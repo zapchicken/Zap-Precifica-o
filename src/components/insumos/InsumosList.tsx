@@ -31,7 +31,7 @@ export function InsumosList() {
     const matchesCategoria = categoriaFilter === 'todas' || insumo.categoria === categoriaFilter
     const matchesFornecedor = fornecedorFilter === 'todos' || 
                              (insumo.fornecedor_id === fornecedorFilter) ||
-                             (!insumo.fornecedores && fornecedorFilter === 'sem_fornecedor')
+                             (!insumo.fornecedor && fornecedorFilter === 'sem_fornecedor')
     const matchesStatus = statusFilter === 'todos' || 
                          (statusFilter === 'ativo' && insumo.ativo) ||
                          (statusFilter === 'inativo' && !insumo.ativo)
@@ -49,8 +49,8 @@ export function InsumosList() {
   // Filtrar fornecedores válidos (não vazios)
   const fornecedores = Array.from(new Set(
     insumos
-      .filter(i => i.fornecedores && i.fornecedores.razao_social)
-      .map(i => i.fornecedores!.razao_social)
+      .filter(i => i.fornecedor)
+      .map(i => i.fornecedor!)
       .filter(nome => nome && nome.trim() !== '')
   )).sort()
 
@@ -282,8 +282,8 @@ export function InsumosList() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {insumo.fornecedores ? (
-                          <span className="text-sm">{insumo.fornecedores.razao_social}</span>
+                        {insumo.fornecedor ? (
+                          <span className="text-sm">{insumo.fornecedor.razao_social}</span>
                         ) : (
                           <span className="text-sm text-muted-foreground">Sem fornecedor</span>
                         )}
