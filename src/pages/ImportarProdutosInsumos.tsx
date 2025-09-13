@@ -96,7 +96,7 @@ export default function ImportarProdutosInsumos() {
         if (resultado.dados.length > 0) {
           const salvamento = await salvarNoSupabase('produtos', resultado.dados);
           if (!salvamento.data) {
-            throw new Error(salvamento.erro);
+            throw new Error(salvamento.error);
           }
         }
         dadosProcessados = resultado.dados;
@@ -108,7 +108,7 @@ export default function ImportarProdutosInsumos() {
         if (resultado.dados.length > 0) {
           const salvamento = await salvarNoSupabase('insumos', resultado.dados);
           if (!salvamento.data) {
-            throw new Error(salvamento.erro);
+            throw new Error(salvamento.error);
           }
         }
         dadosProcessados = resultado.dados;

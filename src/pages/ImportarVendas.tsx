@@ -130,7 +130,7 @@ export default function ImportarVendas() {
       if (resultado.dados.length > 0) {
         const salvamento = await salvarNoSupabase('vendas', resultado.dados);
         if (!salvamento.data) {
-          throw new Error(salvamento.erro);
+          throw new Error(salvamento.error);
         }
       }
       

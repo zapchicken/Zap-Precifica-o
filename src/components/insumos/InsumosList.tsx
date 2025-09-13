@@ -283,7 +283,7 @@ export function InsumosList() {
                       </TableCell>
                       <TableCell>
                         {insumo.fornecedor ? (
-                          <span className="text-sm">{insumo.fornecedor.razao_social}</span>
+                          <span className="text-sm">{insumo.fornecedor}</span>
                         ) : (
                           <span className="text-sm text-muted-foreground">Sem fornecedor</span>
                         )}

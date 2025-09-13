@@ -15,7 +15,7 @@ export interface CatalogInsumo {
   fator_correcao?: number
   unidade_medida?: string
   categoria?: string
-  fornecedor?: string
+  fornecedor: string | null;
 }
 
 interface InsumoComboboxProps {
