@@ -18,10 +18,27 @@ export interface CatalogInsumo {
   fornecedor: string | null;
 }
 
+export type InsumoForUI = {
+  id: string;
+  nome: string;                    // ← usado na UI
+  codigo: string;                  // ← usado na UI
+  fornecedor: string | null;       // ← usado na UI
+  nome_comercial?: string;         // ← vem do banco
+  codigo_insumo?: string;          // ← vem do banco
+  fornecedor_id?: string;          // ← vem do banco
+  categoria: string;
+  unidade_medida: string;
+  tipo_embalagem: string;
+  preco_por_unidade: number;
+  fator_correcao: number;
+  created_at: string;
+  updated_at: string;
+};
+
 interface InsumoComboboxProps {
-  items: CatalogInsumo[]
+  items: InsumoForUI[]
   selectedLabel: string
-  onSelect: (item: CatalogInsumo) => void
+  onSelect: (item: InsumoForUI) => void
   placeholder?: string
   disabled?: boolean
 }

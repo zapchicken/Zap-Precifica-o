@@ -18,19 +18,26 @@ export function InsumosList() {
   const [fornecedorFilter, setFornecedorFilter] = useState('todos')
   const [statusFilter, setStatusFilter] = useState('todos')
 
-  const insumosFiltrados = insumos.filter(insumo => {
+  const insumosForUI = insumos.map(item => ({
+    ...item,
+    fornecedor: item.fornecedor_id,
+    nome: item.nome_comercial || item.nome || 'Sem nome',
+    codigo: item.codigo_insumo || '---'
+  }))
+
+  const insumosFiltrados = insumosForUI.filter(insumo => {
     // Busca aprimorada por texto - solução temporária
     const searchLower = searchTerm.toLowerCase()
     const matchesSearch = searchTerm === '' || 
                          insumo.nome.toLowerCase().includes(searchLower) ||
-                         (insumo.codigo_insumo?.toLowerCase().includes(searchLower)) ||
+                         (insumo.codigo?.toLowerCase().includes(searchLower)) ||
                          (insumo.categoria?.toLowerCase().includes(searchLower)) ||
-                         (insumo.fornecedor_id?.toLowerCase().includes(searchLower)) ||
+                         (insumo.fornecedor?.toLowerCase().includes(searchLower)) ||
                          (insumo.observacoes?.toLowerCase().includes(searchLower))
     
     const matchesCategoria = categoriaFilter === 'todas' || insumo.categoria === categoriaFilter
     const matchesFornecedor = fornecedorFilter === 'todos' || 
-                             (insumo.fornecedor_id === fornecedorFilter) ||
+                             (insumo.fornecedor === fornecedorFilter) ||
                              (!insumo.fornecedor && fornecedorFilter === 'sem_fornecedor')
     const matchesStatus = statusFilter === 'todos' || 
                          (statusFilter === 'ativo' && insumo.ativo) ||
@@ -41,14 +48,14 @@ export function InsumosList() {
 
   // Filtrar categorias válidas (não vazias)
   const categorias = Array.from(new Set(
-    insumos
+    insumosForUI
       .map(i => i.categoria)
       .filter(categoria => categoria && categoria.trim() !== '')
   )).sort()
   
   // Filtrar fornecedores válidos (não vazios)
   const fornecedores = Array.from(new Set(
-    insumos
+    insumosForUI
       .filter(i => i.fornecedor)
       .map(i => i.fornecedor!)
       .filter(nome => nome && nome.trim() !== '')
@@ -128,7 +135,7 @@ export function InsumosList() {
                 💡 Busca em: Nome, Código, Categoria, Fornecedor e Observações
               </p>
               <p className="text-sm font-medium text-blue-800">
-                📊 {insumosFiltrados.length} de {insumos.length} insumos encontrados
+                📊 {insumosFiltrados.length} de {insumosForUI.length} insumos encontrados
               </p>
             </div>
           </div>
@@ -198,7 +205,7 @@ export function InsumosList() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">{insumos.length}</div>
+            <div className="text-2xl font-bold">{insumosForUI.length}</div>
             <p className="text-sm text-muted-foreground">Total de Insumos</p>
           </CardContent>
         </Card>
@@ -211,7 +218,7 @@ export function InsumosList() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
-              {insumos.filter(i => i.ativo).length}
+              {insumosForUI.filter(i => i.ativo).length}
             </div>
             <p className="text-sm text-muted-foreground">Insumos Ativos</p>
           </CardContent>
@@ -219,7 +226,7 @@ export function InsumosList() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">
-              R$ {insumos.reduce((total, i) => total + (i.quantidade_comprar * i.preco_por_unidade * i.fator_correcao), 0).toFixed(2)}
+              R$ {insumosForUI.reduce((total, i) => total + (i.quantidade_comprar * i.preco_por_unidade * i.fator_correcao), 0).toFixed(2)}
             </div>
             <p className="text-sm text-muted-foreground">Valor Total Compras</p>
           </CardContent>
@@ -277,8 +284,8 @@ export function InsumosList() {
                       </TableCell>
                       <TableCell className="font-medium">{insumo.nome}</TableCell>
                       <TableCell>
-                        {insumo.codigo_insumo && (
-                          <Badge variant="outline">{insumo.codigo_insumo}</Badge>
+                        {insumo.codigo && (
+                          <Badge variant="outline">{insumo.codigo}</Badge>
                         )}
                       </TableCell>
                       <TableCell>

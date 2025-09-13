@@ -1263,7 +1263,12 @@ export default function FichasTecnicas() {
                           </Select>
                         ) : (
                           <InsumoCombobox
-                            items={insumos}
+                            items={insumos.map(item => ({
+                              ...item,
+                              fornecedor: item.fornecedor_id,
+                              nome: item.nome_comercial || item.nome || 'Sem nome',
+                              codigo: item.codigo_insumo || '---'
+                            }))}
                             selectedLabel={insumo.nome}
                             onSelect={(item) => {
                               const newInsumos = [...formData.insumos]

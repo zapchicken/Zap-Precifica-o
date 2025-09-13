@@ -100,7 +100,7 @@ export default function ImportarProdutosInsumos() {
           }
         }
         dadosProcessados = resultado.dados;
-        erros = resultado.errors;
+        erros = resultado.erros;
       }
       
       if (tipoImportacao === "insumos" || tipoImportacao === "ambos") {
@@ -112,7 +112,7 @@ export default function ImportarProdutosInsumos() {
           }
         }
         dadosProcessados = resultado.dados;
-        erros = resultado.errors;
+        erros = resultado.erros;
       }
       
       setProgresso(100);

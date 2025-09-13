@@ -152,7 +152,7 @@ export default function ImportarVendas() {
         totalVendas: resultado.dados.length,
         valorTotal: resultado.dados.reduce((total: number, venda: any) => total + venda.valor_total, 0),
         sucessos: resultado.dados.length,
-        erros: resultado.errors.length,
+        erros: resultado.erros.length,
         avisos: 0
       };
       

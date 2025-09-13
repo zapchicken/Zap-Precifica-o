@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { supabase } from '../lib/supabase';
 import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -41,6 +42,7 @@ import { useMarkup } from '../hooks/useMarkup'
 
 
 export default function Produtos() {
+  const [userData, setUserData] = useState<any>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -123,7 +125,7 @@ export default function Produtos() {
       observacoes: formData.observacoes,
       status: formData.ativo ? 'ativo' as const : 'inativo' as const,
       ficha_tecnica_id: formData.fichaTecnicaId || null,
-      user_id: user?.id || ''
+      user_id: userData?.id || ''
     }
 
     try {
@@ -364,6 +366,15 @@ export default function Produtos() {
       sincronizarFichasNaoSincronizadas()
     }
   }, [fichas, produtos, loading])
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (user) setUserData(user);
+    };
+    
+    fetchUser();
+  }, [])
 
   const handleImportFile = async (file: File) => {
     toast({ 

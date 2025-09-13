@@ -358,6 +358,7 @@ export interface Database {
           user_id: string
           created_at: string
           updated_at: string
+          nome_comercial?: string
         }
         Insert: {
           id?: string
