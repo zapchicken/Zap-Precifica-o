@@ -74,7 +74,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const fornecedoresUnicos = Array.from(
     new Set(
       insumosParaCompra
-        .map(insumo => insumo.fornecedores?.razao_social)
+        .map(insumo => insumo.fornecedor_id)
         .filter(Boolean)
     )
   ).sort()
@@ -82,7 +82,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   // Aplicar filtros de depósito e fornecedor
   const insumosFiltrados = insumosParaCompra.filter(insumo => {
     const passaFiltroDeposito = filtroDeposito === "todos" || insumo.deposito === filtroDeposito
-    const passaFiltroFornecedor = filtroFornecedor === "todos" || insumo.fornecedores?.razao_social === filtroFornecedor
+    const passaFiltroFornecedor = filtroFornecedor === "todos" || insumo.fornecedor_id === filtroFornecedor
     return passaFiltroDeposito && passaFiltroFornecedor
   })
 
@@ -107,7 +107,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const fornecedoresComItens = fornecedoresUnicos.filter(fornecedor => {
     return insumosFiltrados.some(insumo => {
       const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
-      return insumo.fornecedores?.razao_social === fornecedor && quantidade > 0
+      return insumo.fornecedor_id === fornecedor && quantidade > 0
     })
   })
 
@@ -115,7 +115,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const gerarMensagemWhatsApp = (fornecedor: string) => {
     const insumosDoFornecedor = insumosFiltrados.filter(insumo => {
       const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
-      return insumo.fornecedores?.razao_social === fornecedor && quantidade > 0
+      return insumo.fornecedor_id === fornecedor && quantidade > 0
     })
   
     if (insumosDoFornecedor.length === 0) {
@@ -430,8 +430,8 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                           </TableCell>
                           <TableCell>
                             <div className="max-w-[130px]">
-                              <p className="truncate" title={insumo.fornecedores?.razao_social || 'N/A'}>
-                                {insumo.fornecedores?.razao_social || 'N/A'}
+                              <p className="truncate" title={insumo.fornecedor_id || 'N/A'}>
+                                {insumo.fornecedor_id || 'N/A'}
                               </p>
                             </div>
                           </TableCell>
@@ -498,11 +498,11 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                 {fornecedoresComItens.map(fornecedor => {
                   const itensCount = insumosFiltrados.filter(insumo => {
                     const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
-                    return insumo.fornecedores?.razao_social === fornecedor && quantidade > 0
+                    return insumo.fornecedor_id === fornecedor && quantidade > 0
                   }).length
                   
                   const valorFornecedor = insumosFiltrados
-                    .filter(insumo => insumo.fornecedores?.razao_social === fornecedor)
+                    .filter(insumo => insumo.fornecedor_id === fornecedor)
                     .reduce((total, insumo) => {
                       const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
                       if (quantidade > 0) {

@@ -9,7 +9,7 @@ export function PublicRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkSession = async () => {
-      const {  } = await supabase.auth.getUser()
+      const { data } = await supabase.auth.getUser()
       const user = data.user
       setIsAuthenticated(!!user)
       setIsLoading(false)
@@ -17,7 +17,7 @@ export function PublicRoute({ children }: { children: React.ReactNode }) {
 
     checkSession()
 
-    const {  authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session?.user)
       setIsLoading(false)
     })

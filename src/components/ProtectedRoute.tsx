@@ -1,10 +1,14 @@
+import { useState, useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
     const checkSession = async () => {
-      const {  } = await supabase.auth.getUser() // ✅ Retorna { data, error }
+      const { data } = await supabase.auth.getUser() // ✅ Retorna { data, error }
       const user = data.user
       setIsAuthenticated(!!user)
       setIsLoading(false)
@@ -12,7 +16,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
     checkSession()
 
-    const {  authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session?.user)
       setIsLoading(false)
     })
