@@ -1,0 +1,101 @@
+table_schema,table_name,column_name,data_type,is_nullable,column_default,pk,fk,foreign_table,foreign_column,column_comment
+public,bases,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,bases,nome,text,NOT NULL,null,,,,,
+public,bases,codigo,text,NOT NULL,null,,,,,
+public,bases,tipo_produto,text,NOT NULL,null,,,,,
+public,bases,quantidade_total,numeric,NULL,0,,,,,
+public,bases,unidade_produto,text,NULL,'kg'::text,,,,,
+public,bases,custo_total_batelada,numeric,NULL,0,,,,,
+public,bases,custo_por_kg,numeric,NULL,null,,,,,
+public,bases,custo_por_unidade,numeric,NULL,null,,,,,
+public,bases,rendimento,text,NULL,null,,,,,
+public,bases,tempo_preparo,integer,NULL,null,,,,,
+public,bases,data_ficha,date,NULL,CURRENT_DATE,,,,,
+public,bases,foto,text,NULL,null,,,,,
+public,bases,modo_preparo,text,NULL,null,,,,,
+public,bases,observacoes,text,NULL,null,,,,,
+public,bases,ativo,boolean,NULL,true,,,,,
+public,bases,user_id,uuid,NOT NULL,null,,,,,
+public,bases,created_at,timestamp with time zone,NULL,now(),,,,,
+public,bases,updated_at,timestamp with time zone,NULL,now(),,,,,
+public,bases_insumos,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,bases_insumos,base_id,uuid,NOT NULL,null,,FK,bases,id,
+public,bases_insumos,insumo_id,uuid,NOT NULL,null,,FK,insumos,id,
+public,bases_insumos,quantidade,numeric,NOT NULL,null,,,,,
+public,bases_insumos,unidade,text,NOT NULL,null,,,,,
+public,bases_insumos,custo,numeric,NOT NULL,null,,,,,
+public,bases_insumos,user_id,uuid,NOT NULL,null,,,,,
+public,bases_insumos,created_at,timestamp with time zone,NULL,now(),,,,,
+public,fichas_bases,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,fichas_bases,ficha_id,uuid,NOT NULL,null,,FK,fichas_tecnicas,id,
+public,fichas_bases,base_id,uuid,NOT NULL,null,,FK,bases,id,
+public,fichas_bases,quantidade,numeric,NOT NULL,null,,,,,
+public,fichas_bases,unidade,character varying,NOT NULL,null,,,,,
+public,fichas_bases,custo_unitario,numeric,NULL,null,,,,,
+public,fichas_bases,custo_total,numeric,NULL,null,,,,,
+public,fichas_bases,user_id,uuid,NOT NULL,null,,,,,
+public,fichas_bases,created_at,timestamp with time zone,NOT NULL,"timezone('utc'::text, now())",,,,,
+public,fichas_insumos,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,fichas_insumos,ficha_id,uuid,NOT NULL,null,,FK,fichas_tecnicas,id,
+public,fichas_insumos,insumo_id,uuid,NOT NULL,null,,FK,insumos,id,
+public,fichas_insumos,quantidade,numeric,NOT NULL,null,,,,,
+public,fichas_insumos,unidade,character varying,NOT NULL,null,,,,,
+public,fichas_insumos,custo_unitario,numeric,NULL,null,,,,,
+public,fichas_insumos,custo_total,numeric,NULL,null,,,,,
+public,fichas_insumos,user_id,uuid,NOT NULL,null,,,,,
+public,fichas_insumos,created_at,timestamp with time zone,NOT NULL,"timezone('utc'::text, now())",,,,,
+public,fichas_tecnicas,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,fichas_tecnicas,nome,character varying,NOT NULL,null,,,,,
+public,fichas_tecnicas,codigo,character varying,NULL,null,,,,,
+public,fichas_tecnicas,descricao,text,NULL,null,,,,,
+public,fichas_tecnicas,categoria,character varying,NULL,null,,,,,
+public,fichas_tecnicas,tipo_produto,character varying,NULL,null,,,,,Tipo do produto: produto_pronto ou base_intermediaria
+public,fichas_tecnicas,rendimento,numeric,NULL,null,,,,,Quantidade produzida pela receita
+public,fichas_tecnicas,unidade_rendimento,character varying,NULL,null,,,,,
+public,fichas_tecnicas,tempo_preparo,integer,NULL,null,,,,,Tempo de preparo em minutos
+public,fichas_tecnicas,modo_preparo,text,NULL,null,,,,,
+public,fichas_tecnicas,custo_total_producao,numeric,NULL,null,,,,,Custo total para produzir a receita completa
+public,fichas_tecnicas,custo_por_unidade,numeric,NULL,null,,,,,Custo por unidade produzida
+public,fichas_tecnicas,preco_sugerido,numeric,NULL,null,,,,,
+public,fichas_tecnicas,margem_contribuicao,numeric,NULL,null,,,,,Margem de contribuição em percentual
+public,fichas_tecnicas,observacoes,text,NULL,null,,,,,
+public,fichas_tecnicas,foto,text,NULL,null,,,,,
+public,fichas_tecnicas,data_ficha,date,NULL,CURRENT_DATE,,,,,
+public,fichas_tecnicas,ativo,boolean,NULL,true,,,,,
+public,fichas_tecnicas,user_id,uuid,NOT NULL,null,,,,,
+public,fichas_tecnicas,created_at,timestamp with time zone,NOT NULL,"timezone('utc'::text, now())",,,,,
+public,fichas_tecnicas,updated_at,timestamp with time zone,NOT NULL,"timezone('utc'::text, now())",,,,,
+public,fornecedores,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,fornecedores,razao_social,character varying,NOT NULL,null,,,,,
+public,fornecedores,pessoa_contato,character varying,NULL,null,,,,,
+public,fornecedores,telefone,character varying,NULL,null,,,,,
+public,fornecedores,status,character varying,NULL,'ativo'::character varying,,,,,
+public,fornecedores,condicoes_pagamento,text,NULL,null,,,,,
+public,fornecedores,observacoes,text,NULL,null,,,,,
+public,fornecedores,created_at,timestamp with time zone,NULL,now(),,,,,
+public,fornecedores,updated_at,timestamp with time zone,NULL,now(),,,,,
+public,fornecedores,user_id,uuid,NULL,null,,,,,
+public,insumos,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,insumos,nome,text,NOT NULL,null,,,,,Nome completo do insumo (ex: Frango Inteiro Congelado)
+public,insumos,codigo_insumo,text,NULL,null,,,,,Código interno do insumo (opcional)
+public,insumos,fornecedor_id,uuid,NULL,null,,FK,fornecedores,id,Referência ao fornecedor (NULLABLE - permite insumos sem fornecedor)
+public,insumos,categoria,text,NOT NULL,null,,,,,"Categoria do insumo (ex: Carnes, Bebidas)"
+public,insumos,unidade_medida,text,NOT NULL,null,,,,,"Unidade de medida (ex: kg, unidade, litro)"
+public,insumos,tipo_embalagem,text,NULL,null,,,,,Tipo de embalagem (ex: Caixa com 10 kg)
+public,insumos,preco_por_unidade,numeric,NOT NULL,null,,,,,Preço unitário pago ao fornecedor (R$)
+public,insumos,fator_correcao,numeric,NULL,1.00,,,,,Fator de correção para cálculo do custo unitário
+public,insumos,quantidade_minima_compra,integer,NULL,0,,,,,Quantidade mínima para disparar alerta de compra
+public,insumos,ultima_compra,date,NULL,null,,,,,Data da última compra registrada
+public,insumos,quantidade_comprar,integer,NULL,0,,,,,Quantidade sugerida para próxima compra
+public,insumos,deposito,text,NULL,null,,,,,Local de armazenamento (ex: Depósito Seco)
+public,insumos,observacoes,text,NULL,null,,,,,Informações adicionais sobre o insumo
+public,insumos,user_id,uuid,NOT NULL,auth.uid(),,,,,ID do usuário proprietário (isolamento de dados)
+public,insumos,created_at,timestamp with time zone,NOT NULL,now(),,,,,Data de criação do registro
+public,insumos,updated_at,timestamp with time zone,NOT NULL,now(),,,,,Data da última atualização do registro
+public,insumos,ativo,boolean,NULL,true,,,,,
+public,insumos_embalagem_delivery,id,uuid,NOT NULL,gen_random_uuid(),PK,,,,
+public,insumos_embalagem_delivery,ficha_id,uuid,NULL,null,,FK,fichas_tecnicas,id,
+public,insumos_embalagem_delivery,nome,text,NOT NULL,null,,,,,
+public,insumos_embalagem_delivery,codigo,text,NULL,null,,,,,
+public,insumos_embalagem_delivery,quantidade,numeric,NOT NULL,null,,,,,
+public,insumos_embalagem_delivery,unidade,text,NOT NULL,null,,,,,

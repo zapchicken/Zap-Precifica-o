@@ -1,0 +1,11 @@
+codigo,nome,categoria,preco_atual,descricao,ativo
+PRD001,Combo Família Grande,COMBO LANCHES FRANGO,45.90,Combo completo com 12 pedaços de frango, 2 porções de batata e 2 refrigerantes,true
+PRD002,Balde Médio 8 Pedaços,FRANGO AMERICANO,32.90,Balde com 8 pedaços de frango crocante,true
+PRD003,Porção Batata Grande,ACOMPANHAMENTOS,12.50,Porção grande de batata frita crocante,true
+PRD004,Refrigerante 350ml,BEBIDAS REFRIGERANTES,4.50,Refrigerante gelado 350ml,true
+PRD005,Combo Individual,ZAPBOX (COMBINADOS INDIVIDUÁIS),18.90,Combo individual com 4 pedaços e batata média,true
+PRD006,Balde Grande 16 Pedaços,JUMBOS (COMBINADOS GRANDES),58.90,Balde grande com 16 pedaços de frango,true
+PRD007,Porção Batata Pequena,ACOMPANHAMENTOS,8.50,Porção pequena de batata frita,true
+PRD008,Água 500ml,BEBIDAS REFRIGERANTES,2.50,Água mineral natural 500ml,true
+PRD009,Combo Casal,COMBO LANCHES FRANGO,28.90,Combo para casal com 8 pedaços e 2 batatas médias,true
+PRD010,Balde Pequeno 4 Pedaços,FRANGO AMERICANO,16.90,Balde pequeno com 4 pedaços de frango,true

@@ -1,0 +1,6 @@
+codigo,nome,fornecedor,categoria,unidade_medida,preco_unitario,quantidade_comprar,quantidade_minima,tipo_embalagem,deposito,fator_correcao,observacoes
+INS001,Frango Inteiro Congelado,Frigorífico Aurora,Carnes,kg,8.50,20,10,Caixa com 10 kg,Depósito Principal,1.0,Produto principal - sempre manter estoque
+INS002,Óleo de Soja,Liza Distribuidora,Óleos,litro,4.20,10,5,Galão 20L,Depósito Seco,1.0,
+INS003,Batata Pré-Frita,McCain Brasil,Vegetais,kg,12.80,15,8,Saco 2.5kg,Depósito Congelados,1.0,Produto importado - verificar qualidade
+INS004,Queijo Mussarela,Laticínios Scala,Laticínios,kg,32.50,12,4,Peça 4kg,Câmara Fria,0.95,Verificar rendimento (fator)
+INS005,Pão de Hambúrguer 80g,Wickbold,Padaria,unidade,0.95,150,60,Pacote 30 un,Depósito Padaria,1.0,Congelar se necessário

@@ -1,0 +1,16 @@
+codigo_pdv,produto,categoria,tempo_preparo,rendimento,custo_unitario,modo_preparo
+PRD001,Combo Família Grande,COMBO LANCHES FRANGO,30,1,0.00,Preparar conforme receita padrão
+PRD002,Balde Médio 8 Pedaços,FRANGO AMERICANO,25,1,0.00,Preparar conforme receita padrão
+PRD003,Porção Batata Grande,ACOMPANHAMENTOS,15,1,0.00,Preparar conforme receita padrão
+PRD004,Refrigerante 350ml,BEBIDAS REFRIGERANTES,0,1,0.00,Produto pronto para venda
+PRD005,Combo Individual,ZAPBOX (COMBINADOS INDIVIDUÁIS),20,1,0.00,Preparar conforme receita padrão
+PRD006,Balde Grande 16 Pedaços,JUMBOS (COMBINADOS GRANDES),35,1,0.00,Preparar conforme receita padrão
+PRD007,Porção Batata Pequena,ACOMPANHAMENTOS,12,1,0.00,Preparar conforme receita padrão
+PRD008,Água 500ml,BEBIDAS REFRIGERANTES,0,1,0.00,Produto pronto para venda
+PRD009,Combo Casal,COMBO LANCHES FRANGO,25,1,0.00,Preparar conforme receita padrão
+PRD010,Balde Pequeno 4 Pedaços,FRANGO AMERICANO,20,1,0.00,Preparar conforme receita padrão
+PRD011,Hambúrguer Clássico,LANCHES,15,1,0.00,Preparar conforme receita padrão
+PRD012,Batata Frita Média,ACOMPANHAMENTOS,10,1,0.00,Preparar conforme receita padrão
+PRD013,Refrigerante 2L,BEBIDAS REFRIGERANTES,0,1,0.00,Produto pronto para venda
+PRD014,Combo Executivo,COMBO LANCHES FRANGO,18,1,0.00,Preparar conforme receita padrão
+PRD015,Salada Caesar,SALADAS,8,1,0.00,Preparar conforme receita padrão
