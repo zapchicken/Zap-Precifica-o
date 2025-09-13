@@ -139,7 +139,7 @@ export const useProdutos = () => {
         fichasProdutosProntos.forEach(item => {
           if (item.fichas_tecnicas) {
             dependencias.fichasProdutosProntos.push(
-              `${item.fichas_tecnicas.nome} (${item.fichas_tecnicas.codigo})`
+              `${item.fichas_tecnicas?.nome} (${item.fichas_tecnicas?.codigo})`
             )
           }
         })

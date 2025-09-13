@@ -25,12 +25,12 @@ export function InsumosList() {
                          insumo.nome.toLowerCase().includes(searchLower) ||
                          (insumo.codigo_insumo?.toLowerCase().includes(searchLower)) ||
                          (insumo.categoria?.toLowerCase().includes(searchLower)) ||
-                         (insumo.fornecedores?.razao_social?.toLowerCase().includes(searchLower)) ||
+                         (insumo.fornecedor_id?.toLowerCase().includes(searchLower)) ||
                          (insumo.observacoes?.toLowerCase().includes(searchLower))
     
     const matchesCategoria = categoriaFilter === 'todas' || insumo.categoria === categoriaFilter
     const matchesFornecedor = fornecedorFilter === 'todos' || 
-                             (insumo.fornecedores?.razao_social === fornecedorFilter) ||
+                             (insumo.fornecedor_id === fornecedorFilter) ||
                              (!insumo.fornecedores && fornecedorFilter === 'sem_fornecedor')
     const matchesStatus = statusFilter === 'todos' || 
                          (statusFilter === 'ativo' && insumo.ativo) ||

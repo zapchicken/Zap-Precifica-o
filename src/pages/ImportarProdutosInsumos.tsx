@@ -95,24 +95,24 @@ export default function ImportarProdutosInsumos() {
         const resultado = await processarProdutos(arquivo);
         if (resultado.dados.length > 0) {
           const salvamento = await salvarNoSupabase('produtos', resultado.dados);
-          if (!salvamento.sucesso) {
+          if (!salvamento.data) {
             throw new Error(salvamento.erro);
           }
         }
         dadosProcessados = resultado.dados;
-        erros = resultado.erros;
+        erros = resultado.errors;
       }
       
       if (tipoImportacao === "insumos" || tipoImportacao === "ambos") {
         const resultado = await processarInsumos(arquivo);
         if (resultado.dados.length > 0) {
           const salvamento = await salvarNoSupabase('insumos', resultado.dados);
-          if (!salvamento.sucesso) {
+          if (!salvamento.data) {
             throw new Error(salvamento.erro);
           }
         }
         dadosProcessados = resultado.dados;
-        erros = resultado.erros;
+        erros = resultado.errors;
       }
       
       setProgresso(100);

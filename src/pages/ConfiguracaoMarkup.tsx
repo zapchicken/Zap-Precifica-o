@@ -460,7 +460,7 @@ export default function ConfiguracaoMarkup() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleAtualizarCanal(canal.id!, { ativo: !canal.ativo })}
+                          onClick={() => handleAtualizarCanal(canal.id!, { nome: canal.nome, taxa_marketplace: canal.taxa_marketplace, taxa_antecipacao: canal.taxa_antecipacao })}
                         >
                           {canal.ativo ? "Desativar" : "Ativar"}
                         </Button>

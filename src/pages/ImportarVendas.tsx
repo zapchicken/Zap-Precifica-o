@@ -129,7 +129,7 @@ export default function ImportarVendas() {
       
       if (resultado.dados.length > 0) {
         const salvamento = await salvarNoSupabase('vendas', resultado.dados);
-        if (!salvamento.sucesso) {
+        if (!salvamento.data) {
           throw new Error(salvamento.erro);
         }
       }
@@ -152,7 +152,7 @@ export default function ImportarVendas() {
         totalVendas: resultado.dados.length,
         valorTotal: resultado.dados.reduce((total: number, venda: any) => total + venda.valor_total, 0),
         sucessos: resultado.dados.length,
-        erros: resultado.erros.length,
+        erros: resultado.errors.length,
         avisos: 0
       };
       

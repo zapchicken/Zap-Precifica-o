@@ -121,8 +121,9 @@ export default function Produtos() {
       margem_lucro: margemLucro,
       origem: 'manual' as const,
       observacoes: formData.observacoes,
-      status: formData.ativo ? 'ativo' : 'inativo',
-      ficha_tecnica_id: formData.fichaTecnicaId || null
+      status: formData.ativo ? 'ativo' as const : 'inativo' as const,
+      ficha_tecnica_id: formData.fichaTecnicaId || null,
+      user_id: user?.id || ''
     }
 
     try {
@@ -437,7 +438,8 @@ export default function Produtos() {
       precoCusto: "",
       precoVenda: "",
       observacoes: "",
-      ativo: true
+      ativo: true,
+      fichaTecnicaId: ""
     })
   }
 
