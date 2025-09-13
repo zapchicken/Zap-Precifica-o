@@ -1,6 +1,5 @@
 import { Layout } from "@/components/Layout"
 import { StatCard } from "@/components/StatCard"
-import { RecálculoStatus } from "@/components/RecalculoStatus"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { 
@@ -10,7 +9,6 @@ import {
   AlertTriangle,
   ShoppingCart,
   Target,
-  Zap,
   BarChart3,
   CheckCircle
 } from "lucide-react"
@@ -68,48 +66,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Status do Sistema de Recálculo Automático */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <RecálculoStatus />
-          </div>
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-yellow-500" />
-                  Sistema de Recálculo Automático
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-green-600">✅ Atualização Automática Ativa</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Quando você alterar o preço de um insumo, todas as fichas e bases que o utilizam são recalculadas automaticamente.
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-blue-600">🔄 Recálculo em Cascata</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Mudanças em insumos → bases → fichas técnicas → produtos finais são propagadas automaticamente.
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <h4 className="font-medium text-green-800 mb-2">Como Funciona:</h4>
-                  <ul className="text-sm text-green-700 space-y-1">
-                    <li>• Altere o preço de um insumo na página de Insumos</li>
-                    <li>• O sistema detecta a mudança automaticamente</li>
-                    <li>• Todas as bases que usam esse insumo são recalculadas</li>
-                    <li>• Todas as fichas que usam essas bases são recalculadas</li>
-                    <li>• Os custos dos produtos finais são atualizados</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
