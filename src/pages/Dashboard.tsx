@@ -10,7 +10,8 @@ import {
   ShoppingCart,
   Target,
   BarChart3,
-  CheckCircle
+  CheckCircle,
+  Zap
 } from "lucide-react"
 import { useDashboardStats, useVendas } from "@/hooks/useSupabaseData"
 
