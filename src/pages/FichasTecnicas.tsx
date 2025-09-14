@@ -643,7 +643,7 @@ export default function FichasTecnicas() {
         </div>
 
               {/* Filtros Específicos por Coluna */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                 {/* Código PDV */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Código PDV</Label>
@@ -651,6 +651,7 @@ export default function FichasTecnicas() {
                     placeholder="Ex: PRD001"
                     value={filtros.codigoPdv}
                     onChange={(e) => setFiltros(prev => ({ ...prev, codigoPdv: e.target.value }))}
+                    className="min-h-[48px]"
                   />
                 </div>
 
@@ -801,7 +802,8 @@ export default function FichasTecnicas() {
         {/* Lista de Fichas */}
         <Card>
           <CardContent className="p-0">
-            <div className="hidden md:block">
+            {/* Desktop Table */}
+            <div className="hidden lg:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -890,6 +892,105 @@ export default function FichasTecnicas() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden p-4 space-y-4">
+              {filteredFichas.map((ficha) => (
+                <Card key={ficha.id} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-lg truncate">{ficha.nome}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline">{ficha.codigo}</Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {ficha.categoria || 'Sem categoria'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="min-h-[48px] min-w-[48px]"
+                          onClick={() => openFichaDetails(ficha)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="min-h-[48px] min-w-[48px]"
+                          onClick={() => carregarFichaParaEdicao(ficha)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="min-h-[48px] min-w-[48px]"
+                          onClick={async () => {
+                            if (confirm('Tem certeza que deseja excluir esta ficha?')) {
+                              try {
+                                await deleteFicha(ficha.id)
+                              } catch (error: any) {
+                                if (error.message.includes('está sendo usada')) {
+                                  const forcarExclusao = confirm(
+                                    `${error.message}\n\nDeseja forçar a exclusão removendo automaticamente a ficha dos produtos que a estão usando?`
+                                  )
+                                  if (forcarExclusao) {
+                                    try {
+                                      await deleteFicha(ficha.id, true)
+                                      toast({
+                                        title: 'Sucesso',
+                                        description: 'Ficha técnica excluída com sucesso!'
+                                      })
+                                    } catch (erroForcar: any) {
+                                      toast({
+                                        title: 'Erro',
+                                        description: erroForcar.message,
+                                        variant: 'destructive'
+                                      })
+                                    }
+                                  }
+                                } else {
+                                  toast({
+                                    title: 'Erro',
+                                    description: error.message,
+                                    variant: 'destructive'
+                                  })
+                                }
+                              }
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="min-h-[48px] min-w-[48px]"
+                          onClick={() => duplicarFicha(ficha)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Data:</span>
+                        <p className="font-medium">{new Date(ficha.data_ficha).toLocaleDateString('pt-BR')}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Custo:</span>
+                        <p className="font-medium">R$ {ficha.custo_total_producao?.toFixed(2) || '0,00'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           </CardContent>
         </Card>

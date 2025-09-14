@@ -32,13 +32,13 @@ export function InsumosList() {
                          insumo.nome.toLowerCase().includes(searchLower) ||
                          (insumo.codigo?.toLowerCase().includes(searchLower)) ||
                          (insumo.categoria?.toLowerCase().includes(searchLower)) ||
-                         (insumo.fornecedores?.razao_social?.toLowerCase().includes(searchLower)) ||
+                         (insumo.fornecedor?.toLowerCase().includes(searchLower)) ||
                          (insumo.observacoes?.toLowerCase().includes(searchLower))
     
     const matchesCategoria = categoriaFilter === 'todas' || insumo.categoria === categoriaFilter
     const matchesFornecedor = fornecedorFilter === 'todos' || 
-                             (insumo.fornecedores?.razao_social === fornecedorFilter) ||
-                             (!insumo.fornecedores?.razao_social && fornecedorFilter === 'sem_fornecedor')
+                             (insumo.fornecedor === fornecedorFilter) ||
+                             (!insumo.fornecedor && fornecedorFilter === 'sem_fornecedor')
     const matchesStatus = statusFilter === 'todos' || 
                          (statusFilter === 'ativo' && insumo.ativo) ||
                          (statusFilter === 'inativo' && !insumo.ativo)
@@ -56,8 +56,8 @@ export function InsumosList() {
   // Filtrar fornecedores válidos (não vazios)
   const fornecedores = Array.from(new Set(
     insumosForUI
-      .filter(i => i.fornecedores?.razao_social)
-      .map(i => i.fornecedores!.razao_social)
+      .filter(i => i.fornecedor)
+      .map(i => i.fornecedor!)
       .filter(nome => nome && nome.trim() !== '')
   )).sort()
 
@@ -140,11 +140,11 @@ export function InsumosList() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
             {/* Filtro por Categoria */}
             <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="min-h-[48px]">
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
               <SelectContent>
@@ -159,7 +159,7 @@ export function InsumosList() {
 
             {/* Filtro por Fornecedor */}
             <Select value={fornecedorFilter} onValueChange={setFornecedorFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="min-h-[48px]">
                 <SelectValue placeholder="Todos os fornecedores" />
               </SelectTrigger>
               <SelectContent>
@@ -175,7 +175,7 @@ export function InsumosList() {
 
             {/* Filtro por Status */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="min-h-[48px]">
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
@@ -188,6 +188,7 @@ export function InsumosList() {
             {/* Limpar Filtros */}
             <Button 
               variant="outline" 
+              className="min-h-[48px]"
               onClick={() => {
                 setSearchTerm('')
                 setCategoriaFilter('todas')
@@ -255,77 +256,139 @@ export function InsumosList() {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Fornecedor</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Unidade</TableHead>
-                    <TableHead className="text-right">Preço/Un.</TableHead>
-                    <TableHead className="text-right">Custo Unit.</TableHead>
-                    <TableHead className="text-right">Qtd. Comprar</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {insumosFiltrados.map((insumo) => (
-                    <TableRow key={insumo.id}>
-                      <TableCell>
-                        <Badge 
-                          variant={insumo.ativo ? "default" : "secondary"}
-                          className={insumo.ativo ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}
-                        >
-                          {insumo.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{insumo.nome}</TableCell>
-                      <TableCell>
-                        {insumo.codigo && (
-                          <Badge variant="outline">{insumo.codigo}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {insumo.fornecedores?.razao_social ? (
-                          <span className="text-sm">{insumo.fornecedores.razao_social}</span>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">Sem fornecedor</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{insumo.categoria}</Badge>
-                      </TableCell>
-                      <TableCell>{insumo.unidade_medida}</TableCell>
-                      <TableCell className="text-right">
-                        R$ {insumo.preco_por_unidade.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        R$ {(insumo.preco_por_unidade * insumo.fator_correcao).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {insumo.quantidade_comprar > 0 ? (
-                          <Badge variant="default">{insumo.quantidade_comprar}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-2">
+            <>
+              {/* Desktop Table */}
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Código</TableHead>
+                      <TableHead>Fornecedor</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Unidade</TableHead>
+                      <TableHead className="text-right">Preço/Un.</TableHead>
+                      <TableHead className="text-right">Custo Unit.</TableHead>
+                      <TableHead className="text-right">Qtd. Comprar</TableHead>
+                      <TableHead className="text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {insumosFiltrados.map((insumo) => (
+                      <TableRow key={insumo.id}>
+                        <TableCell>
+                          <Badge 
+                            variant={insumo.ativo ? "default" : "secondary"}
+                            className={insumo.ativo ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}
+                          >
+                            {insumo.ativo ? "Ativo" : "Inativo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{insumo.nome}</TableCell>
+                        <TableCell>
+                          {insumo.codigo && (
+                            <Badge variant="outline">{insumo.codigo}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {insumo.fornecedor ? (
+                            <span className="text-sm">{insumo.fornecedor}</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Sem fornecedor</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{insumo.categoria}</Badge>
+                        </TableCell>
+                        <TableCell>{insumo.unidade_medida}</TableCell>
+                        <TableCell className="text-right">
+                          R$ {insumo.preco_por_unidade.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          R$ {(insumo.preco_por_unidade * insumo.fator_correcao).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {insumo.quantidade_comprar > 0 ? (
+                            <Badge variant="default">{insumo.quantidade_comprar}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-2">
+                            <InsumoForm 
+                              insumo={insumo}
+                              onSuccess={handleRefresh}
+                              trigger={
+                                <Button variant="ghost" size="sm">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja excluir o insumo "{insumo.nome}"?
+                                    Esta ação não pode ser desfeita.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(insumo)}>
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="lg:hidden space-y-4">
+                {insumosFiltrados.map((insumo) => (
+                  <Card key={insumo.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-lg truncate">{insumo.nome}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge 
+                              variant={insumo.ativo ? "default" : "secondary"}
+                              className={insumo.ativo ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-600 border-gray-200"}
+                            >
+                              {insumo.ativo ? "Ativo" : "Inativo"}
+                            </Badge>
+                            {insumo.codigo && (
+                              <Badge variant="outline">{insumo.codigo}</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <InsumoForm 
                             insumo={insumo}
                             onSuccess={handleRefresh}
                             trigger={
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]">
                                 <Edit className="h-4 w-4" />
                               </Button>
                             }
                           />
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -346,12 +409,43 @@ export function InsumosList() {
                             </AlertDialogContent>
                           </AlertDialog>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Fornecedor:</span>
+                          <p className="font-medium">
+                            {insumo.fornecedor || "Sem fornecedor"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Categoria:</span>
+                          <p className="font-medium">{insumo.categoria}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Unidade:</span>
+                          <p className="font-medium">{insumo.unidade_medida}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Preço/Un.:</span>
+                          <p className="font-medium">R$ {insumo.preco_por_unidade.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Custo Unit.:</span>
+                          <p className="font-medium">R$ {(insumo.preco_por_unidade * insumo.fator_correcao).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Qtd. Comprar:</span>
+                          <p className="font-medium">
+                            {insumo.quantidade_comprar > 0 ? insumo.quantidade_comprar : "-"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -206,7 +206,7 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Nome do Insumo */}
             <div className="space-y-2">
               <Label htmlFor="nome">Nome do Insumo *</Label>
@@ -215,6 +215,7 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
                 value={formData.nome}
                 onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                 placeholder="Ex: Frango Inteiro Congelado"
+                className="min-h-[48px]"
                 required
               />
             </div>
@@ -239,6 +240,7 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
                   }
                 }}
                 placeholder="Ex: INS001 ou digite apenas 1"
+                className="min-h-[48px]"
               />
             </div>
 
@@ -249,7 +251,7 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
                 value={formData.fornecedor_id || 'none'} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, fornecedor_id: value === 'none' ? null : value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[48px]">
                   <SelectValue placeholder="Selecionar fornecedor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -272,7 +274,7 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
                 value={formData.categoria} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, categoria: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[48px]">
                   <SelectValue placeholder="Selecionar categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -292,7 +294,7 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
                 value={formData.unidade_medida} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, unidade_medida: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[48px]">
                   <SelectValue placeholder="Selecionar unidade" />
                 </SelectTrigger>
                 <SelectContent>

@@ -218,7 +218,7 @@ export function Layout({ children, currentPage = "dashboard" }: LayoutProps) {
             />
           )}
           
-          <div className="p-4 md:p-8">
+          <div className="p-4 md:p-8 max-w-full overflow-x-hidden">
             {children}
           </div>
         </main>

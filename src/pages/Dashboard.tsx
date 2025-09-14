@@ -69,7 +69,7 @@ export default function Dashboard() {
 
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total de Produtos"
             value={stats.totalProdutos.toString()}
@@ -115,7 +115,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {produtosTop.length > 0 ? (
                 produtosTop.map((produto: any, index: number) => (
                   <div key={index} className="flex flex-col items-center justify-center p-4 bg-secondary/30 rounded-lg text-center">
@@ -138,7 +138,7 @@ export default function Dashboard() {
         </Card>
 
         {/* Alertas e Recomendações */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Produtos com Baixa Rentabilidade */}
           <Card className="border-warning/20 bg-warning/5">
             <CardHeader>
@@ -182,7 +182,7 @@ export default function Dashboard() {
             <CardContent className="space-y-3">
               <Button 
                 variant="outline" 
-                className="w-full justify-start"
+                className="w-full justify-start min-h-[48px]"
                 onClick={() => window.location.href = '/insumos'}
               >
                 <ShoppingCart className="h-4 w-4" />
@@ -190,7 +190,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full justify-start"
+                className="w-full justify-start min-h-[48px]"
                 onClick={() => window.location.href = '/produtos'}
               >
                 <Package className="h-4 w-4" />
@@ -198,7 +198,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full justify-start"
+                className="w-full justify-start min-h-[48px]"
                 onClick={() => window.location.href = '/fichas'}
               >
                 <Package className="h-4 w-4" />
@@ -206,7 +206,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full justify-start"
+                className="w-full justify-start min-h-[48px]"
                 onClick={() => window.location.href = '/vendas'}
               >
                 <TrendingUp className="h-4 w-4" />
@@ -214,7 +214,7 @@ export default function Dashboard() {
               </Button>
               <Button 
                 variant="accent" 
-                className="w-full justify-start"
+                className="w-full justify-start min-h-[48px]"
                 onClick={() => window.location.href = '/sugestoes'}
               >
                 <Zap className="h-4 w-4" />
