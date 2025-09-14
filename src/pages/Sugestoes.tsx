@@ -608,7 +608,7 @@ export default function Sugestoes() {
 
           {/* Chat com IA */}
           <TabsContent value="chat" className="space-y-4">
-            <Card className="h-[600px] flex flex-col">
+            <Card className="h-[500px] flex flex-col">
               <CardHeader className="flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
@@ -781,29 +781,29 @@ export default function Sugestoes() {
             
             {/* Insight do Chef Digital - dentro da aba do chat */}
             <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <ChefHat className="h-5 w-5 text-primary" />
                   💡 Insight do Chef Digital
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-lg">
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">
                     <strong>Análise principal desta semana:</strong>
                   </p>
-                  <p className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {loading 
                       ? 'Analisando seus dados para gerar insights personalizados...'
                       : sugestoes?.analise || 'Análise indisponível no momento. Por favor, tente gerar novas sugestões.'
                     }
                   </p>
-                  <div className="flex items-center gap-4 pt-2">
-                    <Badge className="bg-success/10 text-success">
+                  <div className="flex items-center gap-3 pt-1">
+                    <Badge className="bg-success/10 text-success text-xs">
                       <Crown className="h-3 w-3 mr-1" />
                       Recomendação Premium
                     </Badge>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {loading 
                         ? 'Processando dados...' 
                         : `Baseado nos dados mais recentes do seu negócio`
