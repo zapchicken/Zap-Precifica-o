@@ -32,13 +32,13 @@ export function InsumosList() {
                          insumo.nome.toLowerCase().includes(searchLower) ||
                          (insumo.codigo?.toLowerCase().includes(searchLower)) ||
                          (insumo.categoria?.toLowerCase().includes(searchLower)) ||
-                         (insumo.fornecedor?.toLowerCase().includes(searchLower)) ||
+                         (insumo.fornecedores?.razao_social?.toLowerCase().includes(searchLower)) ||
                          (insumo.observacoes?.toLowerCase().includes(searchLower))
     
     const matchesCategoria = categoriaFilter === 'todas' || insumo.categoria === categoriaFilter
     const matchesFornecedor = fornecedorFilter === 'todos' || 
-                             (insumo.fornecedor === fornecedorFilter) ||
-                             (!insumo.fornecedor && fornecedorFilter === 'sem_fornecedor')
+                             (insumo.fornecedores?.razao_social === fornecedorFilter) ||
+                             (!insumo.fornecedores?.razao_social && fornecedorFilter === 'sem_fornecedor')
     const matchesStatus = statusFilter === 'todos' || 
                          (statusFilter === 'ativo' && insumo.ativo) ||
                          (statusFilter === 'inativo' && !insumo.ativo)
@@ -56,8 +56,8 @@ export function InsumosList() {
   // Filtrar fornecedores válidos (não vazios)
   const fornecedores = Array.from(new Set(
     insumosForUI
-      .filter(i => i.fornecedor)
-      .map(i => i.fornecedor!)
+      .filter(i => i.fornecedores?.razao_social)
+      .map(i => i.fornecedores!.razao_social)
       .filter(nome => nome && nome.trim() !== '')
   )).sort()
 
@@ -289,8 +289,8 @@ export function InsumosList() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {insumo.fornecedor ? (
-                          <span className="text-sm">{insumo.fornecedor}</span>
+                        {insumo.fornecedores?.razao_social ? (
+                          <span className="text-sm">{insumo.fornecedores.razao_social}</span>
                         ) : (
                           <span className="text-sm text-muted-foreground">Sem fornecedor</span>
                         )}
