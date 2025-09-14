@@ -240,7 +240,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl h-[95vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -511,15 +511,15 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3 mt-20 md:mt-0">
+                <div className="lg:hidden space-y-2 mt-4">
                   {insumosFiltrados.map((insumo: InsumoComFornecedor) => {
                     const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
                     const verificado = insumosVerificados.has(insumo.id)
                     const valorTotal = quantidade * insumo.preco_por_unidade * insumo.quantidade_minima_compra
                     
                     return (
-                      <Card key={insumo.id} className={`p-4 ${verificado ? 'bg-green-50 border-green-200' : ''}`}>
-                        <div className="space-y-3">
+                      <Card key={insumo.id} className={`p-2 ${verificado ? 'bg-green-50 border-green-200' : ''}`}>
+                        <div className="space-y-2">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -549,7 +549,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="grid grid-cols-3 gap-2 text-xs">
                             <div>
                               <span className="text-muted-foreground">Depósito:</span>
                               <p className="font-medium">{insumo.deposito || 'N/A'}</p>
@@ -625,7 +625,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                 <MessageCircle className="h-4 w-4" />
                 Enviar por WhatsApp
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-32 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2 max-h-24 overflow-y-auto">
                 {fornecedoresComItens.map(fornecedor => {
                   const itensCount = insumosFiltrados.filter(insumo => {
                     const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
