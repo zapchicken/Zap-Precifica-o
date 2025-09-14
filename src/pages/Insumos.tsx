@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
 import { ListaCompras } from "@/components/ListaCompras"
 import { InsumosList } from "@/components/insumos/InsumosList"
-import { UploadInsumosExcel } from "@/components/insumos/UploadInsumosExcel"
 import { Insumo } from "@/integrations/supabase/types"
 
 export default function Insumos() {
@@ -25,7 +24,6 @@ export default function Insumos() {
           </div>
           
           <div className="flex gap-2">
-            <UploadInsumosExcel />
             <Button variant="outline" onClick={() => setIsListaComprasOpen(true)}>
               <ShoppingCart className="h-4 w-4" />
               Lista de Compras
