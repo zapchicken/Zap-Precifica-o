@@ -30,6 +30,8 @@ import {
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useAISuggestions } from '../hooks/useAISuggestions'
+import { insumosCatalog } from '../data/insumos-data'
 
 interface ChatMessage {
   id: string
@@ -137,6 +139,9 @@ export default function Sugestoes() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState("")
   const [isChatLoading, setIsChatLoading] = useState(false)
+  
+  // AI Suggestions hook
+  const { suggestions, isLoading: aiLoading, generateSuggestions } = useAISuggestions()
   
   useEffect(() => {
     carregarHistoricoChat()
@@ -742,47 +747,74 @@ export default function Sugestoes() {
                         {sugestao}
                       </Button>
                     ))}
+                    <Button
+                      variant="accent"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => generateSuggestions(insumosCatalog)}
+                      disabled={aiLoading}
+                    >
+                      {aiLoading ? "Gerando..." : "Pedir sugestões"}
+                    </Button>
+                  </div>
+                  
+                  {/* Resultado das sugestões da IA */}
+                  {aiLoading && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <h4 className="font-semibold mb-2">Gerando sugestões...</h4>
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm text-muted-foreground">Analisando seus insumos...</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {suggestions && !aiLoading && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <h4 className="font-semibold mb-2">Sugestões da IA:</h4>
+                      <pre className="text-sm whitespace-pre-wrap">{suggestions}</pre>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Insight do Chef Digital - dentro da aba do chat */}
+            <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ChefHat className="h-5 w-5 text-primary" />
+                  💡 Insight do Chef Digital
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-lg">
+                    <strong>Análise principal desta semana:</strong>
+                  </p>
+                  <p className="text-muted-foreground">
+                    {loading 
+                      ? 'Analisando seus dados para gerar insights personalizados...'
+                      : sugestoes?.analise || 'Análise indisponível no momento. Por favor, tente gerar novas sugestões.'
+                    }
+                  </p>
+                  <div className="flex items-center gap-4 pt-2">
+                    <Badge className="bg-success/10 text-success">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Recomendação Premium
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {loading 
+                        ? 'Processando dados...' 
+                        : `Baseado nos dados mais recentes do seu negócio`
+                      }
+                    </span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Análise com IA */}
-        <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ChefHat className="h-5 w-5 text-primary" />
-              💡 Insight do Chef Digital
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-lg">
-                <strong>Análise principal desta semana:</strong>
-              </p>
-              <p className="text-muted-foreground">
-                {loading 
-                  ? 'Analisando seus dados para gerar insights personalizados...'
-                  : sugestoes?.analise || 'Análise indisponível no momento. Por favor, tente gerar novas sugestões.'
-                }
-              </p>
-              <div className="flex items-center gap-4 pt-2">
-                <Badge className="bg-success/10 text-success">
-                  <Crown className="h-3 w-3 mr-1" />
-                  Recomendação Premium
-                </Badge>
-                <span className="text-sm text-muted-foreground">
-                  {loading 
-                    ? 'Processando dados...' 
-                    : `Baseado nos dados mais recentes do seu negócio`
-                  }
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </Layout>
   )
