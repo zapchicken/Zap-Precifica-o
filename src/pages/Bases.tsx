@@ -34,7 +34,8 @@ import {
   ImageIcon, 
   Clock,
   Camera,
-  X
+  X,
+  Eye
 } from 'lucide-react'
 import { useBases } from '../hooks/useBases'
 import { useInsumos } from '../hooks/useInsumos'
@@ -957,6 +958,9 @@ export default function Bases() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(base)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleEdit(base)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDelete(base.id)}>
@@ -989,6 +993,9 @@ export default function Bases() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleEdit(base)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleEdit(base)}>
                           <Edit className="h-4 w-4" />
                         </Button>
