@@ -20,7 +20,7 @@ export function InsumosList() {
 
   const insumosForUI = insumos.map(item => ({
     ...item,
-    fornecedor: item.fornecedores?.razao_social || null,
+    fornecedor: (item as any).fornecedores?.razao_social || null,
     nome: item.nome_comercial || item.nome || 'Sem nome',
     codigo: item.codigo_insumo || '---'
   }))
