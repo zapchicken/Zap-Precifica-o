@@ -26,7 +26,6 @@ export function InsumosList() {
   }))
 
   const insumosFiltrados = insumosForUI.filter(insumo => {
-    // Busca aprimorada por texto - solução temporária
     const searchLower = searchTerm.toLowerCase()
     const matchesSearch = searchTerm === '' || 
                          insumo.nome.toLowerCase().includes(searchLower) ||
@@ -46,14 +45,12 @@ export function InsumosList() {
     return matchesSearch && matchesCategoria && matchesFornecedor && matchesStatus
   })
 
-  // Filtrar categorias válidas (não vazias)
   const categorias = Array.from(new Set(
     insumosForUI
       .map(i => i.categoria)
       .filter(categoria => categoria && categoria.trim() !== '')
   )).sort()
   
-  // Filtrar fornecedores válidos (não vazios)
   const fornecedores = Array.from(new Set(
     insumosForUI
       .filter(i => i.fornecedor)
@@ -86,7 +83,6 @@ export function InsumosList() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">Insumos</h1>
@@ -97,7 +93,6 @@ export function InsumosList() {
         <InsumoForm onSuccess={handleRefresh} />
       </div>
 
-      {/* Filtros */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -106,11 +101,10 @@ export function InsumosList() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Busca Principal - Solução Temporária */}
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Search className="h-5 w-5 text-blue-600" />
-              <h3 className="font-semibold text-blue-800">🔍 Busca Rápida (Solução Temporária)</h3>
+              <h3 className="font-semibold text-blue-800">🔍 Busca Rápida</h3>
             </div>
             <div className="relative">
               <Input
@@ -202,7 +196,6 @@ export function InsumosList() {
         </CardContent>
       </Card>
 
-      {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -234,7 +227,6 @@ export function InsumosList() {
         </Card>
       </div>
 
-      {/* Tabela */}
       <Card>
         <CardHeader>
           <CardTitle>Lista de Insumos</CardTitle>
@@ -257,7 +249,6 @@ export function InsumosList() {
             </div>
           ) : (
             <>
-              {/* Desktop Table */}
               <div className="hidden lg:block overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -356,7 +347,6 @@ export function InsumosList() {
                 </Table>
               </div>
 
-              {/* Mobile Cards */}
               <div className="lg:hidden space-y-4">
                 {insumosFiltrados.map((insumo) => (
                   <Card key={insumo.id} className="p-4">

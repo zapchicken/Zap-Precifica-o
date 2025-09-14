@@ -32,7 +32,7 @@ export const useInsumos = () => {
 
       const insumosForUI = data?.map(item => ({
         ...item,
-        fornecedor: item.fornecedores?.razao_social || null, // ← converte o campo do banco para o nome da UI
+        fornecedor: item.fornecedores?.razao_social || null,
       }));
 
       setInsumos(insumosForUI || [])
@@ -98,7 +98,6 @@ export const useInsumos = () => {
     }
 
     try {
-      // ✅ Verificar se o preço ou fator de correção mudaram
       const insumoAtual = insumos.find(i => i.id === id)
       const precoMudou = updates.preco_por_unidade !== undefined && updates.preco_por_unidade !== insumoAtual?.preco_por_unidade
       const fatorMudou = updates.fator_correcao !== undefined && updates.fator_correcao !== insumoAtual?.fator_correcao
@@ -122,12 +121,8 @@ export const useInsumos = () => {
 
       setInsumos(prev => prev.map(i => i.id === id ? data : i))
       
-      // ✅ Recálculo automático ativado
       if ((precoMudou || fatorMudou) && data) {
         const novoCustoUnitario = data.preco_por_unidade * data.fator_correcao
-        console.log('🔄 Preço ou fator mudou, iniciando recálculo automático...')
-        
-        // Recalcular automaticamente todas as fichas e bases que usam este insumo
         await recalcularAutomaticamente(id, novoCustoUnitario)
       }
       
@@ -153,7 +148,6 @@ export const useInsumos = () => {
     }
 
     try {
-      // Verificar dependências antes de excluir
       const { data: basesInsumos, error: basesError } = await supabase
         .from('bases_insumos')
         .select('id, bases!inner(nome)')
@@ -167,7 +161,6 @@ export const useInsumos = () => {
       if (basesError) throw basesError
       if (fichasError) throw fichasError
 
-      // Se há dependências, mostrar erro informativo
       if (basesInsumos && basesInsumos.length > 0) {
         const basesNomes = basesInsumos.map((item: any) => item.bases.nome).join(', ')
         throw new Error(`Este insumo está sendo usado nas seguintes bases: ${basesNomes}. Remova-o das bases primeiro.`)
@@ -178,7 +171,6 @@ export const useInsumos = () => {
         throw new Error(`Este insumo está sendo usado nas seguintes fichas técnicas: ${fichasNomes}. Remova-o das fichas primeiro.`)
       }
 
-      // Se não há dependências, excluir
       const { error } = await supabase
         .from('insumos')
         .delete()
@@ -202,10 +194,8 @@ export const useInsumos = () => {
     }
   }
 
-  // Buscar insumos para lista de compras (quantidade_comprar > 0)
-  // Função que filtra por quantidade_comprar > 0
   const getInsumosParaCompra = () => {
-    return insumos.filter(insumo => insumo.quantidade_comprar > 0)  // ← PROBLEMA
+    return insumos.filter(insumo => insumo.quantidade_comprar > 0)
   }
 
   useEffect(() => {

@@ -95,12 +95,7 @@ export default function FichasTecnicas() {
     insumos: [{ tipo: 'insumo', nome: '', codigo: '', quantidade: '', unidade: '', custo: '', custoTotal: '0.00' }]
   })
 
-  // Monitorar mudanças no formData.fotos
-  useEffect(() => {
-    // Lógica para processar fotos se necessário
-  }, [formData.fotos])
 
-  // ✅ Calcular custo unitário automaticamente baseado na soma das 3 seções
   const calcularCustoTotal = () => {
     let custoTotal = 0
 
@@ -122,7 +117,6 @@ export default function FichasTecnicas() {
     formData.insumosEmbalagemDelivery.forEach(embalagem => {
       if (embalagem.custoTotal && embalagem.custoTotal !== '0.00' && embalagem.nome) {
         const custoEmbalagem = parseFloat(embalagem.custoTotal) || 0
-        if (import.meta.env.DEV) console.log('🔍 Embalagem:', embalagem.nome, 'Custo Total:', custoEmbalagem)
         custoTotal += custoEmbalagem
       }
     })
@@ -130,10 +124,8 @@ export default function FichasTecnicas() {
     return custoTotal
   }
 
-  // Atualizar custo unitário automaticamente quando qualquer custo mudar
   useEffect(() => {
     const custoTotal = calcularCustoTotal()
-    if (import.meta.env.DEV) console.log('🔍 Custo total calculado:', custoTotal)
     
     setFormData(prev => ({
       ...prev,
@@ -172,8 +164,6 @@ export default function FichasTecnicas() {
     }
 
     try {
-      // Processar foto antes de salvar
-      
       const novaFicha = {
         nome: formData.produto,
         codigo: formData.codigoPdv,
@@ -184,23 +174,12 @@ export default function FichasTecnicas() {
         custo_total_producao: parseFloat(formData.custoUnitario) || 0,
         data_ficha: formData.dataFicha,
         modo_preparo: formData.modoPreparo,
-        foto: formData.fotos[0] || null, // ✅ Campo foto sendo salvo corretamente
+        foto: formData.fotos[0] || null,
         ativo: true,
-      // ✅ ADICIONANDO os dados relacionados
-      insumos: formData.insumos.filter(insumo => insumo.nome && insumo.quantidade),
-      produtosProntos: formData.produtosProntos.filter(produto => produto.fichaId && produto.quantidade),
-      insumosEmbalagemDelivery: formData.insumosEmbalagemDelivery.filter(embalagem => embalagem.nome && embalagem.quantidade)
-    }
-    
-    // ✅ DEBUG: Log dos dados que serão salvos
-      if (import.meta.env.DEV) {
-        console.log('🔍 Dados da ficha que serão salvos:', novaFicha)
-        console.log('🔍 Insumos filtrados:', novaFicha.insumos)
-        console.log('🔍 Produtos prontos filtrados:', novaFicha.produtosProntos)
-        console.log('🔍 Embalagens filtradas:', novaFicha.insumosEmbalagemDelivery)
+        insumos: formData.insumos.filter(insumo => insumo.nome && insumo.quantidade),
+        produtosProntos: formData.produtosProntos.filter(produto => produto.fichaId && produto.quantidade),
+        insumosEmbalagemDelivery: formData.insumosEmbalagemDelivery.filter(embalagem => embalagem.nome && embalagem.quantidade)
       }
-      
-      // Salvar ficha técnica
 
       if (editingFicha) {
         await updateFicha(editingFicha.id, novaFicha)
@@ -223,7 +202,6 @@ export default function FichasTecnicas() {
 
   const carregarFichaParaEdicao = async (ficha: Ficha) => {
     try {
-      // Carregar detalhes da ficha antes de editar
       const fichaDetalhada = await loadFichaDetalhada(ficha.id)
       
       setEditingFicha(ficha)
@@ -238,7 +216,6 @@ export default function FichasTecnicas() {
         dataFicha: ficha.data_ficha,
         modoPreparo: ficha.modo_preparo || '',
         fotos: fichaDetalhada?.foto ? [fichaDetalhada.foto] : [],
-        // ✅ Carregar dados relacionados
         produtosProntos: fichaDetalhada?.produtosProntos?.map(produto => ({
           fichaId: produto.produto_ficha_id,
           quantidade: produto.quantidade.toString(),
@@ -280,8 +257,7 @@ export default function FichasTecnicas() {
       
       setIsDialogOpen(true)
     } catch (error) {
-      console.error('❌ Erro ao carregar ficha para edição:', error)
-      // Fallback para versão simples
+      console.error('Erro ao carregar ficha para edição:', error)
       setEditingFicha(ficha)
       setFormData({
         produto: ficha.nome,
@@ -304,7 +280,6 @@ export default function FichasTecnicas() {
 
   const duplicarFicha = async (ficha: Ficha) => {
     try {
-      // Carregar detalhes da ficha antes de duplicar
       const fichaDetalhada = await loadFichaDetalhada(ficha.id)
       
       setFormData({
@@ -358,8 +333,7 @@ export default function FichasTecnicas() {
       })
       setIsDialogOpen(true)
     } catch (error) {
-      console.error('❌ Erro ao duplicar ficha:', error)
-      // Fallback para versão simples
+      console.error('Erro ao duplicar ficha:', error)
       setFormData({
         produto: `${ficha.nome} (Cópia)`,
         codigoPdv: '',
@@ -391,13 +365,12 @@ export default function FichasTecnicas() {
       }
       setIsViewDialogOpen(true)
     } catch (error) {
-      console.error('❌ Erro ao carregar detalhes da ficha:', error)
+      console.error('Erro ao carregar detalhes da ficha:', error)
       setSelectedFicha(ficha)
       setIsViewDialogOpen(true)
     }
   }
 
-  // Função para calcular o custo total da embalagem de delivery
   const calcularCustoTotalEmbalagemDelivery = () => {
     return formData.insumosEmbalagemDelivery.reduce((total, embalagem) => {
       return total + (parseFloat(embalagem.custoTotal) || 0)
@@ -449,21 +422,17 @@ export default function FichasTecnicas() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files) {
-      // Processar cada arquivo
       for (const file of Array.from(files)) {
         if (file.type.startsWith('image/')) {
           try {
-            // Mostrar loading
             toast({
               title: "Upload em andamento...",
               description: `Enviando ${file.name}...`,
             })
 
-            // Fazer upload para Supabase Storage
             const result = await uploadAndCompressImage(file, 'fichas')
             
             if (result.success && result.url) {
-              // Adicionar URL da imagem ao formData
               setFormData(prev => ({ 
                 ...prev, 
                 fotos: [...prev.fotos, result.url!] 
@@ -497,7 +466,6 @@ export default function FichasTecnicas() {
         }
       }
       
-      // Limpar input
       event.target.value = ''
     }
   }
@@ -505,21 +473,16 @@ export default function FichasTecnicas() {
   const removePhoto = async (index: number) => {
     const photoToRemove = formData.fotos[index]
     
-    // Se for uma URL do Storage (não base64), remover do Storage também
     if (photoToRemove && photoToRemove.startsWith('http')) {
       try {
         const result = await deleteImageFromStorage(photoToRemove)
         if (!result.success) {
           console.warn('Erro ao remover imagem do Storage:', result.error)
-          // Continuar mesmo se falhar a remoção do Storage
         }
       } catch (error) {
         console.warn('Erro ao remover imagem do Storage:', error)
-        // Continuar mesmo se falhar a remoção do Storage
       }
     }
-    
-    // Remover da lista local
     setFormData(prev => ({
       ...prev,
       fotos: prev.fotos.filter((_, i) => i !== index)
@@ -560,11 +523,8 @@ export default function FichasTecnicas() {
   }
 
   const filteredFichas = fichas.filter(ficha => {
-    // Filtro de busca geral (mantém compatibilidade)
     const matchesSearch = ficha.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ficha.codigo?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    // Filtros específicos por coluna
     const matchesCodigoPdv = !filtros.codigoPdv || 
                             ficha.codigo?.toLowerCase().includes(filtros.codigoPdv.toLowerCase())
     
@@ -573,12 +533,10 @@ export default function FichasTecnicas() {
     
     const matchesCategoria = filtros.categoria === 'all' || ficha.categoria === filtros.categoria
     
-    // Filtro por data
     const dataFicha = new Date(ficha.data_ficha)
     const matchesDataInicio = !filtros.dataInicio || dataFicha >= new Date(filtros.dataInicio)
     const matchesDataFim = !filtros.dataFim || dataFicha <= new Date(filtros.dataFim)
     
-    // Filtro por custo
     const custoFicha = ficha.custo_total_producao || 0
     const matchesCustoMinimo = !filtros.custoMinimo || custoFicha >= parseFloat(filtros.custoMinimo)
     const matchesCustoMaximo = !filtros.custoMaximo || custoFicha <= parseFloat(filtros.custoMaximo)
@@ -596,7 +554,6 @@ export default function FichasTecnicas() {
   return (
     <Layout currentPage="fichas">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -606,7 +563,6 @@ export default function FichasTecnicas() {
           </div>
           <div className="flex gap-2">
             <ImportarFichasTecnicas onImportSuccess={() => {
-              // Recarregar a lista de fichas após importação bem-sucedida
               refresh()
               toast({
                 title: "Sucesso!",
@@ -621,11 +577,9 @@ export default function FichasTecnicas() {
           </div>
         </div>
 
-        {/* Busca e Filtros Avançados */}
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {/* Busca Geral */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -642,9 +596,7 @@ export default function FichasTecnicas() {
                 </Button>
         </div>
 
-              {/* Filtros Específicos por Coluna */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-                {/* Código PDV */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Código PDV</Label>
                   <Input
@@ -655,7 +607,6 @@ export default function FichasTecnicas() {
                   />
                 </div>
 
-                {/* Nome do Produto */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Nome do Produto</Label>
                   <Input
@@ -665,7 +616,6 @@ export default function FichasTecnicas() {
                   />
                 </div>
 
-                {/* Categoria */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Categoria</Label>
                   <Select value={filtros.categoria} onValueChange={(value) => setFiltros(prev => ({ ...prev, categoria: value }))}>
@@ -683,7 +633,6 @@ export default function FichasTecnicas() {
                   </Select>
                 </div>
 
-                {/* Data de Cadastro - Início */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Data Início</Label>
                   <Input
@@ -693,7 +642,6 @@ export default function FichasTecnicas() {
                   />
                 </div>
 
-                {/* Data de Cadastro - Fim */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Data Fim</Label>
                   <Input
@@ -704,7 +652,6 @@ export default function FichasTecnicas() {
                 </div>
               </div>
 
-              {/* Filtros de Custo */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Custo Mínimo (R$)</Label>
@@ -728,7 +675,6 @@ export default function FichasTecnicas() {
                 </div>
               </div>
 
-              {/* Resumo dos Filtros Ativos */}
               {(filtros.codigoPdv || filtros.nomeProduto || filtros.categoria !== 'all' || 
                 filtros.dataInicio || filtros.dataFim || filtros.custoMinimo || filtros.custoMaximo) && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -747,7 +693,6 @@ export default function FichasTecnicas() {
           </CardContent>
         </Card>
 
-        {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
@@ -799,10 +744,8 @@ export default function FichasTecnicas() {
           </Card>
         </div>
 
-        {/* Lista de Fichas */}
         <Card>
           <CardContent className="p-0">
-            {/* Desktop Table */}
             <div className="hidden lg:block">
               <Table>
                 <TableHeader>
@@ -894,7 +837,6 @@ export default function FichasTecnicas() {
               </Table>
             </div>
 
-            {/* Mobile Cards */}
             <div className="lg:hidden p-4 space-y-4">
               {filteredFichas.map((ficha) => (
                 <Card key={ficha.id} className="p-4">
@@ -995,7 +937,6 @@ export default function FichasTecnicas() {
           </CardContent>
         </Card>
 
-        {/* Dialog de criação/edição */}
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1007,7 +948,6 @@ export default function FichasTecnicas() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 py-4">
               <div className="lg:col-span-3 space-y-6">
-                {/* Duplicar Ficha Existente */}
                 <div className="flex items-center justify-end">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span>Duplicar ficha existente:</span>
@@ -1031,7 +971,6 @@ export default function FichasTecnicas() {
                   </div>
                 </div>
 
-                {/* Informações Básicas */}
                 <Card className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Informações Básicas</h3>
@@ -1167,7 +1106,6 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                {/* Produtos Prontos */}
                 <Card className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Produtos Prontos (Fichas Existentes)</h3>
@@ -1270,7 +1208,6 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                {/* Insumos */}
                 <Card className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Insumos</h3>
@@ -1446,7 +1383,6 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                {/* Embalagem */}
                 <Card className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Embalagem</h3>
@@ -1480,7 +1416,6 @@ export default function FichasTecnicas() {
                             if (selectedInsumo) {
                               // ✅ Calcular custo unitário: preço × fator de correção
                               const custoUnitario = (selectedInsumo.preco_por_unidade * selectedInsumo.fator_correcao).toFixed(2)
-                              console.log('🔍 Embalagem selecionada:', value, 'Preço:', selectedInsumo.preco_por_unidade, 'Fator:', selectedInsumo.fator_correcao, 'Custo unitário:', custoUnitario)
                               newEmbalagens[index] = {
                                 ...newEmbalagens[index],
                                 nome: value,
@@ -1519,8 +1454,6 @@ export default function FichasTecnicas() {
                             const custo = parseFloat(newEmbalagens[index].custo) || 0
                             const custoTotal = (quantidade * custo).toFixed(2)
                             
-                            console.log('🔍 Embalagem quantidade alterada:', newEmbalagens[index].nome, 'Qtd:', quantidade, 'Custo unitário:', custo, 'Custo total:', custoTotal)
-                            
                             newEmbalagens[index] = {
                               ...newEmbalagens[index],
                               quantidade: e.target.value,
@@ -1552,7 +1485,6 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                {/* Modo de Preparação */}
                 <Card className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Modo de Preparação</h3>
@@ -1583,7 +1515,6 @@ export default function FichasTecnicas() {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog de visualização */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1628,7 +1559,6 @@ export default function FichasTecnicas() {
                   </div>
                 </div>
 
-                {/* Seção de Produtos Prontos */}
                 {'produtosProntos' in selectedFicha && (selectedFicha as any).produtosProntos && (selectedFicha as any).produtosProntos.length > 0 && (
                   <div className="border rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-3">Produtos Prontos (Fichas Existentes)</h3>
@@ -1650,7 +1580,6 @@ export default function FichasTecnicas() {
                   </div>
                 )}
 
-                {/* Seção de Insumos */}
                 {'insumos' in selectedFicha && (selectedFicha as any).insumos && (selectedFicha as any).insumos.length > 0 && (
                   <div className="border rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-3">Insumos</h3>
@@ -1672,7 +1601,6 @@ export default function FichasTecnicas() {
                   </div>
                 )}
 
-                {/* Seção de Bases */}
                 {'bases' in selectedFicha && (selectedFicha as any).bases && (selectedFicha as any).bases.length > 0 && (
                   <div className="border rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-3">Bases</h3>
@@ -1694,7 +1622,6 @@ export default function FichasTecnicas() {
                   </div>
                 )}
 
-                {/* Seção de Embalagens */}
                 {'embalagem' in selectedFicha && (selectedFicha as any).embalagem && (selectedFicha as any).embalagem.length > 0 && (
                   <div className="border rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-3">Embalagens</h3>

@@ -77,12 +77,9 @@ export default function Produtos() {
     return matchesSearch && matchesCategory
   })
 
-
-
   const { toast } = useToast()
 
   const handleSave = async () => {
-    
     if (!formData.nome || !formData.codigoPdv || !formData.categoria || !formData.precoVenda) {
       const camposFaltando = []
       if (!formData.nome) camposFaltando.push("Nome")
@@ -110,7 +107,6 @@ export default function Produtos() {
       return
     }
 
-    // Calcular margem de lucro
     const margemLucro = precoCusto > 0 ? ((precoVenda - precoCusto) / precoVenda) * 100 : 0
 
     const produtoData = {
@@ -167,24 +163,19 @@ export default function Produtos() {
 
   const handleDelete = async (produto: any) => {
     try {
-      console.log("🔍 Verificando dependências do produto:", produto.nome)
-      
-      // Verificar dependências primeiro
       const dependencias = await verificarDependenciasProduto(produto.id)
       
       if (dependencias.temDependencias) {
-        // Mostrar modal com dependências
         setDependenciasProduto(dependencias)
         setProdutoParaExcluir(produto)
         setIsDeleteModalOpen(true)
         return
       }
 
-      // Se não há dependências, excluir diretamente
       await deleteProduto(produto.id)
       toast({ title: "Produto excluído com sucesso!" })
     } catch (error: any) {
-      console.error("❌ Erro ao excluir produto:", error)
+      console.error("Erro ao excluir produto:", error)
       toast({
         title: "Erro",
         description: error.message || "Erro ao excluir produto",
@@ -203,7 +194,7 @@ export default function Produtos() {
       setProdutoParaExcluir(null)
       setDependenciasProduto(null)
     } catch (error: any) {
-      console.error("❌ Erro ao excluir produto:", error)
+      console.error("Erro ao excluir produto:", error)
       toast({
         title: "Erro",
         description: error.message || "Erro ao excluir produto",
@@ -222,7 +213,7 @@ export default function Produtos() {
       setProdutoParaExcluir(null)
       setDependenciasProduto(null)
     } catch (error: any) {
-      console.error("❌ Erro ao desativar produto:", error)
+      console.error("Erro ao desativar produto:", error)
       toast({
         title: "Erro",
         description: error.message || "Erro ao desativar produto",
@@ -262,13 +253,11 @@ export default function Produtos() {
     return colors[categoria as keyof typeof colors] || "bg-muted/50 text-muted-foreground"
   }
 
-  // Função para arredondar preço para terminar com ,90
   const arredondarPara90 = (preco: number): number => {
     const precoInteiro = Math.floor(preco)
     return precoInteiro + 0.90
   }
 
-  // Função para calcular preço sugerido baseado no markup
   const calcularPrecoSugerido = (precoCusto: number, categoria: string, canal: string): number => {
     if (!precoCusto || precoCusto <= 0) return 0
 
@@ -279,7 +268,6 @@ export default function Produtos() {
     return arredondarPara90(precoSugerido)
   }
 
-  // Mapeamento de categorias dos produtos para configurações de markup
   const mapearCategoria = (categoriaProduto: string): string => {
     const mapeamento: { [key: string]: string } = {
       'ACOMPANHAMENTOS': 'ACOMPANHAMENTOS',
@@ -296,7 +284,6 @@ export default function Produtos() {
       'SALADAS': 'SALADAS',
       'SOBREMESAS': 'SOBREMESAS',
       'ZAPBOX (COMBINADOS INDIVIDUÁIS)': 'ZAPBOX (COMBINADOS INDIVIDUÁIS)',
-      // Mapeamentos legados para compatibilidade
       'Bebida': 'BEBIDAS REFRIGERANTES',
       'Bebidas': 'BEBIDAS REFRIGERANTES', 
       'BEBIDAS': 'BEBIDAS REFRIGERANTES',
@@ -309,33 +296,26 @@ export default function Produtos() {
       'ALIMENTOS': 'LANCHES'
     }
     
-    return mapeamento[categoriaProduto] || 'LANCHES' // Default para LANCHES
+    return mapeamento[categoriaProduto] || 'LANCHES'
   }
 
-  // Função simplificada para calcular markup diretamente
   const calcularMarkupSimples = (categoria: string, canal: string): number => {
-    
-    // Verificar se categoria está vazia ou nula
     if (!categoria || categoria.trim() === '') {
       return 0
     }
     
-    // Mapear categoria do produto para configuração
     const categoriaMapeada = mapearCategoria(categoria)
     
-    // Buscar configuração da categoria
     const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
     if (!configCategoria) {
       return 0
     }
 
-    // Buscar canal de venda
     const canalVenda = canaisVenda.find(c => c.nome === canal)
     if (!canalVenda) {
       return 0
     }
 
-    // Calcular custos totais (simplificado)
     const custosTotais = 
       (configGeral?.impostos_faturamento || 0) +
       (configGeral?.taxa_cartao || 0) +
@@ -344,23 +324,19 @@ export default function Produtos() {
       canalVenda.taxa_marketplace +
       canalVenda.taxa_antecipacao
 
-
-    // Verificar se custos excedem 100%
     if (custosTotais >= 100) {
       return 0
     }
 
-    // Fórmula do markup: M = (1 + L + R) / (1 - T)
     const markup = (1 + (configCategoria.lucro_desejado / 100) + (configCategoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
 
-    return Math.round(markup * 100) / 100 // Arredondar para 2 casas decimais
+    return Math.round(markup * 100) / 100
   }
 
 
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Sincronização automática de fichas existentes ao carregar
   useEffect(() => {
     if (fichas.length > 0 && produtos.length >= 0 && !loading) {
       sincronizarFichasNaoSincronizadas()
@@ -392,7 +368,6 @@ export default function Produtos() {
   }
 
 
-  // Sincronização automática de fichas não sincronizadas
   const sincronizarFichasNaoSincronizadas = async () => {
     if (!fichas || !produtos) return
 
@@ -415,7 +390,6 @@ export default function Produtos() {
 
       if (sincronizadas > 0) {
         await refresh()
-        console.log(`✅ ${sincronizadas} fichas sincronizadas automaticamente`)
       }
     } catch (error) {
       console.error('Erro na sincronização automática:', error)
@@ -457,7 +431,6 @@ export default function Produtos() {
   return (
     <Layout currentPage="produtos">
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -626,7 +599,6 @@ export default function Produtos() {
           </Button>
         </div>
 
-        {/* Filters */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4">
@@ -654,7 +626,6 @@ export default function Produtos() {
           </CardContent>
         </Card>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -733,7 +704,6 @@ export default function Produtos() {
                    </Card>
         </div>
 
-        {/* Products Table */}
         <Card>
           <CardHeader>
             <CardTitle>Catálogo de Produtos ({filteredProdutos.length})</CardTitle>
@@ -871,7 +841,6 @@ export default function Produtos() {
           </CardContent>
         </Card>
 
-        {/* Modal de Nova Categoria */}
         <Dialog open={isModalCategoriaOpen} onOpenChange={setIsModalCategoriaOpen}>
           <DialogContent>
             <DialogHeader>
@@ -898,7 +867,6 @@ export default function Produtos() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Confirmação de Exclusão */}
         <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>

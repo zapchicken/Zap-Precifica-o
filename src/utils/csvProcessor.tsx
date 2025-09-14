@@ -1,7 +1,6 @@
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 
-// Função auxiliar para ler arquivos
 const lerArquivo = (file: File): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -37,7 +36,6 @@ const lerArquivo = (file: File): Promise<any[]> => {
   });
 };
 
-// Processador de CSV/XLSX para produtos
 export const processarProdutos = async (file: File) => {
   const dados = await lerArquivo(file);
   const produtosProcessados = [];
@@ -70,7 +68,6 @@ export const processarProdutos = async (file: File) => {
   return { dados: produtosProcessados, erros };
 };
 
-// Processador de CSV/XLSX para insumos
 export const processarInsumos = async (file: File) => {
   const dados = await lerArquivo(file);
   const insumosProcessados = [];
@@ -110,7 +107,6 @@ export const processarInsumos = async (file: File) => {
   return { dados: insumosProcessados, erros };
 };
 
-// Processador de CSV/XLSX para vendas
 export const processarVendas = async (file: File) => {
   const dados = await lerArquivo(file);
   const vendasProcessadas = [];
@@ -146,9 +142,7 @@ export const processarVendas = async (file: File) => {
   return { dados: vendasProcessadas, erros };
 };
 
-// Função mock para salvar dados (substitui a função do Supabase)
 export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas', dados: any[]) => {
-  // Simular delay de salvamento
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   console.log(`Simulando salvamento de ${dados.length} itens na tabela ${tabela}:`, dados);
