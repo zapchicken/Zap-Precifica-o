@@ -74,7 +74,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const fornecedoresUnicos = Array.from(
     new Set(
       insumosParaCompra
-        .map(insumo => insumo.fornecedor_id)
+        .map(insumo => insumo.fornecedor)
         .filter(Boolean)
     )
   ).sort()
@@ -82,7 +82,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   // Aplicar filtros de depósito e fornecedor
   const insumosFiltrados = insumosParaCompra.filter(insumo => {
     const passaFiltroDeposito = filtroDeposito === "todos" || insumo.deposito === filtroDeposito
-    const passaFiltroFornecedor = filtroFornecedor === "todos" || insumo.fornecedor_id === filtroFornecedor
+    const passaFiltroFornecedor = filtroFornecedor === "todos" || insumo.fornecedor === filtroFornecedor
     return passaFiltroDeposito && passaFiltroFornecedor
   })
 
@@ -107,7 +107,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const fornecedoresComItens = fornecedoresUnicos.filter(fornecedor => {
     return insumosFiltrados.some(insumo => {
       const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
-      return insumo.fornecedor_id === fornecedor && quantidade > 0
+      return insumo.fornecedor === fornecedor && quantidade > 0
     })
   })
 
@@ -115,7 +115,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const gerarMensagemWhatsApp = (fornecedor: string) => {
     const insumosDoFornecedor = insumosFiltrados.filter(insumo => {
       const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
-      return insumo.fornecedor_id === fornecedor && quantidade > 0
+      return insumo.fornecedor === fornecedor && quantidade > 0
     })
   
     if (insumosDoFornecedor.length === 0) {
@@ -254,39 +254,44 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
           {/* Filtros e Estatísticas */}
           <div className="flex flex-col gap-4 pb-4 border-b flex-shrink-0">
             {/* Filtros */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <Filter className="h-4 w-4" />
-              <Select value={filtroDeposito} onValueChange={setFiltroDeposito}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Depósito" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos Depósitos</SelectItem>
-                  {depositosUnicos.map(deposito => (
-                    <SelectItem key={deposito} value={deposito}>
-                      {deposito}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={filtroFornecedor} onValueChange={setFiltroFornecedor}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Fornecedor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos Fornecedores</SelectItem>
-                  {fornecedoresUnicos.map(fornecedor => (
-                    <SelectItem key={fornecedor} value={fornecedor}>
-                      {fornecedor}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="text-sm font-medium">Filtros:</span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Select value={filtroDeposito} onValueChange={setFiltroDeposito}>
+                  <SelectTrigger className="w-full sm:w-[140px] min-h-[48px]">
+                    <SelectValue placeholder="Depósito" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos Depósitos</SelectItem>
+                    {depositosUnicos.map(deposito => (
+                      <SelectItem key={deposito} value={deposito}>
+                        {deposito}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={filtroFornecedor} onValueChange={setFiltroFornecedor}>
+                  <SelectTrigger className="w-full sm:w-[160px] min-h-[48px]">
+                    <SelectValue placeholder="Fornecedor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos Fornecedores</SelectItem>
+                    {fornecedoresUnicos.map(fornecedor => (
+                      <SelectItem key={fornecedor} value={fornecedor}>
+                        {fornecedor}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Estatísticas */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <Card className="p-3">
                 <div className="flex items-center gap-2">
                   <Package className="h-4 w-4 text-blue-600" />
@@ -333,6 +338,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
               <Button 
                 variant="outline" 
                 size="sm" 
+                className="min-h-[48px]"
                 onClick={marcarTodosComoVerificados}
                 disabled={insumosFiltrados.length === 0}
               >
@@ -342,6 +348,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
               <Button 
                 variant="outline" 
                 size="sm" 
+                className="min-h-[48px]"
                 onClick={desmarcarTodos}
                 disabled={insumosVerificados.size === 0}
               >
@@ -351,6 +358,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
               <Button 
                 variant="outline" 
                 size="sm" 
+                className="min-h-[48px]"
                 onClick={limparQuantidades}
                 disabled={Object.keys(quantidades).length === 0}
               >
@@ -373,117 +381,225 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[50px]">✓</TableHead>
-                      <TableHead className="min-w-[200px]">Insumo</TableHead>
-                      <TableHead className="w-[80px]">Depósito</TableHead>
-                      <TableHead className="w-[130px]">Fornecedor</TableHead>
-                      <TableHead className="w-[80px]">Preço Unit.</TableHead>
-                      <TableHead className="w-[80px]">Qtd. Mín.</TableHead>
-                      <TableHead className="w-[120px]">Quantidade</TableHead>
-                      <TableHead className="w-[100px]">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {insumosFiltrados.map((insumo: InsumoComFornecedor) => {
-                      const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
-                      const verificado = insumosVerificados.has(insumo.id)
-                      const valorTotal = quantidade * insumo.preco_por_unidade * insumo.quantidade_minima_compra
-                      
-                      return (
-                        <TableRow key={insumo.id} className={verificado ? 'bg-green-50' : ''}>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleVerificado(insumo.id)}
-                              className="h-6 w-6 p-0"
-                            >
-                              {verificado ? (
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <Circle className="h-4 w-4 text-muted-foreground" />
-                              )}
-                            </Button>
-                          </TableCell>
-                          <TableCell className={`font-medium ${verificado ? 'text-green-800' : ''}`}>
-                            <div className="max-w-[230px]">
-                              <p className="truncate" title={insumo.nome}>
-                                {insumo.nome}
-                              </p>
-                              {insumo.codigo_insumo && (
-                                <p className="text-xs text-muted-foreground">
-                                  {insumo.codigo_insumo}
+              <>
+                {/* Desktop Table */}
+                <div className="hidden lg:block overflow-x-auto border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50px]">✓</TableHead>
+                        <TableHead className="min-w-[200px]">Insumo</TableHead>
+                        <TableHead className="w-[80px]">Depósito</TableHead>
+                        <TableHead className="w-[130px]">Fornecedor</TableHead>
+                        <TableHead className="w-[80px]">Preço Unit.</TableHead>
+                        <TableHead className="w-[80px]">Qtd. Mín.</TableHead>
+                        <TableHead className="w-[120px]">Quantidade</TableHead>
+                        <TableHead className="w-[100px]">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {insumosFiltrados.map((insumo: InsumoComFornecedor) => {
+                        const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
+                        const verificado = insumosVerificados.has(insumo.id)
+                        const valorTotal = quantidade * insumo.preco_por_unidade * insumo.quantidade_minima_compra
+                        
+                        return (
+                          <TableRow key={insumo.id} className={verificado ? 'bg-green-50' : ''}>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleVerificado(insumo.id)}
+                                className="h-6 w-6 p-0"
+                              >
+                                {verificado ? (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Circle className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </Button>
+                            </TableCell>
+                            <TableCell className={`font-medium ${verificado ? 'text-green-800' : ''}`}>
+                              <div className="max-w-[230px]">
+                                <p className="truncate" title={insumo.nome}>
+                                  {insumo.nome}
                                 </p>
-                              )}
+                                {insumo.codigo_insumo && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {insumo.codigo_insumo}
+                                  </p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="max-w-[80px]">
+                                <p className="truncate" title={insumo.deposito || 'N/A'}>
+                                  {insumo.deposito || 'N/A'}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="max-w-[130px]">
+                                <p className="truncate" title={insumo.fornecedor || 'N/A'}>
+                                  {insumo.fornecedor || 'N/A'}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              R$ {insumo.preco_por_unidade.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {insumo.quantidade_minima_compra}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => decrementarQuantidade(insumo.id)}
+                                  className="h-6 w-6 p-0"
+                                  disabled={quantidade <= 0}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  value={quantidade}
+                                  onChange={(e) => {
+                                    const valor = Math.max(0, parseInt(e.target.value) || 0)
+                                    setQuantidades(prev => ({
+                                      ...prev,
+                                      [insumo.id]: valor
+                                    }))
+                                  }}
+                                  className="w-16 h-6 text-center text-xs"
+                                  min="0"
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => incrementarQuantidade(insumo.id)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm font-medium">
+                              R$ {valorTotal.toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="lg:hidden space-y-3">
+                  {insumosFiltrados.map((insumo: InsumoComFornecedor) => {
+                    const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
+                    const verificado = insumosVerificados.has(insumo.id)
+                    const valorTotal = quantidade * insumo.preco_por_unidade * insumo.quantidade_minima_compra
+                    
+                    return (
+                      <Card key={insumo.id} className={`p-4 ${verificado ? 'bg-green-50 border-green-200' : ''}`}>
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleVerificado(insumo.id)}
+                                  className="h-8 w-8 p-0 min-h-[48px] min-w-[48px]"
+                                >
+                                  {verificado ? (
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                  ) : (
+                                    <Circle className="h-5 w-5 text-muted-foreground" />
+                                  )}
+                                </Button>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className={`font-medium text-lg truncate ${verificado ? 'text-green-800' : ''}`}>
+                                    {insumo.nome}
+                                  </h3>
+                                  {insumo.codigo_insumo && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {insumo.codigo_insumo}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-[80px]">
-                              <p className="truncate" title={insumo.deposito || 'N/A'}>
-                                {insumo.deposito || 'N/A'}
-                              </p>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Depósito:</span>
+                              <p className="font-medium">{insumo.deposito || 'N/A'}</p>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-[130px]">
-                              <p className="truncate" title={insumo.fornecedor_id || 'N/A'}>
-                                {insumo.fornecedor_id || 'N/A'}
-                              </p>
+                            <div>
+                              <span className="text-muted-foreground">Fornecedor:</span>
+                              <p className="font-medium">{insumo.fornecedor || 'N/A'}</p>
                             </div>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            R$ {insumo.preco_por_unidade.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {insumo.quantidade_minima_compra}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => decrementarQuantidade(insumo.id)}
-                                className="h-6 w-6 p-0"
-                                disabled={quantidade <= 0}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <Input
-                                type="number"
-                                value={quantidade}
-                                onChange={(e) => {
-                                  const valor = Math.max(0, parseInt(e.target.value) || 0)
-                                  setQuantidades(prev => ({
-                                    ...prev,
-                                    [insumo.id]: valor
-                                  }))
-                                }}
-                                className="w-16 h-6 text-center text-xs"
-                                min="0"
-                              />
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => incrementarQuantidade(insumo.id)}
-                                className="h-6 w-6 p-0"
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
+                            <div>
+                              <span className="text-muted-foreground">Preço Unit.:</span>
+                              <p className="font-medium">R$ {insumo.preco_por_unidade.toFixed(2)}</p>
                             </div>
-                          </TableCell>
-                          <TableCell className="text-sm font-medium">
-                            R$ {valorTotal.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                            <div>
+                              <span className="text-muted-foreground">Qtd. Mín.:</span>
+                              <p className="font-medium">{insumo.quantidade_minima_compra}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Quantidade:</span>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => decrementarQuantidade(insumo.id)}
+                                  className="h-8 w-8 p-0 min-h-[48px] min-w-[48px]"
+                                  disabled={quantidade <= 0}
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  value={quantidade}
+                                  onChange={(e) => {
+                                    const valor = Math.max(0, parseInt(e.target.value) || 0)
+                                    setQuantidades(prev => ({
+                                      ...prev,
+                                      [insumo.id]: valor
+                                    }))
+                                  }}
+                                  className="w-20 h-8 text-center text-sm min-h-[48px]"
+                                  min="0"
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => incrementarQuantidade(insumo.id)}
+                                  className="h-8 w-8 p-0 min-h-[48px] min-w-[48px]"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm text-muted-foreground">Total:</span>
+                              <p className="text-lg font-bold text-primary">R$ {valorTotal.toFixed(2)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    )
+                  })}
+                </div>
+              </>
             )}
           </div>
 
@@ -494,15 +610,15 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                 <MessageCircle className="h-4 w-4" />
                 Enviar por WhatsApp
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-32 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-32 overflow-y-auto">
                 {fornecedoresComItens.map(fornecedor => {
                   const itensCount = insumosFiltrados.filter(insumo => {
                     const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
-                    return insumo.fornecedor_id === fornecedor && quantidade > 0
+                    return insumo.fornecedor === fornecedor && quantidade > 0
                   }).length
                   
                   const valorFornecedor = insumosFiltrados
-                    .filter(insumo => insumo.fornecedor_id === fornecedor)
+                    .filter(insumo => insumo.fornecedor === fornecedor)
                     .reduce((total, insumo) => {
                       const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
                       if (quantidade > 0) {
@@ -524,7 +640,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                       <Button
                         size="sm"
                         onClick={() => gerarMensagemWhatsApp(fornecedor)}
-                        className="h-8 px-2 text-xs"
+                        className="h-8 px-2 text-xs min-h-[48px]"
                       >
                         <Send className="h-3 w-3 mr-1" />
                         Enviar

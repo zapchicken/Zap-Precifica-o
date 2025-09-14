@@ -32,7 +32,7 @@ export const useInsumos = () => {
 
       const insumosForUI = data?.map(item => ({
         ...item,
-        fornecedor: item.fornecedor_id, // ← converte o campo do banco para o nome da UI
+        fornecedor: item.fornecedores?.razao_social || null, // ← converte o campo do banco para o nome da UI
       }));
 
       setInsumos(insumosForUI || [])
