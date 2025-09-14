@@ -545,21 +545,21 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div className="flex flex-wrap gap-3 text-xs">
                             <div>
-                              <span className="text-muted-foreground">Depósito:</span>
+                              <span className="text-muted-foreground">Dep:</span>
                               <p className="font-medium">{insumo.deposito || 'N/A'}</p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Fornecedor:</span>
+                              <span className="text-muted-foreground">Fornec:</span>
                               <p className="font-medium">{(insumo as any).fornecedor || 'N/A'}</p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Preço Unit.:</span>
+                              <span className="text-muted-foreground">Preço:</span>
                               <p className="font-medium">R$ {insumo.preco_por_unidade.toFixed(2)}</p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Qtd. Mín.:</span>
+                              <span className="text-muted-foreground">Qtd. Mín:</span>
                               <p className="font-medium">{insumo.quantidade_minima_compra}</p>
                             </div>
                           </div>
