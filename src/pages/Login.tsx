@@ -31,7 +31,7 @@ export default function Login() {
 
       if (data.user) {
         toast({ title: 'Sucesso', description: 'Login realizado!' })
-        navigate('/fichas')
+        navigate('/')
       } else if (data.session) {
         toast({ title: 'Verifique seu e-mail', description: 'Enviamos um link de confirmação.' })
       }
