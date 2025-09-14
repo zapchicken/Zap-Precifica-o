@@ -36,9 +36,7 @@ import { useCategorias } from '../hooks/useCategorias'
 import { useProdutos } from '../hooks/useProdutos'
 import { useFichas } from '../hooks/useFichas'
 import { useMarkup } from '../hooks/useMarkup'
-
-
-
+import ImportarPrecos from '@/components/ImportarPrecos'
 
 
 export default function Produtos() {
@@ -335,8 +333,6 @@ export default function Produtos() {
 
 
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
   useEffect(() => {
     if (fichas.length > 0 && produtos.length >= 0 && !loading) {
       sincronizarFichasNaoSincronizadas()
@@ -351,22 +347,6 @@ export default function Produtos() {
     
     fetchUser();
   }, [])
-
-  const handleImportFile = async (file: File) => {
-    toast({ 
-      title: "Funcionalidade temporariamente desabilitada", 
-      description: "A importação será implementada em breve.",
-      variant: "destructive" 
-    })
-  }
-
-  const onFileChange = async (e: any) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    await handleImportFile(file)
-    e.currentTarget.value = ''
-  }
-
 
   const sincronizarFichasNaoSincronizadas = async () => {
     if (!fichas || !produtos) return
@@ -592,11 +572,17 @@ export default function Produtos() {
               </div>
             </DialogContent>
           </Dialog>
-          <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={onFileChange} className="hidden" />
-          <Button variant="accent" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="h-4 w-4" />
-            Importar Excel
-          </Button>
+          <ImportarPrecos 
+            produtos={produtos} 
+            onImportSuccess={() => {
+              refresh()
+              toast({
+                title: "Sucesso!",
+                description: "Preços importados com sucesso! A lista foi atualizada.",
+                variant: "default"
+              })
+            }} 
+          />
         </div>
 
         <Card>
