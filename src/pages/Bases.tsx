@@ -864,7 +864,7 @@ export default function Bases() {
           </div>
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 mt-20 md:mt-0">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 mb-6 mt-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Bases</CardTitle>
@@ -873,36 +873,6 @@ export default function Bases() {
             <CardContent>
               <div className="text-xl md:text-2xl font-bold">{bases.length}</div>
               <p className="text-xs text-muted-foreground">Bases e produtos intermediários cadastrados</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Custo Médio</CardTitle>
-              <Calculator className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-lg md:text-2xl font-bold">
-                R${' '}
-                {bases.length > 0
-                  ? (bases.reduce((acc, base) => acc + (base.custo_total_batelada || 0), 0) / bases.length).toFixed(2)
-                  : '0.00'}
-              </div>
-              <p className="text-xs text-muted-foreground">Custo médio por batelada</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tempo Médio</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl md:text-2xl font-bold">
-                {bases.length > 0
-                  ? Math.round(bases.reduce((acc, base) => acc + base.tempo_preparo, 0) / bases.length)
-                  : 0}{' '}
-                min
-              </div>
-              <p className="text-xs text-muted-foreground">Tempo médio de preparo</p>
             </CardContent>
           </Card>
         </div>
@@ -1005,27 +975,27 @@ export default function Bases() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Rendimento:</span>
+                    <div className="flex flex-wrap gap-4 text-xs">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-muted-foreground block">Rend.</span>
                         <p className="font-medium">{base.rendimento || 'N/A'}</p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Custo por Unidade:</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-muted-foreground block">Custo por Und.</span>
                         <p className="font-medium">
                           R$ {base.quantidade_total && base.custo_total_batelada
                             ? (base.custo_total_batelada / base.quantidade_total).toFixed(2)
                             : '0.00'}
                         </p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Custo Total:</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-muted-foreground block">Custo Total</span>
                         <p className="font-medium">R$ {base.custo_total_batelada?.toFixed(2) || '0.00'}</p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Foto:</span>
-                        <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-                          <ImageIcon className="h-4 w-4 text-gray-400" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-muted-foreground block">Foto</span>
+                        <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                          <ImageIcon className="h-3 w-3 text-gray-400" />
                         </div>
                       </div>
                     </div>
