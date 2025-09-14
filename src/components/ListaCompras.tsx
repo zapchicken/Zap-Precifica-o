@@ -166,10 +166,20 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   }
 
   const incrementarQuantidade = (insumoId: string) => {
-    setQuantidades(prev => ({
-      ...prev,
-      [insumoId]: (prev[insumoId] || 0) + 1
-    }))
+    setQuantidades(prev => {
+      const novaQuantidade = (prev[insumoId] || 0) + 1
+      return {
+        ...prev,
+        [insumoId]: novaQuantidade
+      }
+    })
+    
+    // Marcar como verificado automaticamente se quantidade > 0
+    setInsumosVerificados(prev => {
+      const newSet = new Set(prev)
+      newSet.add(insumoId)
+      return newSet
+    })
   }
 
   const decrementarQuantidade = (insumoId: string) => {
@@ -179,6 +189,16 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
         ...prev,
         [insumoId]: novaQuantidade
       }
+    })
+    
+    // Desmarcar como verificado se quantidade = 0
+    setInsumosVerificados(prev => {
+      const newSet = new Set(prev)
+      const quantidadeAtual = quantidades[insumoId] || 0
+      if (quantidadeAtual <= 1) { // Se vai ficar 0 após decrementar
+        newSet.delete(insumoId)
+      }
+      return newSet
     })
   }
 
@@ -487,6 +507,17 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                                       ...prev,
                                       [insumo.id]: valor
                                     }))
+                                    
+                                    // Marcar/desmarcar como verificado baseado na quantidade
+                                    setInsumosVerificados(prev => {
+                                      const newSet = new Set(prev)
+                                      if (valor > 0) {
+                                        newSet.add(insumo.id)
+                                      } else {
+                                        newSet.delete(insumo.id)
+                                      }
+                                      return newSet
+                                    })
                                   }}
                                   className="w-16 h-6 text-center text-xs"
                                   min="0"
@@ -586,6 +617,17 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                                       ...prev,
                                       [insumo.id]: valor
                                     }))
+                                    
+                                    // Marcar/desmarcar como verificado baseado na quantidade
+                                    setInsumosVerificados(prev => {
+                                      const newSet = new Set(prev)
+                                      if (valor > 0) {
+                                        newSet.add(insumo.id)
+                                      } else {
+                                        newSet.delete(insumo.id)
+                                      }
+                                      return newSet
+                                    })
                                   }}
                                   className="w-20 h-8 text-center text-sm min-h-[48px]"
                                   min="0"
@@ -614,7 +656,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
             )}
           </div>
 
-          {/* Resumo por Fornecedor e WhatsApp */}
+          {/* Resumo por Fornecedor e WhatsApp - Sempre no final */}
           {fornecedoresComItens.length > 0 && (
             <div className="border-t pt-4 mt-4 flex-shrink-0">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
