@@ -55,6 +55,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const [filtroFornecedor, setFiltroFornecedor] = useState<string>("todos")
   const [insumosVerificados, setInsumosVerificados] = useState<Set<string>>(new Set())
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [botoesEnviados, setBotoesEnviados] = useState<Set<string>>(new Set())
   
   // Filtrar apenas insumos ativos
   const insumosParaCompra = insumos.filter(insumo => 
@@ -153,6 +154,9 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
     const urlWhatsApp = `https://wa.me/?text=${mensagemCodificada}`
     
     window.open(urlWhatsApp, '_blank')
+    
+    // Marcar botão como enviado
+    setBotoesEnviados(prev => new Set(prev).add(fornecedor))
     
     toast({
       title: "WhatsApp aberto",
@@ -349,35 +353,32 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
             </div>
 
             {/* Ações */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="min-h-[48px]"
                 onClick={marcarTodosComoVerificados}
-                disabled={insumosFiltrados.length === 0}
               >
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Marcar Todos
+                Marcar Tds
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="min-h-[48px]"
                 onClick={desmarcarTodos}
-                disabled={insumosVerificados.size === 0}
               >
                 <Circle className="h-4 w-4 mr-1" />
-                Desmarcar Todos
+                Desmarcar Tds
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="min-h-[48px]"
                 onClick={limparQuantidades}
-                disabled={Object.keys(quantidades).length === 0}
               >
-                Zerar Quantidades
+                Zerar Qtd
               </Button>
             </div>
           </div>
@@ -539,11 +540,6 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                                   <h3 className={`font-medium text-lg whitespace-normal ${verificado ? 'text-green-800' : ''}`}>
                                     {insumo.nome}
                                   </h3>
-                                  {insumo.codigo_insumo && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {insumo.codigo_insumo}
-                                    </p>
-                                  )}
                                 </div>
                               </div>
                             </div>
@@ -655,7 +651,11 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                       <Button
                         size="sm"
                         onClick={() => gerarMensagemWhatsApp(fornecedor)}
-                        className="h-8 px-2 text-xs min-h-[48px]"
+                        className={`h-8 px-2 text-xs min-h-[48px] ${
+                          botoesEnviados.has(fornecedor) 
+                            ? 'bg-green-600 hover:bg-green-700 text-white' 
+                            : ''
+                        }`}
                       >
                         <Send className="h-3 w-3 mr-1" />
                         Enviar
