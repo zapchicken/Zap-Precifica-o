@@ -78,6 +78,7 @@ export default function DespesasFixas() {
   const [despesaEditando, setDespesaEditando] = useState<DespesaFixa | null>(null)
   const [categoriaEditando, setCategoriaEditando] = useState<{ key: string; categoria: Categoria } | null>(null)
   const { toast } = useToast()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   // Formulário para categoria
   const [formularioCategoria, setFormularioCategoria] = useState({
@@ -400,6 +401,14 @@ export default function DespesasFixas() {
             </p>
           </div>
           
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-full shadow-lg"
+          >
+            📋 Filtrar
+          </button>
+          
           <div className="flex gap-2">
             <Dialog open={dialogCategoriasAberto} onOpenChange={setDialogCategoriasAberto}>
               <DialogTrigger asChild>
@@ -676,39 +685,39 @@ export default function DespesasFixas() {
         </div>
 
         {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mt-20 md:mt-0">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Mensal</p>
-                  <p className="text-2xl font-bold text-primary">R$ {totalMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-lg md:text-2xl font-bold text-primary">R$ {totalMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                 </div>
-                <DollarSign className="h-8 w-8 text-primary" />
+                <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Despesas Ativas</p>
-                  <p className="text-2xl font-bold text-success">{getDespesasByStatus('ativa').length}</p>
+                  <p className="text-lg md:text-2xl font-bold text-success">{getDespesasByStatus('ativa').length}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-success" />
+                <TrendingUp className="h-6 w-6 md:h-8 md:w-8 text-success" />
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Despesas Inativas</p>
-                  <p className="text-2xl font-bold text-muted-foreground">{getDespesasByStatus('inativa').length}</p>
+                  <p className="text-lg md:text-2xl font-bold text-muted-foreground">{getDespesasByStatus('inativa').length}</p>
                 </div>
-                <TrendingDown className="h-8 w-8 text-muted-foreground" />
+                <TrendingDown className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
@@ -717,7 +726,12 @@ export default function DespesasFixas() {
         {/* Filtros */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div
+              className={`${
+                isMenuOpen ? 'block' : 'hidden'
+              } md:block absolute top-16 left-4 right-4 bg-white p-4 rounded-lg shadow-xl z-40 md:static md:shadow-none`}
+            >
+              <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -742,6 +756,7 @@ export default function DespesasFixas() {
                   ))}
                 </SelectContent>
               </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -768,8 +783,8 @@ export default function DespesasFixas() {
                 
                 return (
                   <Card key={despesa.id} className={despesa.status !== 'ativa' ? "opacity-60" : ""}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                         <div className="flex items-start gap-4 flex-1">
                           <div className={`p-2 rounded-lg bg-primary/10 ${categoriaInfo.color}`}>
                             <IconeCategoria className="h-5 w-5" />
@@ -797,7 +812,7 @@ export default function DespesasFixas() {
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                           <div className="flex items-center space-x-2">
                             <Switch 
                               checked={despesa.status === 'ativa'} 
@@ -807,19 +822,21 @@ export default function DespesasFixas() {
                               {despesa.status === 'ativa' ? 'Ativa' : 'Inativa'}
                             </span>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => abrirEdicao(despesa)}
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="min-h-[48px] min-w-[48px]"
+                              onClick={() => abrirEdicao(despesa)}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="min-h-[48px] min-w-[48px]">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>

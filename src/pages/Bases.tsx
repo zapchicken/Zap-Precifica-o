@@ -92,6 +92,7 @@ export default function Bases() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [viewingBase, setViewingBase] = useState<BaseComInsumos | null>(null)
   const { toast } = useToast()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -108,13 +109,11 @@ export default function Bases() {
     foto: ''
   })
 
-  // ✅ Declaração única de insumosSelecionados
-  // Linha 107-111 - Adicionar campo 'unidade'
   const [insumosSelecionados, setInsumosSelecionados] = useState<Array<{
-    id: string | number // ✅ Aceitar string vazia ou number
+    id: string | number
     nome: string
     quantidade: number
-    unidade: string  // ✅ Campo obrigatório
+    unidade: string
     custo: number
   }>>([])  
 
@@ -159,7 +158,6 @@ export default function Bases() {
             })
           }
         } catch (error: any) {
-          console.error('Erro no upload:', error)
           toast({
             title: "Erro no upload",
             description: `Erro ao enviar ${file.name}: ${error.message}`,
@@ -185,10 +183,10 @@ export default function Bases() {
       try {
         const result = await deleteImageFromStorage(formData.foto)
         if (!result.success) {
-          console.warn('Erro ao remover imagem do Storage:', result.error)
+          // Erro ao remover imagem do Storage
         }
       } catch (error) {
-        console.warn('Erro ao remover imagem do Storage:', error)
+        // Erro ao remover imagem do Storage
       }
     }
     
@@ -240,10 +238,8 @@ export default function Bases() {
   const calcularCustoTotal = () => {
     const custoTotal = insumosSelecionados.reduce((acc, insumo) => {
       const custoItem = insumo.quantidade * insumo.custo
-      console.log(`🔍 ${insumo.nome}: ${insumo.quantidade} × ${insumo.custo} = ${custoItem}`)
       return acc + custoItem
     }, 0)
-    console.log(`💰 Custo Total da Batelada: R$ ${custoTotal.toFixed(2)}`)
     return custoTotal
   }
 
@@ -268,11 +264,6 @@ export default function Bases() {
     }, 0)
   }
 
-  // Remover estas linhas (175-179):
-  // const extrairQuantidadeDoRendimento = (rendimento: string): number => {
-  //   const match = rendimento.match(/\d+([.,]\d+)?/)
-  //   return match ? parseFloat(match[0].replace(',', '.')) : 0
-  // }
 
   // Atualizar automaticamente o custo total da batelada baseado nos insumos
   useEffect(() => {
@@ -296,23 +287,10 @@ export default function Bases() {
     }
   }, [insumosSelecionados, formData.tipo_produto, insumos])
 
-  // Remover este useEffect (193-203):
-  // useEffect(() => {
-  //   if (formData.rendimento) {
-  //     const quantidadeExtraida = extrairQuantidadeDoRendimento(formData.rendimento)
-  //     if (quantidadeExtraida > 0) {
-  //       setFormData(prev => ({
-  //         ...prev,
-  //         quantidade_total: quantidadeExtraida
-  //       }))
-  //     }
-  //   }
-  // }, [formData.rendimento])
 
   const handleSave = async () => {
     const custoTotalCalculado = calcularCustoTotal()
 
-    // Validação corrigida (remover !formData.rendimento)
     if (
       !formData.nome ||
       !formData.codigo ||
@@ -329,12 +307,8 @@ export default function Bases() {
       return
     }
 
-    // Debug: verificar dados antes de salvar
-    console.log('Dados do formulário:', formData)
-    console.log('Insumos selecionados:', insumosSelecionados)
 
     try {
-      // Dados da base (sem insumos)
       const baseData: Omit<BaseInsert, 'insumos'> = {
         nome: formData.nome,
         codigo: formData.codigo,
@@ -349,20 +323,16 @@ export default function Bases() {
         ativo: formData.ativo
       }
       
-      // Dados dos insumos separadamente
       const insumosData = insumosSelecionados.map(insumo => {
         const insumoCompleto = insumos.find(i => i.id === insumo.id)
         return {
           insumo_id: insumo.id,
           quantidade: insumo.quantidade,
           unidade: insumoCompleto?.unidade_medida || '',
-          custo_unitario: insumo.custo // ✅ CORRIGIDO: insumo.custo já é o custo total, não precisa dividir
+          custo_unitario: insumo.custo
         }
       })
 
-      // Debug: verificar dados processados
-      console.log('Base data:', baseData)
-      console.log('Insumos data:', insumosData)
       
       if (editingBase) {
         await updateBase(editingBase.id, baseData, insumosData)
@@ -418,7 +388,7 @@ export default function Bases() {
       setBaseParaExcluir(bases.find(b => b.id === baseId) || null)
       setIsDeleteModalOpen(true)
     } catch (error) {
-      console.error('Erro ao verificar dependências:', error)
+      // Erro ao verificar dependências
     }
   }
 
@@ -441,7 +411,7 @@ export default function Bases() {
       setBaseParaExcluir(null)
       setDependenciasBase(null)
     } catch (error) {
-      console.error('Erro ao excluir base:', error)
+      // Erro ao excluir base
     }
   }
 
@@ -454,16 +424,16 @@ export default function Bases() {
       setBaseParaExcluir(null)
       setDependenciasBase(null)
     } catch (error) {
-      console.error('Erro ao desativar base:', error)
+      // Erro ao desativar base
     }
   }
 
   const handleAddInsumo = () => {
     setInsumosSelecionados(prev => [...prev, { 
-      id: '', // ✅ Usar string vazia para corresponder à opção padrão
+      id: '',
       nome: '', 
       quantidade: 1, 
-      unidade: '', // ✅ Adicionar campo unidade
+      unidade: '',
       custo: 0 
     }])
   }
@@ -477,12 +447,7 @@ export default function Bases() {
     if (field === 'insumo_id') {
       const insumo = insumos.find(i => i.id === value)
       if (insumo) {
-        console.log('🔍 Insumo selecionado:', insumo.nome)
-        console.log('💰 Preço por unidade:', insumo.preco_por_unidade)
-        console.log('📊 Fator de correção:', insumo.fator_correcao)
-        
         const custoCalculado = insumo.preco_por_unidade * (insumo.fator_correcao || 1)
-        console.log('🧮 Custo calculado:', custoCalculado)
         
         updated[index] = {
           ...updated[index],
@@ -522,8 +487,21 @@ export default function Bases() {
             <p className="text-muted-foreground">Gerencie suas receitas de bases e produtos intermediários</p>
           </div>
           
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-full shadow-lg"
+          >
+            📋 Filtrar
+          </button>
+          
           {/* Campo de Busca */}
-          <div className="flex items-center gap-4">
+          <div
+            className={`${
+              isMenuOpen ? 'block' : 'hidden'
+            } md:block absolute top-16 left-4 right-4 bg-white p-4 rounded-lg shadow-xl z-40 md:static md:shadow-none`}
+          >
+            <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
@@ -882,16 +860,17 @@ export default function Bases() {
               </div>
             </div>
             </div>
+          </div>
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 mt-20 md:mt-0">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Bases</CardTitle>
               <Package2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{bases.length}</div>
+              <div className="text-xl md:text-2xl font-bold">{bases.length}</div>
               <p className="text-xs text-muted-foreground">Bases e produtos intermediários cadastrados</p>
             </CardContent>
           </Card>
@@ -901,7 +880,7 @@ export default function Bases() {
               <Calculator className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-lg md:text-2xl font-bold">
                 R${' '}
                 {bases.length > 0
                   ? (bases.reduce((acc, base) => acc + (base.custo_total_batelada || 0), 0) / bases.length).toFixed(2)
@@ -916,7 +895,7 @@ export default function Bases() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-xl md:text-2xl font-bold">
                 {bases.length > 0
                   ? Math.round(bases.reduce((acc, base) => acc + base.tempo_preparo, 0) / bases.length)
                   : 0}{' '}
@@ -934,7 +913,8 @@ export default function Bases() {
             <CardTitle>Bases/Produtos Intermediários Cadastrados</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden lg:block rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -988,6 +968,63 @@ export default function Bases() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-3">
+              {filteredBases.map(base => (
+                <Card key={base.id} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-lg whitespace-normal">{base.nome}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline">{base.codigo}</Badge>
+                          <Badge
+                            variant={base.tipo_produto === 'peso' ? 'default' : 'secondary'}
+                            className={base.tipo_produto === 'peso' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
+                          >
+                            {base.tipo_produto === 'peso' ? 'Por Peso' : 'Por Unidade'}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleEdit(base)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleDelete(base.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Rendimento:</span>
+                        <p className="font-medium">{base.rendimento || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Custo por Unidade:</span>
+                        <p className="font-medium">
+                          R$ {base.quantidade_total && base.custo_total_batelada
+                            ? (base.custo_total_batelada / base.quantidade_total).toFixed(2)
+                            : '0.00'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Custo Total:</span>
+                        <p className="font-medium">R$ {base.custo_total_batelada?.toFixed(2) || '0.00'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Foto:</span>
+                        <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                          <ImageIcon className="h-4 w-4 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           </CardContent>
         </Card>

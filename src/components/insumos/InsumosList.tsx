@@ -211,33 +211,33 @@ export function InsumosList() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{insumosForUI.length}</div>
-            <p className="text-sm text-muted-foreground">Total de Insumos</p>
+          <CardContent className="p-3 md:p-4">
+            <div className="text-xl md:text-2xl font-bold">{insumosForUI.length}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Total de Insumos</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{insumosFiltrados.length}</div>
-            <p className="text-sm text-muted-foreground">Insumos Filtrados</p>
+          <CardContent className="p-3 md:p-4">
+            <div className="text-xl md:text-2xl font-bold">{insumosFiltrados.length}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Insumos Filtrados</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-4">
+            <div className="text-xl md:text-2xl font-bold">
               {insumosForUI.filter(i => i.ativo).length}
             </div>
-            <p className="text-sm text-muted-foreground">Insumos Ativos</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Insumos Ativos</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-4">
+            <div className="text-lg md:text-2xl font-bold">
               R$ {insumosForUI.reduce((total, i) => total + (i.quantidade_comprar * i.preco_por_unidade * i.fator_correcao), 0).toFixed(2)}
             </div>
-            <p className="text-sm text-muted-foreground">Valor Total Compras</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Valor Total Compras</p>
           </CardContent>
         </Card>
       </div>
@@ -416,7 +416,7 @@ export function InsumosList() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                         <div>
                           <span className="text-muted-foreground">Fornecedor:</span>
                           <p className="font-medium">
