@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import { Badge } from '../components/ui/badge'
 import { useToast } from '../hooks/use-toast'
-import { Plus, Search, FileText, Calculator, Clock, Eye, Edit, Trash2, Copy, Camera, X, Filter, RotateCcw } from 'lucide-react'
+import { Plus, Search, FileText, Calculator, Clock, Eye, Edit, Trash2, Copy, Camera, X, Filter, RotateCcw, Package } from 'lucide-react'
 import { InsumoCombobox } from '../components/InsumoCombobox'
 import { ProdutoProntoCombobox } from '../components/ProdutoProntoCombobox'
 import ImportarFichasTecnicas from '../components/ImportarFichasTecnicas'
@@ -45,6 +45,7 @@ export default function FichasTecnicas() {
   const { bases } = useBases()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   
   // Filtros avançados para cada coluna
   const [filtros, setFiltros] = useState({
@@ -176,10 +177,10 @@ export default function FichasTecnicas() {
         modo_preparo: formData.modoPreparo,
         foto: formData.fotos[0] || null,
         ativo: true,
-        insumos: formData.insumos.filter(insumo => insumo.nome && insumo.quantidade),
-        produtosProntos: formData.produtosProntos.filter(produto => produto.fichaId && produto.quantidade),
-        insumosEmbalagemDelivery: formData.insumosEmbalagemDelivery.filter(embalagem => embalagem.nome && embalagem.quantidade)
-      }
+      insumos: formData.insumos.filter(insumo => insumo.nome && insumo.quantidade),
+      produtosProntos: formData.produtosProntos.filter(produto => produto.fichaId && produto.quantidade),
+      insumosEmbalagemDelivery: formData.insumosEmbalagemDelivery.filter(embalagem => embalagem.nome && embalagem.quantidade)
+    }
 
       if (editingFicha) {
         await updateFicha(editingFicha.id, novaFicha)
@@ -577,9 +578,19 @@ export default function FichasTecnicas() {
           </div>
         </div>
 
+        {/* Botão de filtro móvel */}
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-full shadow-lg"
+        >
+          🔍 Filtrar
+        </button>
+
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
+              {/* Busca geral */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -587,23 +598,30 @@ export default function FichasTecnicas() {
                     placeholder="Busca geral (nome ou código)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+                    className="pl-10 min-h-[48px]"
             />
           </div>
-                <Button variant="outline" onClick={limparFiltros} className="flex items-center gap-2">
+                <Button variant="outline" onClick={limparFiltros} className="flex items-center gap-2 min-h-[48px]">
                   <RotateCcw className="h-4 w-4" />
                   Limpar Filtros
                 </Button>
         </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+              {/* Container de filtros com posicionamento responsivo */}
+              <div
+                className={`${
+                  isMenuOpen ? 'block' : 'hidden'
+                } md:block absolute top-16 left-4 right-4 bg-white p-4 rounded-lg shadow-xl z-40 md:static md:shadow-none`}
+              >
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Código PDV</Label>
                   <Input
                     placeholder="Ex: PRD001"
                     value={filtros.codigoPdv}
                     onChange={(e) => setFiltros(prev => ({ ...prev, codigoPdv: e.target.value }))}
-                    className="min-h-[48px]"
+                      className="min-h-[48px]"
                   />
                 </div>
 
@@ -613,13 +631,14 @@ export default function FichasTecnicas() {
                     placeholder="Ex: Combo Família"
                     value={filtros.nomeProduto}
                     onChange={(e) => setFiltros(prev => ({ ...prev, nomeProduto: e.target.value }))}
+                      className="min-h-[48px]"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Categoria</Label>
                   <Select value={filtros.categoria} onValueChange={(value) => setFiltros(prev => ({ ...prev, categoria: value }))}>
-                    <SelectTrigger>
+                      <SelectTrigger className="min-h-[48px]">
                       <SelectValue placeholder="Todas as categorias" />
                     </SelectTrigger>
                     <SelectContent>
@@ -639,6 +658,7 @@ export default function FichasTecnicas() {
                     type="date"
                     value={filtros.dataInicio}
                     onChange={(e) => setFiltros(prev => ({ ...prev, dataInicio: e.target.value }))}
+                      className="min-h-[48px]"
                   />
                 </div>
 
@@ -648,6 +668,7 @@ export default function FichasTecnicas() {
                     type="date"
                     value={filtros.dataFim}
                     onChange={(e) => setFiltros(prev => ({ ...prev, dataFim: e.target.value }))}
+                      className="min-h-[48px]"
                   />
                 </div>
               </div>
@@ -661,6 +682,7 @@ export default function FichasTecnicas() {
                     placeholder="Ex: 10.00"
                     value={filtros.custoMinimo}
                     onChange={(e) => setFiltros(prev => ({ ...prev, custoMinimo: e.target.value }))}
+                      className="min-h-[48px]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -671,13 +693,14 @@ export default function FichasTecnicas() {
                     placeholder="Ex: 50.00"
                     value={filtros.custoMaximo}
                     onChange={(e) => setFiltros(prev => ({ ...prev, custoMaximo: e.target.value }))}
+                      className="min-h-[48px]"
                   />
                 </div>
               </div>
 
               {(filtros.codigoPdv || filtros.nomeProduto || filtros.categoria !== 'all' || 
                 filtros.dataInicio || filtros.dataFim || filtros.custoMinimo || filtros.custoMaximo) && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <Filter className="h-4 w-4" />
                   <span>Filtros ativos:</span>
                   {filtros.codigoPdv && <Badge variant="secondary">Código: {filtros.codigoPdv}</Badge>}
@@ -689,56 +712,57 @@ export default function FichasTecnicas() {
                   {filtros.custoMaximo && <Badge variant="secondary">Custo ≤ R$ {filtros.custoMaximo}</Badge>}
                 </div>
               )}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-20 md:mt-0">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total de Fichas</p>
-                  <p className="text-2xl font-bold">{fichas.length}</p>
+                  <p className="text-xs md:text-sm font-medium text-muted-foreground">Total de Fichas</p>
+                  <p className="text-lg md:text-2xl font-bold">{fichas.length}</p>
                 </div>
-                <FileText className="h-8 w-8 text-primary" />
+                <FileText className="h-6 w-6 md:h-8 md:w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Resultados Filtrados</p>
-                  <p className="text-2xl font-bold">{filteredFichas.length}</p>
+                  <p className="text-xs md:text-sm font-medium text-muted-foreground">Resultados Filtrados</p>
+                  <p className="text-lg md:text-2xl font-bold">{filteredFichas.length}</p>
                 </div>
-                <Filter className="h-8 w-8 text-blue-600" />
+                <Filter className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Custo Médio</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xs md:text-sm font-medium text-muted-foreground">Custo Médio</p>
+                  <p className="text-lg md:text-2xl font-bold">
                     R$ {filteredFichas.length > 0 ? (filteredFichas.reduce((acc, f) => acc + (f.custo_total_producao || 0), 0) / filteredFichas.length).toFixed(2) : '0,00'}
                   </p>
                 </div>
-                <Calculator className="h-8 w-8 text-green-600" />
+                <Calculator className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Tempo Médio</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xs md:text-sm font-medium text-muted-foreground">Tempo Médio</p>
+                  <p className="text-lg md:text-2xl font-bold">
                     {filteredFichas.length > 0 ? Math.round(filteredFichas.reduce((acc, f) => acc + (f.tempo_preparo || 0), 0) / filteredFichas.length) : 0} min
                   </p>
                 </div>
-                <Clock className="h-8 w-8 text-blue-600" />
+                <Clock className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -837,21 +861,21 @@ export default function FichasTecnicas() {
               </Table>
             </div>
 
-            <div className="lg:hidden p-4 space-y-4">
+            <div className="lg:hidden p-4 space-y-3 mt-20 md:mt-0">
               {filteredFichas.map((ficha) => (
                 <Card key={ficha.id} className="p-4">
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-lg truncate">{ficha.nome}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline">{ficha.codigo}</Badge>
+                        <h3 className="font-medium text-lg whitespace-normal">{ficha.nome}</h3>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">{ficha.codigo}</Badge>
                           <Badge variant="secondary" className="text-xs">
                             {ficha.categoria || 'Sem categoria'}
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -938,7 +962,7 @@ export default function FichasTecnicas() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-full">
             <DialogHeader>
               <DialogTitle>{editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}</DialogTitle>
               <DialogDescription>
@@ -1365,7 +1389,7 @@ export default function FichasTecnicas() {
                         />
                       </div>
                         <div className="flex items-center justify-between md:justify-center">
-                          <div className="md:hidden space-y-2">
+                          <div className="md:hidden space-y-1">
                             <div className="text-xs text-muted-foreground">Qtd: {insumo.quantidade} {insumo.unidade}</div>
                             <div className="text-xs text-muted-foreground">Custo: R$ {insumo.custoTotal || '0.00'}</div>
                           </div>
@@ -1373,7 +1397,7 @@ export default function FichasTecnicas() {
                           variant="outline"
                           size="sm"
                           onClick={() => removeInsumo(index)}
-                          className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 min-h-[48px] min-w-[48px]"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -1516,7 +1540,7 @@ export default function FichasTecnicas() {
         </Dialog>
 
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-full">
             <DialogHeader>
               <DialogTitle>Detalhes da Ficha Técnica</DialogTitle>
               <DialogDescription>
@@ -1559,89 +1583,139 @@ export default function FichasTecnicas() {
                   </div>
                 </div>
 
-                {'produtosProntos' in selectedFicha && (selectedFicha as any).produtosProntos && (selectedFicha as any).produtosProntos.length > 0 && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-3">Produtos Prontos (Fichas Existentes)</h3>
-                    <div className="space-y-2">
-                      {(selectedFicha as any).produtosProntos.map((produto: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b">
-                          <div>
-                            <span className="font-medium">{produto.fichas_tecnicas?.nome || 'Produto não encontrado'}</span>
-                            <span className="text-sm text-muted-foreground ml-2">
-                              {produto.quantidade} {produto.unidade} - Código: {produto.fichas_tecnicas?.codigo}
-                            </span>
-                          </div>
-                          <span className="font-medium text-green-600">
-                            R$ {produto.custo_total?.toFixed(2) || '0.00'}
-                          </span>
+                {/* Card consolidado com todos os ingredientes e materiais */}
+                <Card className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-4">Ingredientes e Materiais</h3>
+                  
+                  <div className="space-y-4">
+                    {/* Produtos Prontos */}
+                    {'produtosProntos' in selectedFicha && (selectedFicha as any).produtosProntos && (selectedFicha as any).produtosProntos.length > 0 && (
+                      <div>
+                        <h4 className="text-md font-medium text-blue-600 mb-3 flex items-center">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Produtos Prontos (Fichas Existentes)
+                        </h4>
+                        <div className="space-y-1">
+                          {(selectedFicha as any).produtosProntos.map((produto: any, index: number) => (
+                            <div key={index} className="grid grid-cols-12 gap-4 py-2 px-3 bg-blue-50 rounded border-l-4 border-blue-200 items-center">
+                              <div className="col-span-8">
+                                <span className="font-medium text-base">{produto.fichas_tecnicas?.nome || 'Produto não encontrado'}</span>
+                              </div>
+                              <div className="col-span-2 text-center">
+                                <span className="text-base text-muted-foreground">
+                                  {produto.quantidade} {produto.unidade}
+                                </span>
+                              </div>
+                              <div className="col-span-2 text-right">
+                                <span className="font-medium text-green-600 text-base">
+                                  R$ {produto.custo_total?.toFixed(2) || '0.00'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    )}
 
-                {'insumos' in selectedFicha && (selectedFicha as any).insumos && (selectedFicha as any).insumos.length > 0 && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-3">Insumos</h3>
-                    <div className="space-y-2">
-                      {(selectedFicha as any).insumos.map((insumo: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b">
-                          <div>
-                            <span className="font-medium">{insumo.insumos?.nome || 'Nome não encontrado'}</span>
-                            <span className="text-sm text-muted-foreground ml-2">
-                              {insumo.quantidade} {insumo.unidade}
-                            </span>
-                          </div>
-                          <span className="font-medium text-green-600">
-                            R$ {((insumo.quantidade || 0) * (insumo.custo_unitario || 0)).toFixed(2)}
-                          </span>
+                    {/* Insumos */}
+                    {'insumos' in selectedFicha && (selectedFicha as any).insumos && (selectedFicha as any).insumos.length > 0 && (
+                      <div>
+                        <h4 className="text-md font-medium text-green-600 mb-3 flex items-center">
+                          <Calculator className="h-4 w-4 mr-2" />
+                          Insumos
+                        </h4>
+                        <div className="space-y-1">
+                          {(selectedFicha as any).insumos.map((insumo: any, index: number) => (
+                            <div key={index} className="grid grid-cols-12 gap-4 py-2 px-3 bg-green-50 rounded border-l-4 border-green-200 items-center">
+                              <div className="col-span-8">
+                                <span className="font-medium text-base">{insumo.insumos?.nome || 'Nome não encontrado'}</span>
+                              </div>
+                              <div className="col-span-2 text-center">
+                                <span className="text-base text-muted-foreground">
+                                  {insumo.quantidade} {insumo.unidade}
+                                </span>
+                              </div>
+                              <div className="col-span-2 text-right">
+                                <span className="font-medium text-green-600 text-base">
+                                  R$ {((insumo.quantidade || 0) * (insumo.custo_unitario || 0)).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    )}
 
-                {'bases' in selectedFicha && (selectedFicha as any).bases && (selectedFicha as any).bases.length > 0 && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-3">Bases</h3>
-                    <div className="space-y-2">
-                      {(selectedFicha as any).bases.map((base: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b">
-                          <div>
-                            <span className="font-medium">{base.bases?.nome || `Base ${index + 1}`}</span>
-                            <span className="text-sm text-muted-foreground ml-2">
-                              {base.quantidade} {base.unidade}
-                            </span>
-                          </div>
-                          <span className="font-medium text-green-600">
-                            R$ {base.custo_total?.toFixed(2) || '0.00'}
-                          </span>
+                    {/* Bases */}
+                    {'bases' in selectedFicha && (selectedFicha as any).bases && (selectedFicha as any).bases.length > 0 && (
+                      <div>
+                        <h4 className="text-md font-medium text-purple-600 mb-3 flex items-center">
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Bases
+                        </h4>
+                        <div className="space-y-1">
+                          {(selectedFicha as any).bases.map((base: any, index: number) => (
+                            <div key={index} className="grid grid-cols-12 gap-4 py-2 px-3 bg-purple-50 rounded border-l-4 border-purple-200 items-center">
+                              <div className="col-span-8">
+                                <span className="font-medium text-base">{base.bases?.nome || `Base ${index + 1}`}</span>
+                              </div>
+                              <div className="col-span-2 text-center">
+                                <span className="text-base text-muted-foreground">
+                                  {base.quantidade} {base.unidade}
+                                </span>
+                              </div>
+                              <div className="col-span-2 text-right">
+                                <span className="font-medium text-green-600 text-base">
+                                  R$ {base.custo_total?.toFixed(2) || '0.00'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    )}
 
-                {'embalagem' in selectedFicha && (selectedFicha as any).embalagem && (selectedFicha as any).embalagem.length > 0 && (
-                  <div className="border rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-3">Embalagens</h3>
-                    <div className="space-y-2">
-                      {(selectedFicha as any).embalagem.map((emb: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center py-2 border-b">
-                          <div>
-                            <span className="font-medium">{emb.nome}</span>
-                            <span className="text-sm text-muted-foreground ml-2">
-                              {emb.quantidade} {emb.unidade} - Código: {emb.codigo}
-                            </span>
-                          </div>
-                          <span className="font-medium text-green-600">
-                            R$ {emb.custo_total?.toFixed(2) || '0.00'}
-                          </span>
+                    {/* Embalagens */}
+                    {'embalagem' in selectedFicha && (selectedFicha as any).embalagem && (selectedFicha as any).embalagem.length > 0 && (
+                      <div>
+                        <h4 className="text-md font-medium text-orange-600 mb-3 flex items-center">
+                          <Package className="h-4 w-4 mr-2" />
+                          Embalagens
+                        </h4>
+                        <div className="space-y-1">
+                          {(selectedFicha as any).embalagem.map((emb: any, index: number) => (
+                            <div key={index} className="grid grid-cols-12 gap-4 py-2 px-3 bg-orange-50 rounded border-l-4 border-orange-200 items-center">
+                              <div className="col-span-8">
+                                <span className="font-medium text-base">{emb.nome}</span>
+                              </div>
+                              <div className="col-span-2 text-center">
+                                <span className="text-base text-muted-foreground">
+                                  {emb.quantidade} {emb.unidade}
+                                </span>
+                              </div>
+                              <div className="col-span-2 text-right">
+                                <span className="font-medium text-green-600 text-base">
+                                  R$ {emb.custo_total?.toFixed(2) || '0.00'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Mensagem quando não há ingredientes */}
+                    {(!('produtosProntos' in selectedFicha) || !(selectedFicha as any).produtosProntos?.length) &&
+                     (!('insumos' in selectedFicha) || !(selectedFicha as any).insumos?.length) &&
+                     (!('bases' in selectedFicha) || !(selectedFicha as any).bases?.length) &&
+                     (!('embalagem' in selectedFicha) || !(selectedFicha as any).embalagem?.length) && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Nenhum ingrediente ou material cadastrado</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </Card>
 
                 {selectedFicha.descricao && (
                   <div>
