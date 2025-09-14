@@ -17,6 +17,7 @@ export function InsumosList() {
   const [categoriaFilter, setCategoriaFilter] = useState('todas')
   const [fornecedorFilter, setFornecedorFilter] = useState('todos')
   const [statusFilter, setStatusFilter] = useState('todos')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const insumosForUI = insumos.map(item => ({
     ...item,
@@ -93,6 +94,14 @@ export function InsumosList() {
         <InsumoForm onSuccess={handleRefresh} />
       </div>
 
+      <button
+        type="button"
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-full shadow-lg"
+      >
+        📋 Filtrar
+      </button>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -101,7 +110,12 @@ export function InsumosList() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div
+            className={`${
+              isMenuOpen ? 'block' : 'hidden'
+            } md:block absolute top-16 left-4 right-4 bg-white p-4 rounded-lg shadow-xl z-40 md:static md:shadow-none`}
+          >
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Search className="h-5 w-5 text-blue-600" />
               <h3 className="font-semibold text-blue-800">🔍 Busca Rápida</h3>
@@ -192,6 +206,7 @@ export function InsumosList() {
             >
               Limpar Filtros
             </Button>
+          </div>
           </div>
         </CardContent>
       </Card>
@@ -347,13 +362,13 @@ export function InsumosList() {
                 </Table>
               </div>
 
-              <div className="lg:hidden space-y-4">
+              <div className="lg:hidden space-y-3 mt-20 md:mt-0">
                 {insumosFiltrados.map((insumo) => (
                   <Card key={insumo.id} className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-lg truncate">{insumo.nome}</h3>
+                          <h3 className="font-medium text-lg whitespace-normal">{insumo.nome}</h3>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge 
                               variant={insumo.ativo ? "default" : "secondary"}

@@ -54,6 +54,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const [filtroDeposito, setFiltroDeposito] = useState<string>("todos")
   const [filtroFornecedor, setFiltroFornecedor] = useState<string>("todos")
   const [insumosVerificados, setInsumosVerificados] = useState<Set<string>>(new Set())
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   
   // Filtrar apenas insumos ativos
   const insumosParaCompra = insumos.filter(insumo => 
@@ -251,10 +252,23 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
         </DialogHeader>
         
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-full shadow-lg"
+          >
+            📋 Filtrar
+          </button>
+
           {/* Filtros e Estatísticas */}
           <div className="flex flex-col gap-4 pb-4 border-b flex-shrink-0">
             {/* Filtros */}
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <div
+              className={`${
+                isMenuOpen ? 'block' : 'hidden'
+              } md:block absolute top-16 left-4 right-4 bg-white p-4 rounded-lg shadow-xl z-40 md:static md:shadow-none`}
+            >
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
                 <span className="text-sm font-medium">Filtros:</span>
@@ -287,6 +301,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
               </div>
             </div>
 
@@ -496,7 +511,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                 </div>
 
                 {/* Mobile Cards */}
-                <div className="lg:hidden space-y-3">
+                <div className="lg:hidden space-y-3 mt-20 md:mt-0">
                   {insumosFiltrados.map((insumo: InsumoComFornecedor) => {
                     const quantidade = quantidades[insumo.id] || insumo.quantidade_comprar
                     const verificado = insumosVerificados.has(insumo.id)
@@ -521,7 +536,7 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
                                   )}
                                 </Button>
                                 <div className="flex-1 min-w-0">
-                                  <h3 className={`font-medium text-lg truncate ${verificado ? 'text-green-800' : ''}`}>
+                                  <h3 className={`font-medium text-lg whitespace-normal ${verificado ? 'text-green-800' : ''}`}>
                                     {insumo.nome}
                                   </h3>
                                   {insumo.codigo_insumo && (
