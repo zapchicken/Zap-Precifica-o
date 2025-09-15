@@ -124,14 +124,24 @@ export default function ImportarVendas() {
     setProgresso(0)
 
     try {
+      console.log('🔄 Iniciando importação de vendas...');
+      
       // Processar arquivo de vendas
       const resultado = await processarVendas(arquivo);
+      console.log('📊 Resultado do processamento:', resultado);
       
       if (resultado.dados.length > 0) {
+        console.log(`💾 Salvando ${resultado.dados.length} vendas no Supabase...`);
         const salvamento = await salvarNoSupabase('vendas', resultado.dados);
+        console.log('📋 Resultado do salvamento:', salvamento);
+        
         if (!salvamento.data) {
-          throw new Error(salvamento.error);
+          throw new Error(`Erro ao salvar: ${salvamento.error}`);
         }
+        
+        console.log(`✅ ${salvamento.count} vendas salvas com sucesso!`);
+      } else {
+        console.log('⚠️ Nenhum dado válido para salvar');
       }
       
       setProgresso(100);
@@ -483,7 +493,7 @@ export default function ImportarVendas() {
                   <div>
                     <h4 className="font-semibold mb-2">Colunas Obrigatórias</h4>
                     <ul className="space-y-1 text-sm text-muted-foreground">
-                      <li>• <strong>data</strong> - Data da venda (AAAA-MM-DD)</li>
+                      <li>• <strong>data</strong> - Data da venda (AAAA-MM-DD ou DD/MM/AAAA)</li>
                       <li>• <strong>pedido_numero</strong> - Número do pedido</li>
                       <li>• <strong>produto</strong> - Nome do produto</li>
                       <li>• <strong>quantidade</strong> - Quantidade vendida</li>
