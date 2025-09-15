@@ -1,7 +1,7 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
@@ -48,9 +48,9 @@ export default function ImportarPrecos({ produtos, onImportSuccess }: ImportarPr
   const downloadTemplate = () => {
     const csvContent = [
       'codigo_pdv,preco_venda',
-      '001,15.90',
-      '002,22.50',
-      '003,8.75'
+      '001,15,90',
+      '002,22,50',
+      '003,8,75'
     ].join('\n')
     
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -118,16 +118,21 @@ export default function ImportarPrecos({ produtos, onImportSuccess }: ImportarPr
 
     data.forEach((row, index) => {
       try {
-        const codigoPdv = row.codigo_pdv?.toString().trim()
-        const precoVenda = parseFloat(row.preco_venda)
+        // Aceitar tanto codigo_pdv quanto codigo_pd
+        const codigoPdv = row.codigo_pdv?.toString().trim() || row.codigo_pd?.toString().trim()
+        let precoVendaStr = row.preco_venda?.toString().trim() || ''
+        
+        // Converter vírgula para ponto (formato brasileiro para americano)
+        precoVendaStr = precoVendaStr.replace(',', '.')
+        const precoVenda = parseFloat(precoVendaStr)
 
         if (!codigoPdv) {
-          errors.push(`Linha ${index + 2}: Código PDV é obrigatório`)
+          errors.push(`Linha ${index + 2}: Código PDV é obrigatório. Chaves encontradas: ${Object.keys(row).join(', ')}`)
           return
         }
 
         if (isNaN(precoVenda) || precoVenda <= 0) {
-          errors.push(`Linha ${index + 2}: Preço de venda deve ser um número maior que zero`)
+          errors.push(`Linha ${index + 2}: Preço de venda deve ser um número maior que zero (aceita vírgula ou ponto como separador decimal)`)
           return
         }
 
@@ -233,13 +238,18 @@ export default function ImportarPrecos({ produtos, onImportSuccess }: ImportarPr
             // Processar CSV
             const text = data as string
             const lines = text.split('\n').filter(line => line.trim())
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+            
+            // Detectar separador automaticamente (vírgula ou ponto e vírgula)
+            const firstLine = lines[0]
+            const separator = firstLine.includes(';') ? ';' : ','
+            
+            const headers = firstLine.split(separator).map(h => h.trim().toLowerCase().replace(/\r/g, ''))
             
             jsonData = lines.slice(1).map(line => {
-              const values = line.split(',')
+              const values = line.split(separator)
               const obj: any = {}
               headers.forEach((header, index) => {
-                obj[header] = values[index]?.trim()
+                obj[header] = values[index]?.trim().replace(/\r/g, '')
               })
               return obj
             }).filter(obj => Object.values(obj).some(val => val && val.toString().trim() !== ''))
@@ -297,6 +307,9 @@ export default function ImportarPrecos({ produtos, onImportSuccess }: ImportarPr
             <DollarSign className="h-5 w-5 text-green-600" />
             Importar Preços de Venda
           </DialogTitle>
+          <DialogDescription>
+            Importe preços de venda em lote através de arquivos CSV ou Excel. Os produtos serão identificados pelo código.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -312,8 +325,10 @@ export default function ImportarPrecos({ produtos, onImportSuccess }: ImportarPr
               <div>
                 <h4 className="font-semibold mb-2">Como funciona:</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• O arquivo deve conter as colunas: <strong>codigo_pdv</strong> e <strong>preco_venda</strong></li>
-                  <li>• Os produtos são identificados pelo código PDV</li>
+                  <li>• O arquivo deve conter as colunas: <strong>codigo_pdv</strong> (ou <strong>codigo_pd</strong>) e <strong>preco_venda</strong></li>
+                  <li>• Os produtos são identificados pelo código PDV (aceita 'codigo_pdv' ou 'codigo_pd')</li>
+                  <li>• Preços aceitam vírgula (15,90) ou ponto (15.90) como separador decimal</li>
+                  <li>• CSV aceita vírgula (,) ou ponto e vírgula (;) como separador de colunas</li>
                   <li>• Apenas produtos existentes terão seus preços atualizados</li>
                   <li>• Formatos aceitos: CSV (.csv) e Excel (.xlsx, .xls)</li>
                 </ul>
@@ -323,10 +338,15 @@ export default function ImportarPrecos({ produtos, onImportSuccess }: ImportarPr
                 <h4 className="font-semibold mb-2">Exemplo do arquivo:</h4>
                 <div className="bg-gray-50 p-3 rounded text-sm font-mono">
                   codigo_pdv,preco_venda<br/>
-                  001,15.90<br/>
-                  002,22.50<br/>
-                  003,8.75
+                  001,15,90<br/>
+                  002,22,50<br/>
+                  003,8,75
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 <strong>Dica:</strong> Use vírgula como separador decimal (formato brasileiro) ou ponto (formato americano)<br/>
+                  📝 <strong>Coluna código:</strong> Aceita 'codigo_pdv' ou 'codigo_pd'<br/>
+                  🔧 <strong>Separador CSV:</strong> Aceita vírgula (,) ou ponto e vírgula (;)
+                </p>
               </div>
 
               <div className="flex gap-2">
