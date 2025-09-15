@@ -751,7 +751,7 @@ export default function Sugestoes() {
                       variant="accent"
                       size="sm"
                       className="text-xs"
-                      onClick={() => generateSuggestions(insumosCatalog)}
+                      onClick={() => generateSuggestions([...insumosCatalog])}
                       disabled={aiLoading}
                     >
                       {aiLoading ? "Gerando..." : "Pedir sugestões"}
