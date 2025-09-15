@@ -498,11 +498,22 @@ export default function ImportarVendas() {
                       <li>• <strong>quantidade</strong> - Quantidade vendida</li>
                       <li>• <strong>valor_unitario</strong> - Preço unitário</li>
                       <li>• <strong>canal</strong> - Canal de venda (opcional)</li>
-                      <li>• <strong>codigo_pdv</strong> - Código do PDV (obrigatório para identificar o produto)</li>
+                      <li>• <strong>codigo_pdv</strong> - Código do PDV (obrigatório)</li>
+                      <li>• <strong>produto</strong> - Nome do produto (opcional - será buscado automaticamente)</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-2">Canais Aceitos</h4>
+                    <h4 className="font-semibold mb-2">🧠 Lógica Inteligente</h4>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <p><strong>Nome do produto:</strong></p>
+                      <ul className="space-y-1 ml-4">
+                        <li>• Se fornecido → usa o nome do CSV</li>
+                        <li>• Se não fornecido → busca na tabela produtos pelo código PDV</li>
+                        <li>• Se não encontrar → usa "Produto {código}"</li>
+                      </ul>
+                    </div>
+                    
+                    <h4 className="font-semibold mb-2 mt-4">Canais Aceitos</h4>
                     <div className="space-y-2">
                       {canaisDisponiveis.map(canal => (
                         <div key={canal.id} className="flex items-center gap-2 text-sm">

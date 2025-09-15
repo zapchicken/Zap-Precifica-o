@@ -107,6 +107,34 @@ export const processarInsumos = async (file: File) => {
   return { dados: insumosProcessados, erros };
 };
 
+// Função para buscar nome do produto pelo código PDV
+const buscarNomeProduto = async (codigoPdv: string): Promise<string> => {
+  try {
+    const { supabase } = await import('../lib/supabase');
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return `Produto ${codigoPdv}`;
+
+    const { data: produto, error } = await supabase
+      .from('produtos')
+      .select('nome')
+      .eq('codigo_pdv', codigoPdv)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error || !produto) {
+      console.log(`⚠️ Produto não encontrado para código ${codigoPdv}`);
+      return `Produto ${codigoPdv}`;
+    }
+
+    console.log(`✅ Produto encontrado: ${codigoPdv} → ${produto.nome}`);
+    return produto.nome;
+  } catch (error) {
+    console.error(`❌ Erro ao buscar produto ${codigoPdv}:`, error);
+    return `Produto ${codigoPdv}`;
+  }
+};
+
 export const processarVendas = async (file: File) => {
   console.log('📁 Processando arquivo:', file.name, file.type);
   
@@ -149,10 +177,27 @@ export const processarVendas = async (file: File) => {
       
       console.log(`📅 Data convertida: "${linha.data}" → "${dataFormatada}"`);
 
+      // Lógica inteligente para nome do produto
+      let nomeProduto: string;
+      
+      if (linha.produto?.toString().trim()) {
+        // Se produto foi fornecido no CSV, usar o nome fornecido
+        nomeProduto = linha.produto.toString().trim();
+        console.log(`📝 Usando nome fornecido: "${nomeProduto}"`);
+      } else if (linha.codigo_pdv?.toString().trim()) {
+        // Se não foi fornecido, buscar na tabela produtos
+        console.log(`🔍 Buscando nome do produto para código: ${linha.codigo_pdv}`);
+        nomeProduto = await buscarNomeProduto(linha.codigo_pdv.toString().trim());
+      } else {
+        // Fallback final
+        nomeProduto = 'Produto N/A';
+        console.log(`⚠️ Usando fallback: "${nomeProduto}"`);
+      }
+
       const venda = {
         data_venda: dataFormatada,
         pedido_numero: linha.pedido_numero.toString().trim(),
-        produto_nome: linha.produto?.toString().trim() || `Produto ${linha.codigo_pdv || 'N/A'}`,
+        produto_nome: nomeProduto,
         produto_codigo: linha.codigo_pdv?.toString().trim() || null,
         quantidade: parseInt(linha.quantidade),
         valor_unitario: parseFloat(linha.valor_unitario),
