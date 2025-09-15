@@ -237,14 +237,29 @@ export const processarVendas = async (file: File) => {
         }
       }
 
-      // Limpar valor unitário removendo "R$" e vírgulas
+      // Limpar valor unitário removendo "R$" e tratando vírgula decimal brasileira
       let valorUnitarioLimpo = camposMapeados.valor_unitario.toString().trim();
-      valorUnitarioLimpo = valorUnitarioLimpo.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.');
+      
+      // Remover "R$" e espaços
+      valorUnitarioLimpo = valorUnitarioLimpo.replace(/R\$\s*/g, '');
+      
+      // Tratar formato brasileiro: "1.234,56" -> "1234.56"
+      // Se tem vírgula, é formato brasileiro: separador de milhares é ponto, decimal é vírgula
+      if (valorUnitarioLimpo.includes(',')) {
+        // Formato brasileiro: remover pontos (milhares) e substituir vírgula por ponto (decimal)
+        valorUnitarioLimpo = valorUnitarioLimpo.replace(/\./g, '').replace(',', '.');
+      }
+      // Se não tem vírgula, manter como está (formato internacional)
       
       // Validar se o valor é um número válido
       const valorNumerico = parseFloat(valorUnitarioLimpo);
       if (isNaN(valorNumerico) || valorNumerico <= 0) {
-        throw new Error(`Valor unitário inválido: "${camposMapeados.valor_unitario}"`);
+        throw new Error(`Valor unitário inválido: "${camposMapeados.valor_unitario}" → "${valorUnitarioLimpo}"`);
+      }
+      
+      // Log de conversão para debug (apenas para arquivos pequenos)
+      if (totalLinhas <= 50 || index < 3) {
+        console.log(`💰 Valor convertido: "${camposMapeados.valor_unitario}" → "${valorUnitarioLimpo}" → ${valorNumerico}`);
       }
       
       // Lógica inteligente para nome do produto (otimizada)
@@ -262,17 +277,25 @@ export const processarVendas = async (file: File) => {
         nomeProduto = 'Produto N/A';
       }
 
+      const quantidade = parseInt(camposMapeados.quantidade);
+      const valorTotal = quantidade * valorNumerico;
+      
       const venda = {
         data_venda: dataFormatada,
         pedido_numero: camposMapeados.pedido_numero.toString().trim(),
         produto_nome: nomeProduto,
         produto_codigo: camposMapeados.codigo_pdv?.toString().trim() || null,
-        quantidade: parseInt(camposMapeados.quantidade),
+        quantidade: quantidade,
         valor_unitario: valorNumerico,
-        valor_total: parseInt(camposMapeados.quantidade) * valorNumerico,
+        valor_total: valorTotal,
         canal: camposMapeados.canal?.toString().trim() || null,
         observacoes: camposMapeados.observacoes?.toString().trim() || null
       };
+      
+      // Log detalhado para debug (apenas para arquivos pequenos)
+      if (totalLinhas <= 50 || index < 3) {
+        console.log(`🧮 Cálculo: ${quantidade} × ${valorNumerico} = ${valorTotal}`);
+      }
 
       // Log de venda processada apenas para arquivos pequenos
       if (totalLinhas <= 50 || index < 3) {
@@ -312,6 +335,14 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
     }));
 
     console.log(`📊 Dados preparados para inserção:`, dadosComUserId.slice(0, 2)); // Log apenas os primeiros 2 itens
+    
+    // Log específico para valores monetários
+    if (tabela === 'vendas' && dadosComUserId.length > 0) {
+      console.log(`💰 Valores que serão salvos:`);
+      dadosComUserId.slice(0, 3).forEach((venda, index) => {
+        console.log(`   ${index + 1}. Valor unitário: ${venda.valor_unitario}, Valor total: ${venda.valor_total}`);
+      });
+    }
 
     let result;
     
