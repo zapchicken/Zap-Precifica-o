@@ -268,11 +268,13 @@ export default function Bases() {
 
   // Atualizar automaticamente o custo total da batelada baseado nos insumos
   useEffect(() => {
-    const custoCalculado = calcularCustoTotal()
+    if (insumosSelecionados.length > 0) {
+      const custoCalculado = calcularCustoTotal()
       setFormData(prev => ({
         ...prev,
         custo_total_batelada: custoCalculado
       }))
+    }
   }, [insumosSelecionados])
 
   // Atualizar automaticamente a quantidade produzida quando for tipo 'peso'
@@ -356,6 +358,24 @@ export default function Bases() {
 
   const handleEdit = (base: BaseComInsumos) => {
     setEditingBase(base)
+    
+    // Primeiro, carregar os insumos
+    const insumosCarregados = base.insumos.map(insumo => ({
+      id: insumos.find(i => i.nome === insumo.nome)?.id || 0,
+      nome: insumo.nome,
+      quantidade: insumo.quantidade,
+      unidade: insumo.unidade,
+      custo: insumo.custo
+    }))
+    
+    setInsumosSelecionados(insumosCarregados)
+    
+    // Calcular o custo total baseado nos insumos carregados
+    const custoTotalCalculado = insumosCarregados.reduce((acc, insumo) => {
+      const custoItem = insumo.quantidade * insumo.custo
+      return acc + custoItem
+    }, 0)
+    
     setFormData({
       nome: base.nome,
       codigo: base.codigo,
@@ -367,18 +387,10 @@ export default function Bases() {
       observacoes: base.observacoes || '',
       tempo_preparo: base.tempo_preparo,
       ativo: base.ativo,
-      custo_total_batelada: base.custo_total_batelada,
+      custo_total_batelada: custoTotalCalculado, // Usar o custo calculado, não o salvo
       foto: ''
     })
-    setInsumosSelecionados(
-      base.insumos.map(insumo => ({
-        id: insumos.find(i => i.nome === insumo.nome)?.id || 0,
-        nome: insumo.nome,
-        quantidade: insumo.quantidade,
-        unidade: insumo.unidade,
-        custo: insumo.custo
-      }))
-    )
+    
     setIsDialogOpen(true)
   }
 
