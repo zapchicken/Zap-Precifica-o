@@ -239,8 +239,10 @@ export default function Bases() {
   const calcularCustoTotal = () => {
     const custoTotal = insumosSelecionados.reduce((acc, insumo) => {
       const custoItem = insumo.quantidade * insumo.custo
+      console.log(`🔍 Insumo: ${insumo.nome} - Qtd: ${insumo.quantidade} x Custo: ${insumo.custo} = ${custoItem}`)
       return acc + custoItem
     }, 0)
+    console.log(`💰 Custo Total Calculado: R$ ${custoTotal.toFixed(2)}`)
     return custoTotal
   }
 
@@ -268,14 +270,26 @@ export default function Bases() {
 
   // Atualizar automaticamente o custo total da batelada baseado nos insumos
   useEffect(() => {
-    if (insumosSelecionados.length > 0) {
+    if (insumosSelecionados.length > 0 && !editingBase) {
+      // Só atualiza automaticamente se não estiver editando uma base existente
       const custoCalculado = calcularCustoTotal()
       setFormData(prev => ({
         ...prev,
         custo_total_batelada: custoCalculado
       }))
     }
-  }, [insumosSelecionados])
+  }, [insumosSelecionados, editingBase])
+
+  // Recalcular custo quando estiver editando e os insumos mudarem
+  useEffect(() => {
+    if (editingBase && insumosSelecionados.length > 0) {
+      const custoCalculado = calcularCustoTotal()
+      setFormData(prev => ({
+        ...prev,
+        custo_total_batelada: custoCalculado
+      }))
+    }
+  }, [insumosSelecionados, editingBase])
 
   // Atualizar automaticamente a quantidade produzida quando for tipo 'peso'
   useEffect(() => {
@@ -368,14 +382,15 @@ export default function Bases() {
       custo: insumo.custo
     }))
     
-    setInsumosSelecionados(insumosCarregados)
-    
     // Calcular o custo total baseado nos insumos carregados
     const custoTotalCalculado = insumosCarregados.reduce((acc, insumo) => {
       const custoItem = insumo.quantidade * insumo.custo
+      console.log(`📝 Editando - Insumo: ${insumo.nome} - Qtd: ${insumo.quantidade} x Custo: ${insumo.custo} = ${custoItem}`)
       return acc + custoItem
     }, 0)
+    console.log(`📊 Custo Total na Edição: R$ ${custoTotalCalculado.toFixed(2)}`)
     
+    // Definir formData primeiro
     setFormData({
       nome: base.nome,
       codigo: base.codigo,
@@ -390,6 +405,9 @@ export default function Bases() {
       custo_total_batelada: custoTotalCalculado, // Usar o custo calculado, não o salvo
       foto: ''
     })
+    
+    // Definir insumos depois para evitar conflito com useEffect
+    setInsumosSelecionados(insumosCarregados)
     
     setIsDialogOpen(true)
   }
