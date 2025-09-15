@@ -509,7 +509,7 @@ export default function ImportarVendas() {
                       <ul className="space-y-1 ml-4">
                         <li>• Se fornecido → usa o nome do CSV</li>
                         <li>• Se não fornecido → busca na tabela produtos pelo código PDV</li>
-                        <li>• Se não encontrar → usa "Produto {código}"</li>
+                        <li>• Se não encontrar → usa "Produto {'{código}'}"</li>
                       </ul>
                     </div>
                     
