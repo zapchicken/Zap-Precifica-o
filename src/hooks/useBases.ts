@@ -130,6 +130,24 @@ export const useBases = () => {
     }
 
     try {
+      // Validar código duplicado
+      if (baseData.codigo) {
+        const { data: existingBase, error: checkError } = await supabase
+          .from('bases')
+          .select('id, codigo')
+          .eq('codigo', baseData.codigo)
+          .eq('user_id', user.id)
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingBase) {
+          throw new Error(`Já existe uma base/produto intermediário com o código "${baseData.codigo}". Códigos devem ser únicos.`)
+        }
+      }
+
       const baseDataWithUserId = {
         ...baseData,
         user_id: user.id
@@ -184,6 +202,25 @@ export const useBases = () => {
     }
 
     try {
+      // Validar código duplicado se estiver sendo alterado
+      if (baseData.codigo) {
+        const { data: existingBase, error: checkError } = await supabase
+          .from('bases')
+          .select('id, codigo')
+          .eq('codigo', baseData.codigo)
+          .eq('user_id', user.id)
+          .neq('id', id) // Excluir a própria base da verificação
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingBase) {
+          throw new Error(`Já existe uma base/produto intermediário com o código "${baseData.codigo}". Códigos devem ser únicos.`)
+        }
+      }
+
       const { error } = await supabase
         .from('bases')
         .update(baseData)

@@ -57,6 +57,24 @@ export const useProdutos = () => {
     if (!user?.id) throw new Error('Usuário não autenticado')
 
     try {
+      // Validar código PDV duplicado
+      if (produto.codigo_pdv) {
+        const { data: existingProduto, error: checkError } = await supabase
+          .from('produtos')
+          .select('id, codigo_pdv')
+          .eq('codigo_pdv', produto.codigo_pdv)
+          .eq('user_id', user.id)
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingProduto) {
+          throw new Error(`Já existe um produto com o código PDV "${produto.codigo_pdv}". Códigos PDV devem ser únicos.`)
+        }
+      }
+
       const produtoComUserId = { ...produto, user_id: user.id }
       const { data, error } = await supabase
         .from('produtos')
@@ -76,6 +94,25 @@ export const useProdutos = () => {
     if (!user?.id) throw new Error('Usuário não autenticado')
 
     try {
+      // Validar código PDV duplicado se estiver sendo alterado
+      if (updates.codigo_pdv) {
+        const { data: existingProduto, error: checkError } = await supabase
+          .from('produtos')
+          .select('id, codigo_pdv')
+          .eq('codigo_pdv', updates.codigo_pdv)
+          .eq('user_id', user.id)
+          .neq('id', id) // Excluir o próprio produto da verificação
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingProduto) {
+          throw new Error(`Já existe um produto com o código PDV "${updates.codigo_pdv}". Códigos PDV devem ser únicos.`)
+        }
+      }
+
       const { error } = await supabase
         .from('produtos')
         .update(updates)

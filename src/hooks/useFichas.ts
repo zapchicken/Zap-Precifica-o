@@ -359,6 +359,24 @@ export const useFichas = () => {
       console.log('🔍 Campos filtrados para inserção:', Object.keys(fichaFiltrada))
       console.log('🔍 Dados filtrados:', fichaFiltrada)
       
+      // Validar código PDV duplicado
+      if (fichaFiltrada.codigoPdv) {
+        const { data: existingFicha, error: checkError } = await supabase
+          .from('fichas_tecnicas')
+          .select('id, codigoPdv')
+          .eq('codigoPdv', fichaFiltrada.codigoPdv)
+          .eq('user_id', user.id)
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingFicha) {
+          throw new Error(`Já existe uma ficha técnica com o código PDV "${fichaFiltrada.codigoPdv}". Códigos PDV devem ser únicos.`)
+        }
+      }
+
       // ✅ Inserir apenas os campos válidos na tabela fichas_tecnicas
       const { data, error } = await supabase
         .from('fichas_tecnicas')
@@ -625,6 +643,25 @@ export const useFichas = () => {
          console.log('🔍 Tipo do campo foto nos dados filtrados:', typeof updatesFiltrados.foto)
        }
       
+      // Validar código PDV duplicado se estiver sendo alterado
+      if (updatesFiltrados.codigo) {
+        const { data: existingFicha, error: checkError } = await supabase
+          .from('fichas_tecnicas')
+          .select('id, codigo')
+          .eq('codigo', updatesFiltrados.codigo)
+          .eq('user_id', user.id)
+          .neq('id', id) // Excluir a própria ficha da verificação
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingFicha) {
+          throw new Error(`Já existe uma ficha técnica com o código PDV "${updatesFiltrados.codigo}". Códigos PDV devem ser únicos.`)
+        }
+      }
+
       // ✅ RESTAURADO filtro com user_id - RLS precisa deste filtro para UPDATEs
       const { error } = await supabase
         .from('fichas_tecnicas')

@@ -54,6 +54,24 @@ export const useInsumos = () => {
     }
 
     try {
+      // Validar código duplicado
+      if (insumo.codigo_insumo) {
+        const { data: existingInsumo, error: checkError } = await supabase
+          .from('insumos')
+          .select('id, codigo_insumo')
+          .eq('codigo_insumo', insumo.codigo_insumo)
+          .eq('user_id', user.id)
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingInsumo) {
+          throw new Error(`Já existe um insumo com o código "${insumo.codigo_insumo}". Códigos devem ser únicos.`)
+        }
+      }
+
       const insumoData = {
         ...insumo,
         user_id: user.id
@@ -98,6 +116,25 @@ export const useInsumos = () => {
     }
 
     try {
+      // Validar código duplicado se estiver sendo alterado
+      if (updates.codigo_insumo) {
+        const { data: existingInsumo, error: checkError } = await supabase
+          .from('insumos')
+          .select('id, codigo_insumo')
+          .eq('codigo_insumo', updates.codigo_insumo)
+          .eq('user_id', user.id)
+          .neq('id', id) // Excluir o próprio insumo da verificação
+          .single()
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          throw checkError
+        }
+
+        if (existingInsumo) {
+          throw new Error(`Já existe um insumo com o código "${updates.codigo_insumo}". Códigos devem ser únicos.`)
+        }
+      }
+
       const insumoAtual = insumos.find(i => i.id === id)
       const precoMudou = updates.preco_por_unidade !== undefined && updates.preco_por_unidade !== insumoAtual?.preco_por_unidade
       const fatorMudou = updates.fator_correcao !== undefined && updates.fator_correcao !== insumoAtual?.fator_correcao

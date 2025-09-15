@@ -239,10 +239,8 @@ export default function Bases() {
   const calcularCustoTotal = () => {
     const custoTotal = insumosSelecionados.reduce((acc, insumo) => {
       const custoItem = insumo.quantidade * insumo.custo
-      console.log(`🔍 Insumo: ${insumo.nome} - Qtd: ${insumo.quantidade} x Custo: ${insumo.custo} = ${custoItem}`)
       return acc + custoItem
     }, 0)
-    console.log(`💰 Custo Total Calculado: R$ ${custoTotal.toFixed(2)}`)
     return custoTotal
   }
 
@@ -385,10 +383,8 @@ export default function Bases() {
     // Calcular o custo total baseado nos insumos carregados
     const custoTotalCalculado = insumosCarregados.reduce((acc, insumo) => {
       const custoItem = insumo.quantidade * insumo.custo
-      console.log(`📝 Editando - Insumo: ${insumo.nome} - Qtd: ${insumo.quantidade} x Custo: ${insumo.custo} = ${custoItem}`)
       return acc + custoItem
     }, 0)
-    console.log(`📊 Custo Total na Edição: R$ ${custoTotalCalculado.toFixed(2)}`)
     
     // Definir formData primeiro
     setFormData({
@@ -478,7 +474,8 @@ export default function Bases() {
     if (field === 'insumo_id') {
       const insumo = insumos.find(i => i.id === value)
       if (insumo) {
-        const custoCalculado = insumo.preco_por_unidade * (insumo.fator_correcao || 1)
+        // Usar apenas o preço por unidade, sem fator de correção
+        const custoCalculado = insumo.preco_por_unidade
         
         updated[index] = {
           ...updated[index],
@@ -688,18 +685,20 @@ export default function Bases() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="custoTotalBatelada">
-                      Custo Total da Batelada (R$) *
+                      Custo Total da Batelada (R$) - Calculado Automaticamente
                     </Label>
                     <Input
                       id="custoTotalBatelada"
                       type="number"
                       step="0.01"
                       value={formData.custo_total_batelada}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, custo_total_batelada: parseFloat(e.target.value) }))
-                      }
-                      placeholder="42.50"
+                      readOnly
+                      className="bg-gray-50 cursor-not-allowed"
+                      placeholder="Calculado automaticamente"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Este valor é calculado automaticamente baseado nos insumos selecionados
+                    </p>
                   </div>
                 </div>
 
