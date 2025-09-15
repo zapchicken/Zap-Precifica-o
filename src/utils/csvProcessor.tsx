@@ -114,23 +114,21 @@ export const processarVendas = async (file: File) => {
 
   for (const [index, linha] of dados.entries()) {
     try {
-      if (!linha.data || !linha.produto || !linha.quantidade || !linha.valor_unitario) {
-        erros.push(`Linha ${index + 2}: Data, produto, quantidade e valor unitário são obrigatórios`);
+      if (!linha.data || !linha.produto || !linha.quantidade || !linha.valor_unitario || !linha.pedido_numero) {
+        erros.push(`Linha ${index + 2}: Data, produto, quantidade, valor unitário e pedido_numero são obrigatórios`);
         continue;
       }
 
       const venda = {
-        id: `temp-${Date.now()}-${index}`,
         data_venda: linha.data.toString(),
+        pedido_numero: linha.pedido_numero.toString().trim(),
         produto_nome: linha.produto.toString().trim(),
         produto_codigo: linha.codigo_pdv?.toString().trim() || null,
         quantidade: parseInt(linha.quantidade),
         valor_unitario: parseFloat(linha.valor_unitario),
         valor_total: parseInt(linha.quantidade) * parseFloat(linha.valor_unitario),
         canal: linha.canal?.toString().trim() || null,
-        observacoes: linha.observacoes?.toString().trim() || null,
-        created_at: new Date().toISOString(),
-        user_id: 'mock-user'
+        observacoes: linha.observacoes?.toString().trim() || null
       };
 
       vendasProcessadas.push(venda);
@@ -143,13 +141,64 @@ export const processarVendas = async (file: File) => {
 };
 
 export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas', dados: any[]) => {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  console.log(`Simulando salvamento de ${dados.length} itens na tabela ${tabela}:`, dados);
-  
-  return {
-    data: dados,
-    error: null,
-    count: dados.length
-  };
+  try {
+    // Importar supabase dinamicamente para evitar problemas de SSR
+    const { supabase } = await import('../lib/supabase');
+    
+    // Obter usuário atual
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    // Adicionar user_id aos dados
+    const dadosComUserId = dados.map(item => ({
+      ...item,
+      user_id: user.id
+    }));
+
+    let result;
+    
+    if (tabela === 'vendas') {
+      // Salvar vendas
+      result = await supabase
+        .from('vendas')
+        .insert(dadosComUserId)
+        .select();
+    } else if (tabela === 'produtos') {
+      // Salvar produtos
+      result = await supabase
+        .from('produtos')
+        .insert(dadosComUserId)
+        .select();
+    } else if (tabela === 'insumos') {
+      // Salvar insumos
+      result = await supabase
+        .from('insumos')
+        .insert(dadosComUserId)
+        .select();
+    } else {
+      throw new Error(`Tabela ${tabela} não suportada`);
+    }
+
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+
+    console.log(`✅ Salvamento real de ${dados.length} itens na tabela ${tabela} concluído`);
+    
+    return {
+      data: result.data,
+      error: null,
+      count: result.data?.length || 0
+    };
+  } catch (error: any) {
+    console.error(`❌ Erro ao salvar na tabela ${tabela}:`, error);
+    return {
+      data: null,
+      error: error.message,
+      count: 0
+    };
+  }
 };

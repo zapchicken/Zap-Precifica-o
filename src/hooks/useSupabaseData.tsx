@@ -213,14 +213,35 @@ export function useVendas() {
   const fetchVendas = async () => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 400));
-      setVendas(MOCK_DATA.vendas);
+      
+      // Obter usuário atual
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        setVendas([]);
+        return;
+      }
+
+      // Buscar vendas do usuário
+      const { data, error } = await supabase
+        .from('vendas')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('data_venda', { ascending: false });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setVendas(data || []);
     } catch (error: any) {
+      console.error('Erro ao carregar vendas:', error);
       toast({
         title: "Erro ao carregar vendas",
         description: error.message,
         variant: "destructive"
       });
+      setVendas([]);
     } finally {
       setLoading(false);
     }
@@ -266,21 +287,55 @@ export function useDashboardStats() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 600));
       
-      // Calcular stats baseado nos dados mock
-      const produtos = MOCK_DATA.produtos;
-      const vendas = MOCK_DATA.vendas;
+      // Obter usuário atual
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        setStats({
+          totalProdutos: 0,
+          margemMedia: 0,
+          produtosLucrativos: 0,
+          alertasPreco: 0,
+          vendasMes: 0
+        });
+        return;
+      }
+
+      // Buscar produtos e vendas do usuário
+      const [produtosResult, vendasResult] = await Promise.all([
+        supabase
+          .from('produtos')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'ativo'),
+        supabase
+          .from('vendas')
+          .select('valor_total, data_venda')
+          .eq('user_id', user.id)
+          .gte('data_venda', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+      ]);
+
+      if (produtosResult.error) {
+        throw new Error(produtosResult.error.message);
+      }
+
+      const produtos = produtosResult.data || [];
+      const vendas = vendasResult.data || [];
       
       const totalProdutos = produtos.length;
-      const margemMedia = produtos.reduce((acc, p) => acc + p.margem_contribuicao, 0) / produtos.length;
-      const produtosLucrativos = produtos.filter(p => p.margem_contribuicao > 30).length;
+      const margemMedia = produtos.length > 0 
+        ? produtos.reduce((acc, p) => acc + (p.margem_lucro || 0), 0) / produtos.length 
+        : 0;
+      const produtosLucrativos = produtos.filter(p => (p.margem_lucro || 0) > 30).length;
       const alertasPreco = produtos.filter(p => !p.preco_venda || p.preco_venda <= 0).length;
-      const vendasMes = vendas.reduce((acc, v) => acc + v.valor_total, 0);
+      
+      // Calcular vendas do mês atual
+      const vendasMes = vendas.reduce((acc, v) => acc + (v.valor_total || 0), 0);
       
       setStats({
         totalProdutos,
-        margemMedia,
+        margemMedia: Math.round(margemMedia * 100) / 100,
         produtosLucrativos,
         alertasPreco,
         vendasMes
