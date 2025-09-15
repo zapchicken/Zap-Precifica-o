@@ -96,6 +96,13 @@ export default function ImportarVendas() {
   const [filtroCanal, setFiltroCanal] = useState<string>("todos")
   const [analiseMargem, setAnaliseMargem] = useState<AnaliseMargem[]>([])
   const [resumoMargem, setResumoMargem] = useState<ResumoMargem | null>(null)
+  
+  // Estados para controle de período e limpeza
+  const [dataInicio, setDataInicio] = useState<string>("")
+  const [dataFim, setDataFim] = useState<string>("")
+  const [filtrarPorPeriodo, setFiltrarPorPeriodo] = useState<boolean>(false)
+  const [limpezaConfirmada, setLimpezaConfirmada] = useState<boolean>(false)
+  
   const { toast } = useToast()
   
   // Hooks para dados necessários
@@ -117,6 +124,82 @@ export default function ImportarVendas() {
     }
   }
 
+  // Função para filtrar vendas por período
+  const filtrarVendasPorPeriodo = (vendas: any[]) => {
+    if (!filtrarPorPeriodo || (!dataInicio && !dataFim)) {
+      return vendas;
+    }
+
+    return vendas.filter(venda => {
+      const dataVenda = new Date(venda.data_venda);
+      
+      if (dataInicio && dataFim) {
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+        return dataVenda >= inicio && dataVenda <= fim;
+      } else if (dataInicio) {
+        const inicio = new Date(dataInicio);
+        return dataVenda >= inicio;
+      } else if (dataFim) {
+        const fim = new Date(dataFim);
+        return dataVenda <= fim;
+      }
+      
+      return true;
+    });
+  };
+
+  // Função para limpar tabela de vendas
+  const limparTabelaVendas = async () => {
+    if (!limpezaConfirmada) {
+      setLimpezaConfirmada(true);
+      toast({
+        title: "Confirmação necessária",
+        description: "Clique novamente no botão para confirmar a limpeza de TODAS as vendas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { error } = await supabase
+        .from('vendas')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) {
+        throw new Error(`Erro ao limpar vendas: ${error.message}`);
+      }
+
+      // Limpar estados locais
+      setVendasImportadas([]);
+      setResumo(null);
+      setAnaliseMargem([]);
+      setResumoMargem(null);
+      setLimpezaConfirmada(false);
+
+      toast({
+        title: "Tabela limpa com sucesso",
+        description: "Todas as vendas foram removidas da base de dados."
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Erro ao limpar vendas",
+        description: error.message,
+        variant: "destructive"
+      });
+      setLimpezaConfirmada(false);
+    }
+  };
+
   const simularImportacao = async () => {
     if (!arquivo) return
 
@@ -130,9 +213,16 @@ export default function ImportarVendas() {
       const resultado = await processarVendas(arquivo);
       console.log('📊 Resultado do processamento:', resultado);
       
-      if (resultado.dados.length > 0) {
-        console.log(`💾 Salvando ${resultado.dados.length} vendas no Supabase...`);
-        const salvamento = await salvarNoSupabase('vendas', resultado.dados);
+      // Filtrar vendas por período se necessário
+      let vendasParaSalvar = resultado.dados;
+      if (filtrarPorPeriodo) {
+        vendasParaSalvar = filtrarVendasPorPeriodo(resultado.dados);
+        console.log(`📅 Filtradas ${vendasParaSalvar.length} vendas do período de ${dataInicio || 'início'} até ${dataFim || 'fim'}`);
+      }
+      
+      if (vendasParaSalvar.length > 0) {
+        console.log(`💾 Salvando ${vendasParaSalvar.length} vendas no Supabase...`);
+        const salvamento = await salvarNoSupabase('vendas', vendasParaSalvar);
         console.log('📋 Resultado do salvamento:', salvamento);
         
         if (!salvamento.data) {
@@ -141,11 +231,11 @@ export default function ImportarVendas() {
         
         console.log(`✅ ${salvamento.count} vendas salvas com sucesso!`);
       } else {
-        console.log('⚠️ Nenhum dado válido para salvar');
+        console.log('⚠️ Nenhum dado válido para salvar no período selecionado');
       }
       
       setProgresso(100);
-      setVendasImportadas(resultado.dados.map((venda: any, index: number) => ({
+      setVendasImportadas(vendasParaSalvar.map((venda: any, index: number) => ({
         id: index.toString(),
         data: venda.data_venda,
         produto: venda.produto_nome,
@@ -159,18 +249,22 @@ export default function ImportarVendas() {
       })));
       
       const novoResumo = {
-        totalVendas: resultado.dados.length,
-        valorTotal: resultado.dados.reduce((total: number, venda: any) => total + venda.valor_total, 0),
-        sucessos: resultado.dados.length,
+        totalVendas: vendasParaSalvar.length,
+        valorTotal: vendasParaSalvar.reduce((total: number, venda: any) => total + venda.valor_total, 0),
+        sucessos: vendasParaSalvar.length,
         erros: resultado.erros.length,
-        avisos: 0
+        avisos: resultado.dados.length - vendasParaSalvar.length // Vendas filtradas fora do período
       };
       
       setResumo(novoResumo);
 
+      const mensagemSucesso = filtrarPorPeriodo 
+        ? `${novoResumo.sucessos} vendas importadas do período selecionado!`
+        : `${novoResumo.sucessos} vendas importadas com sucesso!`;
+
       toast({
         title: "Importação concluída",
-        description: `${novoResumo.sucessos} vendas importadas com sucesso!`
+        description: mensagemSucesso
       });
     } catch (error: any) {
       toast({
@@ -458,24 +552,87 @@ export default function ImportarVendas() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={simularImportacao} 
-                    disabled={!arquivo || importando}
-                    className="flex-1"
-                  >
-                    {importando ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        Importando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4" />
-                        Importar Vendas
-                      </>
-                    )}
-                  </Button>
+                {/* Controles de Período e Limpeza */}
+                <div className="space-y-4">
+                  {/* Seletor de Período */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-4 w-4" />
+                        Filtro por Período (Opcional)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="filtrarPeriodo"
+                          checked={filtrarPorPeriodo}
+                          onChange={(e) => setFiltrarPorPeriodo(e.target.checked)}
+                          className="rounded"
+                        />
+                        <Label htmlFor="filtrarPeriodo" className="text-sm">
+                          Filtrar vendas por período antes de importar
+                        </Label>
+                      </div>
+                      
+                      {filtrarPorPeriodo && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="dataInicio" className="text-sm">Data de Início</Label>
+                            <Input
+                              id="dataInicio"
+                              type="date"
+                              value={dataInicio}
+                              onChange={(e) => setDataInicio(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="dataFim" className="text-sm">Data de Fim</Label>
+                            <Input
+                              id="dataFim"
+                              type="date"
+                              value={dataFim}
+                              onChange={(e) => setDataFim(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Botões de Ação */}
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={simularImportacao} 
+                      disabled={!arquivo || importando}
+                      className="flex-1"
+                    >
+                      {importando ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Importando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4" />
+                          Importar Vendas
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button 
+                      onClick={limparTabelaVendas}
+                      variant="destructive"
+                      disabled={importando}
+                      className={limpezaConfirmada ? "animate-pulse" : ""}
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                      {limpezaConfirmada ? "Confirmar Limpeza" : "Limpar Tabela"}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

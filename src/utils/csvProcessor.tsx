@@ -107,31 +107,40 @@ export const processarInsumos = async (file: File) => {
   return { dados: insumosProcessados, erros };
 };
 
-// Função para buscar nome do produto pelo código PDV
-const buscarNomeProduto = async (codigoPdv: string): Promise<string> => {
+// Função para buscar TODOS os produtos de uma vez (otimizada para arquivos grandes)
+const buscarTodosProdutos = async (): Promise<Map<string, string>> => {
   try {
     const { supabase } = await import('../lib/supabase');
     
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return `Produto ${codigoPdv}`;
+    if (!user) return new Map();
 
-    const { data: produto, error } = await supabase
+    console.log('🔍 Buscando todos os produtos cadastrados...');
+    
+    const { data: produtos, error } = await supabase
       .from('produtos')
-      .select('nome')
-      .eq('codigo_pdv', codigoPdv)
+      .select('codigo_pdv, nome')
       .eq('user_id', user.id)
-      .single();
+      .not('codigo_pdv', 'is', null);
 
-    if (error || !produto) {
-      console.log(`⚠️ Produto não encontrado para código ${codigoPdv}`);
-      return `Produto ${codigoPdv}`;
+    if (error) {
+      console.error('❌ Erro ao buscar produtos:', error);
+      return new Map();
     }
 
-    console.log(`✅ Produto encontrado: ${codigoPdv} → ${produto.nome}`);
-    return produto.nome;
+    // Criar mapa código_pdv -> nome
+    const mapaProdutos = new Map<string, string>();
+    produtos?.forEach(produto => {
+      if (produto.codigo_pdv) {
+        mapaProdutos.set(produto.codigo_pdv.toString(), produto.nome);
+      }
+    });
+
+    console.log(`✅ ${mapaProdutos.size} produtos carregados para mapeamento`);
+    return mapaProdutos;
   } catch (error) {
-    console.error(`❌ Erro ao buscar produto ${codigoPdv}:`, error);
-    return `Produto ${codigoPdv}`;
+    console.error(`❌ Erro ao buscar produtos:`, error);
+    return new Map();
   }
 };
 
@@ -142,19 +151,52 @@ export const processarVendas = async (file: File) => {
   console.log('📊 Dados lidos do arquivo:', dados.length, 'linhas');
   console.log('📋 Primeira linha:', dados[0]);
   
+  // Buscar todos os produtos uma única vez (otimização para arquivos grandes)
+  const mapaProdutos = await buscarTodosProdutos();
+  
   const vendasProcessadas = [];
   const erros = [];
 
+  // Função para mapear campos do CSV para os campos esperados
+  const mapearCampos = (linha: any) => {
+    return {
+      data: linha['Data'] || linha['data'] || linha.data || linha.data_venda || linha.date,
+      quantidade: linha['Qtd.'] || linha['qtd'] || linha.quantidade || linha.qtd || linha.qtde,
+      valor_unitario: linha['Valor Un. Item'] || linha['valor_unitario'] || linha.valor_unitario || linha.valor || linha.preco || linha.price,
+      pedido_numero: linha['Cod. Ped.'] || linha['pedido_numero'] || linha.pedido_numero || linha.pedido || linha.numero_pedido || linha.order_number,
+      produto: linha['Produto'] || linha['produto'] || linha.produto || linha.nome_produto || linha.product_name,
+      codigo_pdv: linha['codigo_pdv'] || linha['codigo'] || linha.codigo || linha.codigo_produto || linha.product_code,
+      canal: linha['Canal'] || linha['canal'] || linha.canal || linha.tipo_venda || linha.channel,
+      observacoes: linha['Observações'] || linha['observacoes'] || linha.observacoes || linha.obs || linha.observacao || linha.notes
+    };
+  };
+
+  // Processar vendas com feedback de progresso para arquivos grandes
+  const totalLinhas = dados.length;
+  console.log(`🚀 Iniciando processamento de ${totalLinhas} linhas...`);
+  
   for (const [index, linha] of dados.entries()) {
     try {
-      console.log(`🔍 Processando linha ${index + 2}:`, linha);
+      // Feedback de progresso a cada 100 linhas para arquivos grandes
+      if (totalLinhas > 500 && (index + 1) % 100 === 0) {
+        const progresso = Math.round(((index + 1) / totalLinhas) * 100);
+        console.log(`📊 Progresso: ${index + 1}/${totalLinhas} linhas (${progresso}%)`);
+      }
       
-      if (!linha.data || !linha.quantidade || !linha.valor_unitario || !linha.pedido_numero) {
+      // Mapear campos para os nomes esperados
+      const camposMapeados = mapearCampos(linha);
+      
+      // Log detalhado apenas para arquivos pequenos ou primeiras linhas
+      if (totalLinhas <= 50 || index < 3) {
+        console.log(`🔄 Campos mapeados:`, camposMapeados);
+      }
+      
+      if (!camposMapeados.data || !camposMapeados.quantidade || !camposMapeados.valor_unitario || !camposMapeados.pedido_numero) {
         const camposFaltando = [];
-        if (!linha.data) camposFaltando.push('data');
-        if (!linha.quantidade) camposFaltando.push('quantidade');
-        if (!linha.valor_unitario) camposFaltando.push('valor_unitario');
-        if (!linha.pedido_numero) camposFaltando.push('pedido_numero');
+        if (!camposMapeados.data) camposFaltando.push('data');
+        if (!camposMapeados.quantidade) camposFaltando.push('quantidade');
+        if (!camposMapeados.valor_unitario) camposFaltando.push('valor_unitario');
+        if (!camposMapeados.pedido_numero) camposFaltando.push('pedido_numero');
         
         const erroMsg = `Linha ${index + 2}: Campos obrigatórios faltando: ${camposFaltando.join(', ')}`;
         console.error(`❌ ${erroMsg}`);
@@ -164,49 +206,78 @@ export const processarVendas = async (file: File) => {
       }
 
       // Converter data para formato ISO (YYYY-MM-DD)
-      let dataFormatada = linha.data.toString().trim();
+      let dataFormatada = camposMapeados.data.toString().trim();
       
-      // Se a data está no formato DD/MM/YYYY, converter para YYYY-MM-DD
-      if (dataFormatada.includes('/')) {
+      // Verificar se é uma data serial do Excel (número decimal)
+      if (!isNaN(parseFloat(dataFormatada)) && parseFloat(dataFormatada) > 25000) {
+        // É uma data serial do Excel - converter para data
+        const dataSerial = parseFloat(dataFormatada);
+        // Excel conta dias desde 1 de janeiro de 1900 (com correção para bug do Excel)
+        const dataExcel = new Date((dataSerial - 25569) * 86400 * 1000);
+        dataFormatada = dataExcel.toISOString().split('T')[0];
+        // Log de conversão apenas para arquivos pequenos
+        if (totalLinhas <= 50 || index < 3) {
+          console.log(`📅 Data serial Excel convertida: "${camposMapeados.data}" → "${dataFormatada}"`);
+        }
+      } else if (dataFormatada.includes('/')) {
+        // Se a data está no formato DD/MM/YYYY, converter para YYYY-MM-DD
         const partes = dataFormatada.split('/');
         if (partes.length === 3) {
           const [dia, mes, ano] = partes;
           dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
         }
+        // Log de conversão apenas para arquivos pequenos
+        if (totalLinhas <= 50 || index < 3) {
+          console.log(`📅 Data formato DD/MM/YYYY convertida: "${camposMapeados.data}" → "${dataFormatada}"`);
+        }
+      } else {
+        // Log de conversão apenas para arquivos pequenos
+        if (totalLinhas <= 50 || index < 3) {
+          console.log(`📅 Data mantida como: "${dataFormatada}"`);
+        }
+      }
+
+      // Limpar valor unitário removendo "R$" e vírgulas
+      let valorUnitarioLimpo = camposMapeados.valor_unitario.toString().trim();
+      valorUnitarioLimpo = valorUnitarioLimpo.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.');
+      
+      // Validar se o valor é um número válido
+      const valorNumerico = parseFloat(valorUnitarioLimpo);
+      if (isNaN(valorNumerico) || valorNumerico <= 0) {
+        throw new Error(`Valor unitário inválido: "${camposMapeados.valor_unitario}"`);
       }
       
-      console.log(`📅 Data convertida: "${linha.data}" → "${dataFormatada}"`);
-
-      // Lógica inteligente para nome do produto
+      // Lógica inteligente para nome do produto (otimizada)
       let nomeProduto: string;
       
-      if (linha.produto?.toString().trim()) {
+      if (camposMapeados.produto?.toString().trim()) {
         // Se produto foi fornecido no CSV, usar o nome fornecido
-        nomeProduto = linha.produto.toString().trim();
-        console.log(`📝 Usando nome fornecido: "${nomeProduto}"`);
-      } else if (linha.codigo_pdv?.toString().trim()) {
-        // Se não foi fornecido, buscar na tabela produtos
-        console.log(`🔍 Buscando nome do produto para código: ${linha.codigo_pdv}`);
-        nomeProduto = await buscarNomeProduto(linha.codigo_pdv.toString().trim());
+        nomeProduto = camposMapeados.produto.toString().trim();
+      } else if (camposMapeados.codigo_pdv?.toString().trim()) {
+        // Buscar no mapa de produtos (muito mais rápido!)
+        const codigoPdv = camposMapeados.codigo_pdv.toString().trim();
+        nomeProduto = mapaProdutos.get(codigoPdv) || `Produto ${codigoPdv}`;
       } else {
         // Fallback final
         nomeProduto = 'Produto N/A';
-        console.log(`⚠️ Usando fallback: "${nomeProduto}"`);
       }
 
       const venda = {
         data_venda: dataFormatada,
-        pedido_numero: linha.pedido_numero.toString().trim(),
+        pedido_numero: camposMapeados.pedido_numero.toString().trim(),
         produto_nome: nomeProduto,
-        produto_codigo: linha.codigo_pdv?.toString().trim() || null,
-        quantidade: parseInt(linha.quantidade),
-        valor_unitario: parseFloat(linha.valor_unitario),
-        valor_total: parseInt(linha.quantidade) * parseFloat(linha.valor_unitario),
-        canal: linha.canal?.toString().trim() || null,
-        observacoes: linha.observacoes?.toString().trim() || null
+        produto_codigo: camposMapeados.codigo_pdv?.toString().trim() || null,
+        quantidade: parseInt(camposMapeados.quantidade),
+        valor_unitario: valorNumerico,
+        valor_total: parseInt(camposMapeados.quantidade) * valorNumerico,
+        canal: camposMapeados.canal?.toString().trim() || null,
+        observacoes: camposMapeados.observacoes?.toString().trim() || null
       };
 
-      console.log(`✅ Venda processada:`, venda);
+      // Log de venda processada apenas para arquivos pequenos
+      if (totalLinhas <= 50 || index < 3) {
+        console.log(`✅ Venda processada:`, venda);
+      }
       vendasProcessadas.push(venda);
     } catch (error) {
       console.error(`❌ Erro na linha ${index + 2}:`, error);
