@@ -185,10 +185,10 @@ export default function ImportarVendas() {
 
   const baixarTemplateCSV = () => {
     const csvContent = [
-      "data,pedido_numero,produto,quantidade,valor_unitario,canal,codigo_pdv",
-      "2024-01-15,PED001,Combo Família,2,45.90,ifood,PDV001",
-      "2024-01-15,PED002,Frango Assado,1,28.50,balcao,PDV002",
-      "2024-01-15,PED003,Porção de Batata,3,12.00,whatsapp,PDV003"
+      "data,pedido_numero,quantidade,valor_unitario,canal,codigo_pdv",
+      "2024-01-15,PED001,2,45.90,ifood,PDV001",
+      "2024-01-15,PED002,1,28.50,balcao,PDV002",
+      "2024-01-15,PED003,3,12.00,whatsapp,PDV003"
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -495,11 +495,10 @@ export default function ImportarVendas() {
                     <ul className="space-y-1 text-sm text-muted-foreground">
                       <li>• <strong>data</strong> - Data da venda (AAAA-MM-DD ou DD/MM/AAAA)</li>
                       <li>• <strong>pedido_numero</strong> - Número do pedido</li>
-                      <li>• <strong>produto</strong> - Nome do produto</li>
                       <li>• <strong>quantidade</strong> - Quantidade vendida</li>
                       <li>• <strong>valor_unitario</strong> - Preço unitário</li>
                       <li>• <strong>canal</strong> - Canal de venda (opcional)</li>
-                      <li>• <strong>codigo_pdv</strong> - Código do PDV (opcional)</li>
+                      <li>• <strong>codigo_pdv</strong> - Código do PDV (obrigatório para identificar o produto)</li>
                     </ul>
                   </div>
                   <div>

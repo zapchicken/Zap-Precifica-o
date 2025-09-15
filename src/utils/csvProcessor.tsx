@@ -121,10 +121,9 @@ export const processarVendas = async (file: File) => {
     try {
       console.log(`🔍 Processando linha ${index + 2}:`, linha);
       
-      if (!linha.data || !linha.produto || !linha.quantidade || !linha.valor_unitario || !linha.pedido_numero) {
+      if (!linha.data || !linha.quantidade || !linha.valor_unitario || !linha.pedido_numero) {
         const camposFaltando = [];
         if (!linha.data) camposFaltando.push('data');
-        if (!linha.produto) camposFaltando.push('produto');
         if (!linha.quantidade) camposFaltando.push('quantidade');
         if (!linha.valor_unitario) camposFaltando.push('valor_unitario');
         if (!linha.pedido_numero) camposFaltando.push('pedido_numero');
@@ -153,7 +152,7 @@ export const processarVendas = async (file: File) => {
       const venda = {
         data_venda: dataFormatada,
         pedido_numero: linha.pedido_numero.toString().trim(),
-        produto_nome: linha.produto.toString().trim(),
+        produto_nome: linha.produto?.toString().trim() || `Produto ${linha.codigo_pdv || 'N/A'}`,
         produto_codigo: linha.codigo_pdv?.toString().trim() || null,
         quantidade: parseInt(linha.quantidade),
         valor_unitario: parseFloat(linha.valor_unitario),
