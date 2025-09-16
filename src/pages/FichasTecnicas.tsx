@@ -962,18 +962,18 @@ export default function FichasTecnicas() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-full">
+          <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto w-[98vw] md:w-full">
             <DialogHeader>
-              <DialogTitle>{editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-2xl font-bold">{editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}</DialogTitle>
+              <DialogDescription className="text-base">
                 Preencha os dados da ficha técnica do produto
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 py-4">
-              <div className="lg:col-span-3 space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 py-6">
+              <div className="xl:col-span-4 space-y-8">
                 <div className="flex items-center justify-end">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>Duplicar ficha existente:</span>
                     <Select onValueChange={(fichaId) => {
                       const fichaSelecionada = fichas.find(f => f.id === fichaId)
@@ -981,7 +981,7 @@ export default function FichasTecnicas() {
                         duplicarFicha(fichaSelecionada)
                       }
                     }}>
-                      <SelectTrigger className="w-64">
+                      <SelectTrigger className="w-72">
                         <SelectValue placeholder="Escolha uma ficha para duplicar" />
                       </SelectTrigger>
                       <SelectContent>
@@ -995,39 +995,42 @@ export default function FichasTecnicas() {
                   </div>
                 </div>
 
-                <Card className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Informações Básicas</h3>
+                <Card className="border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">Informações Básicas</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Código PDV *</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Código PDV *</Label>
                       <Input
                         placeholder="Código do PDV"
                         value={formData.codigoPdv}
                         onChange={(e) => setFormData(prev => ({ ...prev, codigoPdv: e.target.value }))}
+                        className="h-12 text-base"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Nome do Produto *</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Nome do Produto *</Label>
                       <Input
                         placeholder="Nome do produto"
                         value={formData.produto}
                         onChange={(e) => setFormData(prev => ({ ...prev, produto: e.target.value }))}
+                        className="h-12 text-base"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Data da Ficha *</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Data da Ficha *</Label>
                       <Input
                         type="date"
                         value={formData.dataFicha}
                         onChange={(e) => setFormData(prev => ({ ...prev, dataFicha: e.target.value }))}
+                        className="h-12 text-base"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Categoria</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Categoria</Label>
                       <Select value={formData.categoria} onValueChange={(value) => setFormData(prev => ({ ...prev, categoria: value }))}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-base">
                           <SelectValue placeholder="Selecionar" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1037,51 +1040,54 @@ export default function FichasTecnicas() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Custo Unitário (R$) - Calculado Automaticamente</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Custo Unitário (R$) - Calculado Automaticamente</Label>
                       <Input
                         type="number"
                         step="0.01"
                         placeholder="0"
                         value={formData.custoUnitario}
                         readOnly
-                        className="bg-gray-50 cursor-not-allowed"
+                        className="h-12 text-base bg-gray-50 cursor-not-allowed"
                         title="Custo calculado automaticamente: Produtos Prontos + Insumos + Embalagens"
                       />
                       <p className="text-xs text-muted-foreground">
                         Soma automática: Produtos Prontos + Insumos + Embalagens
                       </p>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Tempo de Preparo (min)</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Tempo de Preparo (min)</Label>
                       <Input
                         type="number"
                         placeholder="0"
                         value={formData.tempoPreparo}
                         onChange={(e) => setFormData(prev => ({ ...prev, tempoPreparo: e.target.value }))}
+                        className="h-12 text-base"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Rendimento</Label>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Rendimento</Label>
                       <Input
                         type="number"
                         placeholder="Ex: 8 porções"
                         value={formData.rendimento}
                         onChange={(e) => setFormData(prev => ({ ...prev, rendimento: e.target.value }))}
+                        className="h-12 text-base"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Descrição do Produto</Label>
+                    <div className="space-y-3 xl:col-span-3">
+                      <Label className="text-sm font-medium">Descrição do Produto</Label>
                       <Textarea
                         placeholder="Descreva as características do produto..."
                         value={formData.descricao}
                         onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                        rows={3}
+                        rows={4}
+                        className="text-base resize-none"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Fotos</Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div className="space-y-3 xl:col-span-3">
+                      <Label className="text-sm font-medium">Fotos</Label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
                         <input
                           type="file"
                           multiple
@@ -1091,32 +1097,32 @@ export default function FichasTecnicas() {
                           id="photo-upload"
                         />
                         <label htmlFor="photo-upload" className="cursor-pointer">
-                          <div className="flex flex-col items-center gap-2">
-                            <Camera className="h-8 w-8 text-gray-400" />
-                            <p className="text-sm text-gray-500">Clique para adicionar fotos</p>
-                            <p className="text-xs text-gray-400">Ou arraste</p>
+                          <div className="flex flex-col items-center gap-3">
+                            <Camera className="h-12 w-12 text-gray-400" />
+                            <p className="text-base text-gray-600 font-medium">Clique para adicionar fotos</p>
+                            <p className="text-sm text-gray-400">Ou arraste e solte aqui</p>
                           </div>
                         </label>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full mt-2"
+                        className="w-full h-10"
                         onClick={() => document.getElementById('photo-upload')?.click()}
                       >
                         Adicionar Fotos
                       </Button>
                       {formData.fotos.length > 0 && (
-                        <div className="mt-2">
-                          <Label>Fotos Adicionadas</Label>
-                          <div className="grid grid-cols-2 gap-2">
+                        <div className="mt-4">
+                          <Label className="text-sm font-medium">Fotos Adicionadas</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-2">
                             {formData.fotos.map((foto, index) => (
                               <div key={index} className="relative group">
-                                <img src={foto} alt={`Foto ${index + 1}`} className="w-full h-20 object-cover rounded border" />
+                                <img src={foto} alt={`Foto ${index + 1}`} className="w-full h-24 object-cover rounded-lg border" />
                                 <Button
                                   variant="destructive"
                                   size="sm"
-                                  className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                                   onClick={() => removePhoto(index)}
                                 >
                                   <X className="h-3 w-3" />
@@ -1130,16 +1136,16 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                <Card className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Produtos Prontos (Fichas Existentes)</h3>
-                    <Button variant="outline" size="sm" onClick={addProdutoPronto}>
-                      <Plus className="h-4 w-4" />
+                <Card className="border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">Produtos Prontos (Fichas Existentes)</h3>
+                    <Button variant="outline" size="sm" onClick={addProdutoPronto} className="h-10">
+                      <Plus className="h-4 w-4 mr-2" />
                       Adicionar Produto
                     </Button>
                   </div>
-                      <div className="space-y-2">
-                    <div className="grid grid-cols-6 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
+                      <div className="space-y-3">
+                    <div className="grid grid-cols-6 gap-4 text-sm font-medium text-muted-foreground border-b pb-3">
                       <div>Código</div>
                       <div>Nome do Produto</div>
                       <div>Qtd.</div>
@@ -1148,12 +1154,12 @@ export default function FichasTecnicas() {
                       <div>Ações</div>
                     </div>
                     {formData.produtosProntos.map((produto, index) => (
-                      <div key={index} className="grid grid-cols-6 gap-4 p-3 border rounded">
+                      <div key={index} className="grid grid-cols-6 gap-4 p-4 border rounded-lg bg-gray-50/50">
                         <Input 
                           placeholder="Código automático" 
                           value={fichas.find(f => f.id === produto.fichaId)?.codigo || ''} 
                           readOnly 
-                          className="bg-gray-50" 
+                          className="bg-gray-100 h-10" 
                         />
                         <ProdutoProntoCombobox
                           items={fichas}
@@ -1211,19 +1217,20 @@ export default function FichasTecnicas() {
                             }
                             setFormData(prev => ({ ...prev, produtosProntos: newProdutos }))
                           }}
+                          className="h-10"
                         />
-                        <Input value="un" readOnly className="bg-gray-50" />
+                        <Input value="un" readOnly className="bg-gray-100 h-10" />
                         <Input
                           value={produto.custoTotal || '0.00'}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-100 h-10"
                           title="Custo apenas dos insumos do produto, menos o custo da embalagem de delivery"
                         />
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => removeProdutoPronto(index)}
-                          className="h-8 w-8 p-0"
+                          className="h-10 w-10 p-0"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -1232,16 +1239,16 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                <Card className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Insumos</h3>
-                    <Button variant="outline" size="sm" onClick={addInsumo}>
-                      <Plus className="h-4 w-4" />
+                <Card className="border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">Insumos</h3>
+                    <Button variant="outline" size="sm" onClick={addInsumo} className="h-10">
+                      <Plus className="h-4 w-4 mr-2" />
                       Adicionar Insumo
                     </Button>
                   </div>
-                      <div className="space-y-2">
-                    <div className="grid grid-cols-2 md:grid-cols-7 gap-3 text-sm font-medium text-muted-foreground border-b pb-2">
+                      <div className="space-y-3">
+                    <div className="grid grid-cols-2 md:grid-cols-7 gap-3 text-sm font-medium text-muted-foreground border-b pb-3">
                       <div className="hidden md:block">Tipo</div>
                       <div className="hidden md:block">Código</div>
                       <div className="col-span-2">Nome</div>
@@ -1250,7 +1257,7 @@ export default function FichasTecnicas() {
                       <div className="hidden md:block">Custo (R$)</div>
                     </div>
                     {formData.insumos.map((insumo, index) => (
-                      <div key={index} className="grid grid-cols-2 md:grid-cols-7 gap-3 p-3 border rounded">
+                      <div key={index} className="grid grid-cols-2 md:grid-cols-7 gap-3 p-4 border rounded-lg bg-gray-50/50">
                         <div className="hidden md:block">
                         <Select
                           value={insumo.tipo || 'insumo'}
@@ -1268,7 +1275,7 @@ export default function FichasTecnicas() {
                             setFormData(prev => ({ ...prev, insumos: newInsumos }))
                           }}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="h-10">
                             <SelectValue placeholder="Tipo" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1282,7 +1289,7 @@ export default function FichasTecnicas() {
                           placeholder="Código automático"
                           value={insumo.codigo}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-100 h-10"
                         />
                       </div>
                         <div className="col-span-2">
@@ -1372,20 +1379,21 @@ export default function FichasTecnicas() {
                             }
                             setFormData(prev => ({ ...prev, insumos: newInsumos }))
                           }}
+                          className="h-10"
                         />
                       </div>
                         <div className="hidden md:block">
                         <Input
                           value={insumo.unidade}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-100 h-10"
                         />
                       </div>
                         <div className="hidden md:block">
                         <Input
                           value={insumo.custoTotal || '0.00'}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-100 h-10"
                         />
                       </div>
                         <div className="flex items-center justify-between md:justify-center">
@@ -1397,7 +1405,7 @@ export default function FichasTecnicas() {
                           variant="outline"
                           size="sm"
                           onClick={() => removeInsumo(index)}
-                            className="h-8 w-8 p-0 min-h-[48px] min-w-[48px]"
+                          className="h-10 w-10 p-0"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -1407,16 +1415,16 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                <Card className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Embalagem</h3>
-                    <Button variant="outline" size="sm" onClick={addEmbalagemDelivery}>
-                      <Plus className="h-4 w-4" />
+                <Card className="border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">Embalagem</h3>
+                    <Button variant="outline" size="sm" onClick={addEmbalagemDelivery} className="h-10">
+                      <Plus className="h-4 w-4 mr-2" />
                       Adicionar Embalagem
                     </Button>
                   </div>
-                      <div className="space-y-2">
-                    <div className="grid grid-cols-6 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
+                      <div className="space-y-3">
+                    <div className="grid grid-cols-6 gap-4 text-sm font-medium text-muted-foreground border-b pb-3">
                       <div>Código</div>
                       <div>Nome da Embalagem</div>
                       <div>Qtd.</div>
@@ -1425,12 +1433,12 @@ export default function FichasTecnicas() {
                       <div>Ações</div>
                     </div>
                     {formData.insumosEmbalagemDelivery.map((embalagem, index) => (
-                      <div key={index} className="grid grid-cols-6 gap-4 p-3 border rounded">
+                      <div key={index} className="grid grid-cols-6 gap-4 p-4 border rounded-lg bg-gray-50/50">
                         <Input
                           placeholder="Código automático"
                           value={embalagem.codigo}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-100 h-10"
                         />
                         <Select 
                           value={embalagem.nome} 
@@ -1451,7 +1459,7 @@ export default function FichasTecnicas() {
                             }
                           }}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="h-10">
                             <SelectValue placeholder="Selecione a embalagem" />
                           </SelectTrigger>
                           <SelectContent className="max-h-60">
@@ -1485,22 +1493,23 @@ export default function FichasTecnicas() {
                             }
                             setFormData(prev => ({ ...prev, insumosEmbalagemDelivery: newEmbalagens }))
                           }}
+                          className="h-10"
                         />
                         <Input
                           value={embalagem.unidade}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-100 h-10"
                         />
                         <Input
                           value={embalagem.custoTotal || '0.00'}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-100 h-10"
                         />
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => removeEmbalagemDelivery(index)}
-                          className="h-8 w-8 p-0"
+                          className="h-10 w-10 p-0"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -1509,30 +1518,30 @@ export default function FichasTecnicas() {
                   </div>
                 </Card>
 
-                <Card className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Modo de Preparação</h3>
+                <Card className="border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold">Modo de Preparação</h3>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Textarea
                       placeholder="1. Primeiro passo...
 2. Segundo passo...
 3. Continue descrevendo cada etapa."
                       value={formData.modoPreparo}
                       onChange={(e) => setFormData(prev => ({ ...prev, modoPreparo: e.target.value }))}
-                      rows={6}
-                      className="resize-none"
+                      rows={8}
+                      className="resize-none text-base"
                     />
                   </div>
                 </Card>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <div className="flex flex-col sm:flex-row justify-end gap-4 pt-8 border-t">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="h-12 px-8">
                 Cancelar
               </Button>
-              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 h-12 px-8">
                 Salvar Ficha
               </Button>
             </div>

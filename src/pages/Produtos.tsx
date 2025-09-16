@@ -50,6 +50,7 @@ export default function Produtos() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [produtoParaExcluir, setProdutoParaExcluir] = useState<any>(null)
   const [dependenciasProduto, setDependenciasProduto] = useState<any>(null)
+  const [sincronizacaoExecutada, setSincronizacaoExecutada] = useState(false)
   
   const { categorias, addCategoria } = useCategorias()
   const { produtos, loading, error, createProduto, updateProduto, deleteProduto, desativarProduto, reativarProduto, verificarDependenciasProduto, refresh } = useProdutos()
@@ -333,11 +334,13 @@ export default function Produtos() {
 
 
 
+  // 🔄 Sincronização automática apenas quando necessário
   useEffect(() => {
-    if (fichas.length > 0 && produtos.length >= 0 && !loading) {
+    if (fichas.length > 0 && produtos.length >= 0 && !loading && !sincronizacaoExecutada) {
       sincronizarFichasNaoSincronizadas()
+      setSincronizacaoExecutada(true)
     }
-  }, [fichas, produtos, loading])
+  }, [fichas.length, produtos.length, loading, sincronizacaoExecutada]) // Usar apenas .length para evitar loops
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -349,7 +352,7 @@ export default function Produtos() {
   }, [])
 
   const sincronizarFichasNaoSincronizadas = async () => {
-    if (!fichas || !produtos) return
+    if (!fichas || !produtos || fichas.length === 0) return
 
     try {
       const fichasNaoSincronizadas = fichas.filter(ficha => 

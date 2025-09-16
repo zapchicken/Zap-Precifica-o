@@ -11,6 +11,9 @@ import { useFornecedores } from '@/hooks/useFornecedores'
 import { useInsumos } from '@/hooks/useInsumos'
 import type { InsumoInsert, InsumoUpdate, Insumo } from '@/integrations/supabase/types'
 import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/integrations/supabase/client'
 
 interface InsumoFormProps {
   insumo?: Insumo
@@ -80,6 +83,8 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
   const [precoInput, setPrecoInput] = useState('')
   const { fornecedores } = useFornecedores()
   const { createInsumo, updateInsumo } = useInsumos()
+  const { toast } = useToast()
+  const { user } = useAuth()
   
   const [formData, setFormData] = useState<InsumoInsert>({
     nome: '',
@@ -181,6 +186,47 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
     return ''
   }
 
+  const gerarProximoCodigoInsumo = async (): Promise<string> => {
+    try {
+      const { data: insumos, error } = await supabase
+        .from('insumos')
+        .select('codigo_insumo')
+        .eq('user_id', user?.id)
+        .not('codigo_insumo', 'is', null)
+
+      if (error) throw error
+
+      const maxCode = insumos
+        ?.filter(i => i.codigo_insumo?.startsWith('INS'))
+        .map(i => parseInt(i.codigo_insumo?.replace('INS', '') || '0', 10))
+        .filter(n => !isNaN(n))
+        .reduce((max, n) => Math.max(max, n), 0) || 0
+
+      const nextNumber = (maxCode + 1).toString().padStart(3, '0')
+      return `INS${nextNumber}`
+    } catch (error) {
+      console.error('Erro ao gerar próximo código:', error)
+      return 'INS001'
+    }
+  }
+
+  const gerarCodigoAutomatico = async () => {
+    try {
+      const novoCodigo = await gerarProximoCodigoInsumo()
+      setFormData(prev => ({ ...prev, codigo_insumo: novoCodigo }))
+      toast({
+        title: 'Código gerado',
+        description: `Código ${novoCodigo} foi gerado automaticamente.`
+      })
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o código automaticamente.',
+        variant: 'destructive'
+      })
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -219,25 +265,31 @@ export function InsumoForm({ insumo, onSuccess, trigger }: InsumoFormProps) {
             {/* Código do Insumo */}
             <div className="space-y-2">
               <Label htmlFor="codigo">Código do Insumo</Label>
-              <Input
-                id="codigo"
-                value={formData.codigo_insumo || ''}
-                onChange={(e) => {
-                  const valor = e.target.value
-                  if (valor === '' || /^INS\d{0,3}$/.test(valor) || /^\d{0,3}$/.test(valor)) {
-                    setFormData(prev => ({ ...prev, codigo_insumo: valor }))
-                  }
-                }}
-                onBlur={(e) => {
-                  const valor = e.target.value
-                  if (valor && valor !== '') {
-                    const codigoFormatado = formatarCodigoInsumo(valor)
-                    setFormData(prev => ({ ...prev, codigo_insumo: codigoFormatado }))
-                  }
-                }}
-                placeholder="Ex: INS001 ou digite apenas 1"
-                className="min-h-[48px]"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="codigo"
+                  value={formData.codigo_insumo || ''}
+                  onChange={(e) => {
+                    const valor = e.target.value
+                    if (valor === '' || /^INS\d{0,3}$/.test(valor) || /^\d{0,3}$/.test(valor)) {
+                      setFormData(prev => ({ ...prev, codigo_insumo: valor }))
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const valor = e.target.value
+                    if (valor && valor !== '') {
+                      const codigoFormatado = formatarCodigoInsumo(valor)
+                      setFormData(prev => ({ ...prev, codigo_insumo: codigoFormatado }))
+                    }
+                  }}
+                  placeholder="Ex: INS001 ou digite apenas 1"
+                  className="flex-1"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={gerarCodigoAutomatico}>
+                  Auto
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Códigos são gerados automaticamente no formato INSXXX (001-999)</p>
             </div>
 
             {/* Fornecedor */}

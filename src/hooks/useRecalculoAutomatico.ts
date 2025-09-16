@@ -38,6 +38,8 @@ export const useRecalculoAutomatico = () => {
         return
       }
 
+      console.log('🔍 Fichas afetadas encontradas:', fichasAfetadas?.length || 0)
+
       if (!fichasAfetadas || fichasAfetadas.length === 0) {
         console.log('✅ Nenhuma ficha afetada pelo insumo:', insumoId)
         return
@@ -110,6 +112,8 @@ export const useRecalculoAutomatico = () => {
         console.error('❌ Erro ao buscar bases afetadas:', buscaError)
         return
       }
+
+      console.log('🔍 Bases afetadas encontradas:', basesAfetadas?.length || 0)
 
       if (!basesAfetadas || basesAfetadas.length === 0) {
         console.log('✅ Nenhuma base afetada pelo insumo:', insumoId)
@@ -226,6 +230,58 @@ export const useRecalculoAutomatico = () => {
     }
   }, [user?.id])
 
+  // Função para recalcular fichas que usam bases que contêm um insumo específico
+  const recalcularFichasComBasesQueUsamInsumo = useCallback(async (insumoId: string, novoCustoUnitario: number) => {
+    if (!user?.id) {
+      console.warn('⚠️ Usuário não autenticado para recálculo automático')
+      return 0
+    }
+
+    try {
+      console.log('🔄 Iniciando recálculo automático de fichas com bases que usam insumo:', insumoId, 'Novo custo:', novoCustoUnitario)
+      
+      // 1. Encontrar todas as bases que usam este insumo
+      const { data: basesAfetadas, error: basesError } = await supabase
+        .from('bases_insumos')
+        .select(`
+          base_id,
+          bases!inner(
+            id,
+            nome,
+            user_id
+          )
+        `)
+        .eq('insumo_id', insumoId)
+        .eq('bases.user_id', user.id)
+
+      if (basesError) {
+        console.error('❌ Erro ao buscar bases afetadas:', basesError)
+        return 0
+      }
+
+      console.log('🔍 Bases afetadas encontradas:', basesAfetadas?.length || 0, basesAfetadas)
+
+      if (!basesAfetadas || basesAfetadas.length === 0) {
+        console.log('✅ Nenhuma base afetada pelo insumo:', insumoId)
+        return 0
+      }
+
+      // 2. Para cada base afetada, recalcular fichas que a usam
+      let totalFichasAfetadas = 0
+      for (const baseInsumo of basesAfetadas) {
+        const fichasAfetadas = await recalcularFichasComBase(baseInsumo.base_id, novoCustoUnitario)
+        totalFichasAfetadas += fichasAfetadas
+      }
+
+      console.log('✅ Recálculo automático de fichas com bases concluído para', totalFichasAfetadas, 'fichas')
+      
+      return totalFichasAfetadas
+    } catch (error) {
+      console.error('❌ Erro no recálculo automático de fichas com bases:', error)
+      return 0
+    }
+  }, [user?.id, recalcularFichasComBase])
+
   // Função auxiliar para recalcular custo total de uma ficha
   const recalcularCustoTotalFicha = useCallback(async (fichaId: string) => {
     try {
@@ -282,10 +338,136 @@ export const useRecalculoAutomatico = () => {
 
       console.log('✅ Custo total recalculado para ficha:', fichaId, 'Valor:', custoTotalGeral)
 
+      // 🔄 SINCRONIZAÇÃO AUTOMÁTICA: Atualizar produto no catálogo
+      try {
+        const { data: fichaAtualizada } = await supabase
+          .from('fichas_tecnicas')
+          .select('*')
+          .eq('id', fichaId)
+          .single()
+
+        if (fichaAtualizada) {
+          // Verificar se já existe produto para esta ficha
+          const { data: produtoExistente } = await supabase
+            .from('produtos')
+            .select('id')
+            .eq('ficha_tecnica_id', fichaId)
+            .single()
+
+          if (produtoExistente) {
+            // Atualizar produto existente com novo custo
+            const produtoData = {
+              preco_custo: custoTotalGeral,
+              preco_venda: fichaAtualizada.preco_sugerido || 0,
+              margem_lucro: fichaAtualizada.margem_contribuicao || 0
+            }
+
+            await supabase
+              .from('produtos')
+              .update(produtoData)
+              .eq('id', produtoExistente.id)
+
+            console.log('✅ Produto atualizado automaticamente no catálogo com novo custo:', custoTotalGeral)
+          }
+        }
+      } catch (syncError) {
+        console.error('❌ Erro ao sincronizar produto após recálculo:', syncError)
+        // Não interromper o fluxo principal se a sincronização falhar
+      }
+
     } catch (error) {
       console.error('❌ Erro ao recalcular custo total da ficha:', fichaId, error)
     }
   }, [])
+
+  // Função para recalcular fichas que usam embalagens que contêm um insumo específico
+  const recalcularFichasComEmbalagensQueUsamInsumo = useCallback(async (insumoId: string, novoCustoUnitario: number) => {
+    if (!user?.id) {
+      console.warn('⚠️ Usuário não autenticado para recálculo automático')
+      return 0
+    }
+
+    try {
+      console.log('🔄 Iniciando recálculo automático de fichas com embalagens que usam insumo:', insumoId, 'Novo custo:', novoCustoUnitario)
+      
+      // 1. Buscar o nome do insumo
+      const { data: insumo, error: insumoError } = await supabase
+        .from('insumos')
+        .select('nome')
+        .eq('id', insumoId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (insumoError || !insumo) {
+        console.error('❌ Erro ao buscar nome do insumo:', insumoError)
+        return 0
+      }
+
+      console.log('🔍 Nome do insumo:', insumo.nome)
+      
+      // 2. Encontrar todas as embalagens que usam este insumo pelo nome
+      const { data: embalagensAfetadas, error: embalagensError } = await supabase
+        .from('insumos_embalagem_delivery')
+        .select(`
+          ficha_id,
+          quantidade,
+          nome,
+          fichas_tecnicas!inner(
+            id,
+            nome,
+            user_id
+          )
+        `)
+        .eq('nome', insumo.nome)
+        .eq('fichas_tecnicas.user_id', user.id)
+
+      if (embalagensError) {
+        console.error('❌ Erro ao buscar embalagens afetadas:', embalagensError)
+        return 0
+      }
+
+      console.log('🔍 Embalagens afetadas encontradas:', embalagensAfetadas?.length || 0, embalagensAfetadas)
+
+      if (!embalagensAfetadas || embalagensAfetadas.length === 0) {
+        console.log('✅ Nenhuma embalagem afetada pelo insumo:', insumo.nome)
+        return 0
+      }
+
+      // 3. Atualizar custos nas embalagens
+      for (const embalagem of embalagensAfetadas) {
+        const novoCustoTotal = embalagem.quantidade * novoCustoUnitario
+
+        // Atualizar embalagem
+        const { error: updateError } = await supabase
+          .from('insumos_embalagem_delivery')
+          .update({
+            custo_unitario: novoCustoUnitario,
+            custo_total: novoCustoTotal
+          })
+          .eq('ficha_id', embalagem.ficha_id)
+          .eq('nome', insumo.nome)
+
+        if (updateError) {
+          console.error('❌ Erro ao atualizar embalagem:', updateError)
+          continue
+        }
+
+        console.log('✅ Embalagem atualizada:', embalagem.ficha_id, 'para insumo:', insumo.nome)
+      }
+
+      // 4. Recalcular custo total de cada ficha afetada
+      for (const embalagem of embalagensAfetadas) {
+        await recalcularCustoTotalFicha(embalagem.ficha_id)
+      }
+
+      console.log('✅ Recálculo automático de fichas com embalagens concluído para', embalagensAfetadas.length, 'fichas')
+      
+      return embalagensAfetadas.length
+    } catch (error) {
+      console.error('❌ Erro no recálculo automático de fichas com embalagens:', error)
+      return 0
+    }
+  }, [user?.id, recalcularCustoTotalFicha])
 
   // Função auxiliar para recalcular custo total de uma base
   const recalcularCustoTotalBase = useCallback(async (baseId: string) => {
@@ -342,18 +524,24 @@ export const useRecalculoAutomatico = () => {
     try {
       console.log('🔄 Iniciando recálculo automático completo para insumo:', insumoId)
       
-      // Recalcular bases que usam este insumo
+      // 1. Recalcular bases que usam este insumo diretamente
       const basesAfetadas = await recalcularBasesComInsumo(insumoId, novoCustoUnitario)
       
-      // Recalcular fichas que usam este insumo diretamente
+      // 2. Recalcular fichas que usam este insumo diretamente
       const fichasAfetadas = await recalcularFichasComInsumo(insumoId, novoCustoUnitario)
       
-      const totalAfetado = basesAfetadas + fichasAfetadas
+      // 3. Recalcular fichas que usam bases que contêm este insumo
+      const fichasComBasesAfetadas = await recalcularFichasComBasesQueUsamInsumo(insumoId, novoCustoUnitario)
+      
+      // 4. Recalcular fichas que usam embalagens que contêm este insumo
+      const fichasComEmbalagensAfetadas = await recalcularFichasComEmbalagensQueUsamInsumo(insumoId, novoCustoUnitario)
+      
+      const totalAfetado = basesAfetadas + fichasAfetadas + fichasComBasesAfetadas + fichasComEmbalagensAfetadas
       
       if (totalAfetado > 0) {
         toast({
           title: "Recálculo Automático Concluído",
-          description: `${totalAfetado} registros foram atualizados automaticamente (${basesAfetadas} bases, ${fichasAfetadas} fichas)`,
+          description: `${totalAfetado} registros foram atualizados automaticamente (${basesAfetadas} bases, ${fichasAfetadas} fichas diretas, ${fichasComBasesAfetadas} fichas via bases, ${fichasComEmbalagensAfetadas} fichas via embalagens)`,
         })
       }
       
@@ -367,13 +555,15 @@ export const useRecalculoAutomatico = () => {
       })
       return 0
     }
-  }, [user?.id, recalcularBasesComInsumo, recalcularFichasComInsumo, toast])
+  }, [user?.id, recalcularBasesComInsumo, recalcularFichasComInsumo, recalcularFichasComBasesQueUsamInsumo, recalcularFichasComEmbalagensQueUsamInsumo, toast])
 
   return {
     recalcularAutomaticamente,
     recalcularFichasComInsumo,
     recalcularBasesComInsumo,
     recalcularFichasComBase,
+    recalcularFichasComBasesQueUsamInsumo,
+    recalcularFichasComEmbalagensQueUsamInsumo,
     recalcularCustoTotalFicha,
     recalcularCustoTotalBase
   }

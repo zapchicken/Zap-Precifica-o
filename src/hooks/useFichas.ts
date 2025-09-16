@@ -724,7 +724,7 @@ export const useFichas = () => {
                   // Buscar insumo pelo nome na tabela insumos
                   const { data: insumoCompleto, error: buscaInsumoError } = await supabase
                     .from('insumos')
-                    .select('id')
+                    .select('id, nome')
                     .eq('nome', insumo.nome)
                     .eq('user_id', user.id)
                     .single()
@@ -975,16 +975,25 @@ export const useFichas = () => {
       // Verificar se já existe produto para esta ficha
       const { data: produtoExistente } = await supabase
         .from('produtos')
-        .select('id')
+        .select('id, nome, codigo_pdv, preco_custo, preco_venda, margem_lucro')
         .eq('ficha_tecnica_id', ficha.id)
         .single()
 
       if (produtoExistente) {
-        // Atualizar produto existente
-        await supabase
-          .from('produtos')
-          .update(produtoData)
-          .eq('id', produtoExistente.id)
+        // Verificar se há mudanças antes de atualizar
+        const hasChanges = 
+          produtoExistente.nome !== produtoData.nome ||
+          produtoExistente.codigo_pdv !== produtoData.codigo_pdv ||
+          produtoExistente.preco_custo !== produtoData.preco_custo ||
+          produtoExistente.preco_venda !== produtoData.preco_venda ||
+          produtoExistente.margem_lucro !== produtoData.margem_lucro
+
+        if (hasChanges) {
+          await supabase
+            .from('produtos')
+            .update(produtoData)
+            .eq('id', produtoExistente.id)
+        }
       } else {
         // Criar novo produto
         await supabase

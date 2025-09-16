@@ -249,8 +249,6 @@ export function useMarkup() {
 
       if (error) {
         console.error('Erro ao adicionar canais padrão:', error)
-      } else {
-        console.log('Canais padrão adicionados com sucesso!')
       }
     } catch (error) {
       console.error('Erro inesperado ao adicionar canais padrão:', error)
