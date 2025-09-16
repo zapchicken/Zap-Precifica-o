@@ -19,12 +19,25 @@ export function InsumosList() {
   const [statusFilter, setStatusFilter] = useState('todos')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const insumosForUI = insumos.map(item => ({
-    ...item,
-    fornecedor: (item as any).fornecedores?.razao_social || null,
-    nome: item.nome_comercial || item.nome || 'Sem nome',
-    codigo: item.codigo_insumo || '---'
-  }))
+  const insumosForUI = insumos
+    .filter(insumo => {
+      // Excluir bases conhecidas
+      const nomeInsumo = insumo.nome.toLowerCase()
+      const codigoInsumo = insumo.codigo_insumo || ''
+      const isBase = nomeInsumo.includes('farinha empanamento') || 
+                     nomeInsumo.includes('base') ||
+                     nomeInsumo.includes('preparo') ||
+                     nomeInsumo.includes('mistura') ||
+                     codigoInsumo.startsWith('BAS')
+      
+      return !isBase
+    })
+    .map(item => ({
+      ...item,
+      fornecedor: (item as any).fornecedores?.razao_social || null,
+      nome: item.nome_comercial || item.nome || 'Sem nome',
+      codigo: item.codigo_insumo || '---'
+    }))
 
   const insumosFiltrados = insumosForUI.filter(insumo => {
     const searchLower = searchTerm.toLowerCase()

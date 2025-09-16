@@ -113,10 +113,19 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   }, [botoesEnviados])
 
   
-  // Filtrar apenas insumos ativos
-  const insumosParaCompra = insumos.filter(insumo => 
-    insumo.ativo === true
-  )
+  // Filtrar apenas insumos ativos (excluir bases)
+  const insumosParaCompra = insumos.filter(insumo => {
+    // Excluir bases conhecidas
+    const nomeInsumo = insumo.nome.toLowerCase()
+    const codigoInsumo = insumo.codigo_insumo || ''
+    const isBase = nomeInsumo.includes('farinha empanamento') || 
+                   nomeInsumo.includes('base') ||
+                   nomeInsumo.includes('preparo') ||
+                   nomeInsumo.includes('mistura') ||
+                   codigoInsumo.startsWith('BAS')
+    
+    return insumo.ativo === true && !isBase
+  })
   
   // Obter lista de depósitos únicos dos insumos
   const depositosDosInsumos = Array.from(
