@@ -118,11 +118,9 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   }, [botoesEnviados])
 
   
-  // Filtrar apenas insumos ativos (não bases)
+  // Filtrar apenas insumos ativos
   const insumosParaCompra = insumos.filter(insumo => 
-    insumo.ativo === true && 
-    insumo.tipo !== 'base' && 
-    insumo.tipo !== 'Base'
+    insumo.ativo === true
   )
   
   // Obter lista de depósitos únicos dos insumos
