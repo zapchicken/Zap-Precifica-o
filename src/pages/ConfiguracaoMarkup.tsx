@@ -31,7 +31,6 @@ import {
   RefreshCw
 } from "lucide-react"
 import { useMarkup } from "@/hooks/useMarkup"
-import { useCategorias } from "@/hooks/useCategorias"
 
 export default function ConfiguracaoMarkup() {
   const { 
@@ -59,7 +58,23 @@ export default function ConfiguracaoMarkup() {
     percentualDespesasFixas
   } = useMarkup()
 
-  const { categorias } = useCategorias()
+  // Categorias hard coded da página de fichas técnicas
+  const categorias = [
+    'ACOMPANHAMENTOS',
+    'BEBIDAS CERVEJAS E CHOPP',
+    'BEBIDAS REFRIGERANTES',
+    'BEBIDAS SUCOS',
+    'COMBO LANCHES CARNE ANGUS',
+    'COMBO LANCHES FRANGO',
+    'FRANGO AMERICANO',
+    'JUMBOS (COMBINADOS GRANDES)',
+    'LANCHES',
+    'MOLHOS',
+    'PROMOÇÕES',
+    'SALADAS',
+    'SOBREMESAS',
+    'ZAPBOX (COMBINADOS INDIVIDUÁIS)'
+  ]
 
   // Estados locais
   const [hasChanges, setHasChanges] = useState(false)
