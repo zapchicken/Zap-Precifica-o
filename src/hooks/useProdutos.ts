@@ -14,6 +14,7 @@ export interface Produto {
   categoria: string | null
   preco_custo: number | null
   preco_venda: number | null
+  preco_venda_ifood: number | null
   margem_lucro: number | null
   status: 'ativo' | 'inativo'
   origem: 'manual' | 'ficha_tecnica' | 'importacao'

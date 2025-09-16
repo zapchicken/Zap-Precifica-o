@@ -965,6 +965,7 @@ export const useFichas = () => {
         categoria: ficha.categoria,
         preco_custo: ficha.custo_total_producao || 0,
         preco_venda: ficha.preco_sugerido || 0,
+        preco_venda_ifood: ficha.preco_sugerido || 0, // Por padrão, usar o mesmo preço
         margem_lucro: ficha.margem_contribuicao || 0,
         origem: 'ficha_tecnica' as const,
         ficha_tecnica_id: ficha.id,
@@ -975,7 +976,7 @@ export const useFichas = () => {
       // Verificar se já existe produto para esta ficha
       const { data: produtoExistente } = await supabase
         .from('produtos')
-        .select('id, nome, codigo_pdv, preco_custo, preco_venda, margem_lucro')
+        .select('id, nome, codigo_pdv, preco_custo, preco_venda, preco_venda_ifood, margem_lucro')
         .eq('ficha_tecnica_id', ficha.id)
         .single()
 
@@ -986,6 +987,7 @@ export const useFichas = () => {
           produtoExistente.codigo_pdv !== produtoData.codigo_pdv ||
           produtoExistente.preco_custo !== produtoData.preco_custo ||
           produtoExistente.preco_venda !== produtoData.preco_venda ||
+          produtoExistente.preco_venda_ifood !== produtoData.preco_venda_ifood ||
           produtoExistente.margem_lucro !== produtoData.margem_lucro
 
         if (hasChanges) {

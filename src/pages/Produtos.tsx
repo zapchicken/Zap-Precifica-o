@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { 
   Plus, 
   Search, 
@@ -65,6 +66,7 @@ export default function Produtos() {
     categoria: "",
     precoCusto: "",
     precoVenda: "",
+    precoVendaIfood: "",
     observacoes: "",
     ativo: true,
     fichaTecnicaId: ""
@@ -95,6 +97,7 @@ export default function Produtos() {
     }
 
     const precoVenda = parseFloat(formData.precoVenda)
+    const precoVendaIfood = parseFloat(formData.precoVendaIfood) || 0
     const precoCusto = parseFloat(formData.precoCusto) || 0
     
     if (isNaN(precoVenda) || precoVenda <= 0) {
@@ -115,6 +118,7 @@ export default function Produtos() {
       categoria: formData.categoria,
       preco_custo: precoCusto,
       preco_venda: precoVenda,
+      preco_venda_ifood: precoVendaIfood,
       margem_lucro: margemLucro,
       origem: 'manual' as const,
       observacoes: formData.observacoes,
@@ -153,6 +157,7 @@ export default function Produtos() {
       categoria: produto.categoria || "",
       precoCusto: (produto.preco_custo || 0).toString(),
       precoVenda: (produto.preco_venda || 0).toString(),
+      precoVendaIfood: (produto.preco_venda_ifood || 0).toString(),
       observacoes: produto.observacoes || "",
       ativo: produto.status === 'ativo',
       fichaTecnicaId: produto.ficha_tecnica_id || ""
@@ -332,7 +337,18 @@ export default function Produtos() {
     return Math.round(markup * 100) / 100
   }
 
+  // Funções para calcular margens de contribuição
+  const calcularMargemContribuicao = (precoVenda: number, precoCusto: number) => {
+    const margemValor = precoVenda - precoCusto
+    const margemPercentual = precoVenda > 0 ? (margemValor / precoVenda) * 100 : 0
+    return { valor: margemValor, percentual: margemPercentual }
+  }
 
+  const calcularMargemIfood = (precoVendaIfood: number, precoCusto: number) => {
+    const margemValor = precoVendaIfood - precoCusto
+    const margemPercentual = precoVendaIfood > 0 ? (margemValor / precoVendaIfood) * 100 : 0
+    return { valor: margemValor, percentual: margemPercentual }
+  }
 
   // 🔄 Sincronização automática apenas quando necessário
   useEffect(() => {
@@ -405,6 +421,7 @@ export default function Produtos() {
       categoria: "",
       precoCusto: "",
       precoVenda: "",
+      precoVendaIfood: "",
       observacoes: "",
       ativo: true,
       fichaTecnicaId: ""
@@ -469,16 +486,6 @@ export default function Produtos() {
                   />
                 </div>
                 
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="descricao">Descrição do Produto *</Label>
-                  <Textarea
-                    id="descricao"
-                    value={formData.descricao}
-                    onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                    placeholder="Descrição detalhada do produto para apresentar aos clientes..."
-                    rows={3}
-                  />
-                </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria *</Label>
@@ -530,6 +537,18 @@ export default function Produtos() {
                   />
                 </div>
                 
+                <div className="space-y-2">
+                  <Label htmlFor="precoVendaIfood">Preço de Venda IFood (R$)</Label>
+                  <Input
+                    id="precoVendaIfood"
+                    type="number"
+                    step="0.01"
+                    value={formData.precoVendaIfood}
+                    onChange={(e) => setFormData(prev => ({ ...prev, precoVendaIfood: e.target.value }))}
+                    placeholder="0,00"
+                  />
+                </div>
+                
                 <div className="md:col-span-2 space-y-2">
                   <Label htmlFor="observacoes">Observações</Label>
                   <Textarea
@@ -562,6 +581,20 @@ export default function Produtos() {
                   <p className="text-xs text-muted-foreground">
                     Selecione uma ficha técnica para vincular ou "Nenhuma ficha técnica" para desvincular
                   </p>
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="origem">Origem do Produto</Label>
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                    <Badge variant={editingProduto?.origem === 'ficha_tecnica' ? 'default' : editingProduto?.origem === 'importacao' ? 'secondary' : 'outline'}>
+                      {editingProduto?.origem === 'ficha_tecnica' ? 'Ficha Técnica' : 
+                       editingProduto?.origem === 'importacao' ? 'Importação' : 'Manual'}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {editingProduto?.origem === 'ficha_tecnica' ? 'Produto criado a partir de uma ficha técnica' :
+                       editingProduto?.origem === 'importacao' ? 'Produto importado de planilha' : 'Produto criado manualmente'}
+                    </span>
+                  </div>
                 </div>
               </div>
               
@@ -693,6 +726,65 @@ export default function Produtos() {
                    </Card>
         </div>
 
+        {/* Indicadores de Margem de Contribuição */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">MC Venda Direta (R$)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {formData.precoVenda && formData.precoCusto 
+                  ? `R$ ${calcularMargemContribuicao(parseFloat(formData.precoVenda), parseFloat(formData.precoCusto)).valor.toFixed(2)}`
+                  : 'R$ 0,00'
+                }
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">MC Venda Direta (%)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {formData.precoVenda && formData.precoCusto 
+                  ? `${calcularMargemContribuicao(parseFloat(formData.precoVenda), parseFloat(formData.precoCusto)).percentual.toFixed(1)}%`
+                  : '0,0%'
+                }
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">MC IFood (R$)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {formData.precoVendaIfood && formData.precoCusto 
+                  ? `R$ ${calcularMargemIfood(parseFloat(formData.precoVendaIfood), parseFloat(formData.precoCusto)).valor.toFixed(2)}`
+                  : 'R$ 0,00'
+                }
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">MC IFood (%)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {formData.precoVendaIfood && formData.precoCusto 
+                  ? `${calcularMargemIfood(parseFloat(formData.precoVendaIfood), parseFloat(formData.precoCusto)).percentual.toFixed(1)}%`
+                  : '0,0%'
+                }
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Catálogo de Produtos ({filteredProdutos.length})</CardTitle>
@@ -717,14 +809,88 @@ export default function Produtos() {
                      <TableHead>Status</TableHead>
                      <TableHead>Produto</TableHead>
                      <TableHead>Código PDV</TableHead>
-                     <TableHead>Descrição</TableHead>
                      <TableHead>Categoria</TableHead>
                      <TableHead>Preço Custo</TableHead>
-                     <TableHead>Preço Venda</TableHead>
-                     <TableHead>Preço Sugerido Venda Direta</TableHead>
-                     <TableHead>Preço Sugerido iFood</TableHead>
-                     <TableHead>Margem</TableHead>
-                     <TableHead>Origem</TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">Preço VD</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Preço de Venda Direta</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">Preço IFood</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Preço de Venda no IFood</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">MC VD (R$)</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Margem de Contribuição Venda Direta em Reais</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">MC VD (%)</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Margem de Contribuição Venda Direta em Percentual</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">MC IFOOD (R$)</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Margem de Contribuição IFood em Reais</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">MC IFOOD (%)</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Margem de Contribuição IFood em Percentual</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">Preço Sugerido VD</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Preço Sugerido para Venda Direta</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">Preço Sugerido IFood</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Preço Sugerido para IFood</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
                      <TableHead>Ações</TableHead>
                    </TableRow>
                  </TableHeader>
@@ -768,11 +934,6 @@ export default function Produtos() {
                         <code className="text-sm bg-muted px-2 py-1 rounded">{produto.codigo_pdv || 'N/A'}</code>
                       </TableCell>
                       <TableCell>
-                        <p className="text-sm text-muted-foreground max-w-32 truncate" title={produto.descricao || ''}>
-                          {produto.descricao || 'Sem descrição'}
-                        </p>
-                      </TableCell>
-                      <TableCell>
                         <Badge className={getCategoryColor(produto.categoria)}>
                           {produto.categoria || 'Sem categoria'}
                         </Badge>
@@ -783,26 +944,27 @@ export default function Produtos() {
                       <TableCell className="font-medium">
                         R$ {produto.preco_venda?.toFixed(2) || '0,00'}
                       </TableCell>
+                      <TableCell className="font-medium">
+                        R$ {produto.preco_venda_ifood?.toFixed(2) || '0,00'}
+                      </TableCell>
+                      <TableCell className="font-medium text-green-600">
+                        R$ {calcularMargemContribuicao(produto.preco_venda || 0, produto.preco_custo || 0).valor.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="font-medium text-green-600">
+                        {calcularMargemContribuicao(produto.preco_venda || 0, produto.preco_custo || 0).percentual.toFixed(1)}%
+                      </TableCell>
+                      <TableCell className="font-medium text-blue-600">
+                        R$ {calcularMargemIfood(produto.preco_venda_ifood || 0, produto.preco_custo || 0).valor.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="font-medium text-blue-600">
+                        {calcularMargemIfood(produto.preco_venda_ifood || 0, produto.preco_custo || 0).percentual.toFixed(1)}%
+                      </TableCell>
                       <TableCell className="font-medium text-primary">
                         R$ {calcularPrecoSugerido(produto.preco_custo || 0, produto.categoria || '', 'Venda Direta').toFixed(2)}
                       </TableCell>
                       <TableCell className="font-medium text-accent">
                         R$ {calcularPrecoSugerido(produto.preco_custo || 0, produto.categoria || '', 'iFood').toFixed(2)}
                       </TableCell>
-                                             <TableCell>
-                         <span className={`text-sm font-medium ${
-                           (produto.margem_lucro || 0) >= 30 ? 'text-success' :
-                           (produto.margem_lucro || 0) >= 15 ? 'text-warning' : 'text-destructive'
-                         }`}>
-                           {produto.margem_lucro?.toFixed(1) || '0,0'}%
-                         </span>
-                       </TableCell>
-                       <TableCell>
-                         <Badge variant={produto.origem === 'ficha_tecnica' ? 'default' : 'secondary'}>
-                           {produto.origem === 'ficha_tecnica' ? 'Ficha Técnica' : 
-                            produto.origem === 'importacao' ? 'Importação' : 'Manual'}
-                         </Badge>
-                       </TableCell>
                        <TableCell>
                          <div className="flex items-center gap-2">
                           <Button
