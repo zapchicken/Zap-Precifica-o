@@ -14,10 +14,12 @@ import { useToast } from "@/hooks/use-toast"
 import { processarVendas, salvarNoSupabase } from "@/utils/csvProcessor"
 import { useProdutos } from "@/hooks/useProdutos"
 import { useMarkup } from "@/hooks/useMarkup"
+import { supabase } from "@/lib/supabase"
 import { 
   Upload, 
   FileText, 
   Check, 
+  CheckCircle,
   AlertCircle,
   Download,
   Calendar,
@@ -52,6 +54,8 @@ interface ResumoImportacao {
   sucessos: number
   erros: number
   avisos: number
+  dataInicio?: string
+  dataFim?: string
 }
 
 interface AnaliseMargem {
@@ -104,6 +108,41 @@ export default function ImportarVendas() {
   const [limpezaConfirmada, setLimpezaConfirmada] = useState<boolean>(false)
   
   const { toast } = useToast()
+  
+  // Carregar resumo das vendas existentes ao inicializar
+  useEffect(() => {
+    const carregarResumoVendas = async () => {
+      try {
+        const { data: vendas, error } = await supabase
+          .from('vendas')
+          .select('data_venda, valor_total')
+          .order('data_venda', { ascending: true });
+
+        if (error) throw error;
+
+        if (vendas && vendas.length > 0) {
+          const datas = vendas.map(v => v.data_venda).sort();
+          const dataInicioPeriodo = datas[0];
+          const dataFimPeriodo = datas[datas.length - 1];
+          const valorTotal = vendas.reduce((total, venda) => total + venda.valor_total, 0);
+
+          setResumo({
+            totalVendas: vendas.length,
+            valorTotal: valorTotal,
+            sucessos: vendas.length,
+            erros: 0,
+            avisos: 0,
+            dataInicio: dataInicioPeriodo,
+            dataFim: dataFimPeriodo
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar resumo das vendas:', error);
+      }
+    };
+
+    carregarResumoVendas();
+  }, []);
   
   // Hooks para dados necessários
   const { produtos } = useProdutos()
@@ -248,12 +287,19 @@ export default function ImportarVendas() {
         observacao: undefined
       })));
       
+      // Calcular período das vendas importadas
+      const datas = vendasParaSalvar.map((venda: any) => venda.data_venda).sort();
+      const dataInicioPeriodo = datas.length > 0 ? datas[0] : undefined;
+      const dataFimPeriodo = datas.length > 0 ? datas[datas.length - 1] : undefined;
+
       const novoResumo = {
         totalVendas: vendasParaSalvar.length,
         valorTotal: vendasParaSalvar.reduce((total: number, venda: any) => total + venda.valor_total, 0),
         sucessos: vendasParaSalvar.length,
         erros: resultado.erros.length,
-        avisos: resultado.dados.length - vendasParaSalvar.length // Vendas filtradas fora do período
+        avisos: resultado.dados.length - vendasParaSalvar.length, // Vendas filtradas fora do período
+        dataInicio: dataInicioPeriodo,
+        dataFim: dataFimPeriodo
       };
       
       setResumo(novoResumo);
@@ -636,6 +682,57 @@ export default function ImportarVendas() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Resumo de Vendas Importadas */}
+            {resumo && (
+              <Card className="border-green-200 bg-green-50/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-green-700">
+                    <CheckCircle className="h-5 w-5" />
+                    Resumo das Vendas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{resumo.totalVendas}</div>
+                      <div className="text-sm text-green-600">Vendas Importadas</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        R$ {resumo.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-sm text-green-600">Valor Total</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{resumo.sucessos}</div>
+                      <div className="text-sm text-green-600">Sucessos</div>
+                    </div>
+                  </div>
+                  
+                  {/* Período das vendas */}
+                  {resumo.dataInicio && resumo.dataFim && (
+                    <div className="mt-4 p-3 bg-green-100 rounded-md">
+                      <div className="flex items-center justify-center gap-2 text-green-700">
+                        <Calendar className="h-4 w-4" />
+                        <span className="text-sm font-medium">Período das vendas:</span>
+                        <span className="text-sm">
+                          {new Date(resumo.dataInicio).toLocaleDateString('pt-BR')} até {new Date(resumo.dataFim).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {resumo.erros > 0 && (
+                    <div className="mt-3 p-2 bg-yellow-100 rounded-md">
+                      <div className="text-sm text-yellow-800">
+                        ⚠️ {resumo.erros} vendas com erro foram ignoradas
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Instruções */}
             <Card>

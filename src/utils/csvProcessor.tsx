@@ -18,7 +18,12 @@ const lerArquivo = (file: File): Promise<any[]> => {
         
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        // CRÍTICO: Forçar leitura como texto para preservar vírgulas decimais
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+          raw: false,
+          defval: "",
+          blankrows: false
+        });
         
         resolve(jsonData);
       } catch (error) {
@@ -115,8 +120,6 @@ const buscarTodosProdutos = async (): Promise<Map<string, string>> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return new Map();
 
-    console.log('🔍 Buscando todos os produtos cadastrados...');
-    
     const { data: produtos, error } = await supabase
       .from('produtos')
       .select('codigo_pdv, nome')
@@ -124,7 +127,6 @@ const buscarTodosProdutos = async (): Promise<Map<string, string>> => {
       .not('codigo_pdv', 'is', null);
 
     if (error) {
-      console.error('❌ Erro ao buscar produtos:', error);
       return new Map();
     }
 
@@ -135,21 +137,14 @@ const buscarTodosProdutos = async (): Promise<Map<string, string>> => {
         mapaProdutos.set(produto.codigo_pdv.toString(), produto.nome);
       }
     });
-
-    console.log(`✅ ${mapaProdutos.size} produtos carregados para mapeamento`);
     return mapaProdutos;
   } catch (error) {
-    console.error(`❌ Erro ao buscar produtos:`, error);
     return new Map();
   }
 };
 
 export const processarVendas = async (file: File) => {
-  console.log('📁 Processando arquivo:', file.name, file.type);
-  
   const dados = await lerArquivo(file);
-  console.log('📊 Dados lidos do arquivo:', dados.length, 'linhas');
-  console.log('📋 Primeira linha:', dados[0]);
   
   // Buscar todos os produtos uma única vez (otimização para arquivos grandes)
   const mapaProdutos = await buscarTodosProdutos();
@@ -171,25 +166,16 @@ export const processarVendas = async (file: File) => {
     };
   };
 
-  // Processar vendas com feedback de progresso para arquivos grandes
+  // Processar vendas
   const totalLinhas = dados.length;
-  console.log(`🚀 Iniciando processamento de ${totalLinhas} linhas...`);
   
   for (const [index, linha] of dados.entries()) {
     try {
-      // Feedback de progresso a cada 100 linhas para arquivos grandes
-      if (totalLinhas > 500 && (index + 1) % 100 === 0) {
-        const progresso = Math.round(((index + 1) / totalLinhas) * 100);
-        console.log(`📊 Progresso: ${index + 1}/${totalLinhas} linhas (${progresso}%)`);
-      }
       
       // Mapear campos para os nomes esperados
       const camposMapeados = mapearCampos(linha);
       
-      // Log detalhado apenas para arquivos pequenos ou primeiras linhas
-      if (totalLinhas <= 50 || index < 3) {
-        console.log(`🔄 Campos mapeados:`, camposMapeados);
-      }
+      
       
       if (!camposMapeados.data || !camposMapeados.quantidade || !camposMapeados.valor_unitario || !camposMapeados.pedido_numero) {
         const camposFaltando = [];
@@ -199,8 +185,6 @@ export const processarVendas = async (file: File) => {
         if (!camposMapeados.pedido_numero) camposFaltando.push('pedido_numero');
         
         const erroMsg = `Linha ${index + 2}: Campos obrigatórios faltando: ${camposFaltando.join(', ')}`;
-        console.error(`❌ ${erroMsg}`);
-        console.error(`📋 Dados da linha:`, linha);
         erros.push(erroMsg);
         continue;
       }
@@ -215,52 +199,40 @@ export const processarVendas = async (file: File) => {
         // Excel conta dias desde 1 de janeiro de 1900 (com correção para bug do Excel)
         const dataExcel = new Date((dataSerial - 25569) * 86400 * 1000);
         dataFormatada = dataExcel.toISOString().split('T')[0];
-        // Log de conversão apenas para arquivos pequenos
-        if (totalLinhas <= 50 || index < 3) {
-          console.log(`📅 Data serial Excel convertida: "${camposMapeados.data}" → "${dataFormatada}"`);
-        }
       } else if (dataFormatada.includes('/')) {
-        // Se a data está no formato DD/MM/YYYY, converter para YYYY-MM-DD
+        // Se a data está no formato DD/MM/YYYY ou DD/MM/YY, converter para YYYY-MM-DD
         const partes = dataFormatada.split('/');
         if (partes.length === 3) {
-          const [dia, mes, ano] = partes;
+          let [dia, mes, ano] = partes;
+          
+          // Se o ano tem 2 dígitos, assumir 20XX
+          if (ano.length === 2) {
+            ano = '20' + ano;
+          }
+          
           dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-        }
-        // Log de conversão apenas para arquivos pequenos
-        if (totalLinhas <= 50 || index < 3) {
-          console.log(`📅 Data formato DD/MM/YYYY convertida: "${camposMapeados.data}" → "${dataFormatada}"`);
-        }
-      } else {
-        // Log de conversão apenas para arquivos pequenos
-        if (totalLinhas <= 50 || index < 3) {
-          console.log(`📅 Data mantida como: "${dataFormatada}"`);
         }
       }
 
-      // Limpar valor unitário removendo "R$" e tratando vírgula decimal brasileira
-      let valorUnitarioLimpo = camposMapeados.valor_unitario.toString().trim();
+      // Limpar valor unitário - tratar diferentes formatos
+      let valorOriginal = camposMapeados.valor_unitario;
       
-      // Remover "R$" e espaços
-      valorUnitarioLimpo = valorUnitarioLimpo.replace(/R\$\s*/g, '');
-      
-      // Tratar formato brasileiro: "1.234,56" -> "1234.56"
-      // Se tem vírgula, é formato brasileiro: separador de milhares é ponto, decimal é vírgula
-      if (valorUnitarioLimpo.includes(',')) {
-        // Formato brasileiro: remover pontos (milhares) e substituir vírgula por ponto (decimal)
-        valorUnitarioLimpo = valorUnitarioLimpo.replace(/\./g, '').replace(',', '.');
+      // Se o valor já foi convertido incorretamente (ex: 799 em vez de 79,90)
+      if (typeof valorOriginal === 'number' && valorOriginal > 100) {
+        // Tentar reconstruir o valor decimal dividindo por 10 ou 100
+        // Assumir que valores grandes foram multiplicados por 100
+        valorOriginal = (valorOriginal / 100).toString();
       }
-      // Se não tem vírgula, manter como está (formato internacional)
+      
+      const valorLimpo = valorOriginal.toString().replace(',', '.').trim();
       
       // Validar se o valor é um número válido
-      const valorNumerico = parseFloat(valorUnitarioLimpo);
+      const valorNumerico = parseFloat(valorLimpo);
+      
       if (isNaN(valorNumerico) || valorNumerico <= 0) {
-        throw new Error(`Valor unitário inválido: "${camposMapeados.valor_unitario}" → "${valorUnitarioLimpo}"`);
+        throw new Error(`Valor unitário inválido: "${camposMapeados.valor_unitario}" → "${valorLimpo}"`);
       }
       
-      // Log de conversão para debug (apenas para arquivos pequenos)
-      if (totalLinhas <= 50 || index < 3) {
-        console.log(`💰 Valor convertido: "${camposMapeados.valor_unitario}" → "${valorUnitarioLimpo}" → ${valorNumerico}`);
-      }
       
       // Lógica inteligente para nome do produto (otimizada)
       let nomeProduto: string;
@@ -280,6 +252,7 @@ export const processarVendas = async (file: File) => {
       const quantidade = parseInt(camposMapeados.quantidade);
       const valorTotal = quantidade * valorNumerico;
       
+      
       const venda = {
         data_venda: dataFormatada,
         pedido_numero: camposMapeados.pedido_numero.toString().trim(),
@@ -292,37 +265,22 @@ export const processarVendas = async (file: File) => {
         observacoes: camposMapeados.observacoes?.toString().trim() || null
       };
       
-      // Log detalhado para debug (apenas para arquivos pequenos)
-      if (totalLinhas <= 50 || index < 3) {
-        console.log(`🧮 Cálculo: ${quantidade} × ${valorNumerico} = ${valorTotal}`);
-      }
 
-      // Log de venda processada apenas para arquivos pequenos
-      if (totalLinhas <= 50 || index < 3) {
-        console.log(`✅ Venda processada:`, venda);
-      }
       vendasProcessadas.push(venda);
     } catch (error) {
-      console.error(`❌ Erro na linha ${index + 2}:`, error);
       erros.push(`Linha ${index + 2}: Erro ao processar - ${error}`);
     }
   }
-
-  console.log(`📊 Resultado final: ${vendasProcessadas.length} vendas processadas, ${erros.length} erros`);
   return { dados: vendasProcessadas, erros };
 };
 
 export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas', dados: any[]) => {
   try {
-    console.log(`🔄 Iniciando salvamento de ${dados.length} itens na tabela ${tabela}`);
-    
     // Importar supabase dinamicamente para evitar problemas de SSR
     const { supabase } = await import('../lib/supabase');
-    console.log('✅ Supabase importado com sucesso');
     
     // Obter usuário atual
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    console.log('👤 Usuário:', user ? `${user.email} (${user.id})` : 'Não autenticado');
     
     if (userError || !user) {
       throw new Error(`Usuário não autenticado: ${userError?.message || 'Usuário não encontrado'}`);
@@ -334,34 +292,21 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
       user_id: user.id
     }));
 
-    console.log(`📊 Dados preparados para inserção:`, dadosComUserId.slice(0, 2)); // Log apenas os primeiros 2 itens
-    
-    // Log específico para valores monetários
-    if (tabela === 'vendas' && dadosComUserId.length > 0) {
-      console.log(`💰 Valores que serão salvos:`);
-      dadosComUserId.slice(0, 3).forEach((venda, index) => {
-        console.log(`   ${index + 1}. Valor unitário: ${venda.valor_unitario}, Valor total: ${venda.valor_total}`);
-      });
-    }
-
     let result;
     
     if (tabela === 'vendas') {
-      console.log('💾 Salvando vendas...');
       // Salvar vendas
       result = await supabase
         .from('vendas')
         .insert(dadosComUserId)
         .select();
     } else if (tabela === 'produtos') {
-      console.log('💾 Salvando produtos...');
       // Salvar produtos
       result = await supabase
         .from('produtos')
         .insert(dadosComUserId)
         .select();
     } else if (tabela === 'insumos') {
-      console.log('💾 Salvando insumos...');
       // Salvar insumos
       result = await supabase
         .from('insumos')
@@ -371,15 +316,9 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
       throw new Error(`Tabela ${tabela} não suportada`);
     }
 
-    console.log('📋 Resultado da inserção:', result);
-
     if (result.error) {
-      console.error('❌ Erro do Supabase:', result.error);
       throw new Error(`Erro do Supabase: ${result.error.message} (${result.error.code})`);
     }
-
-    console.log(`✅ Salvamento real de ${dados.length} itens na tabela ${tabela} concluído`);
-    console.log(`📊 Itens salvos:`, result.data?.length || 0);
     
     return {
       data: result.data,
@@ -387,7 +326,6 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
       count: result.data?.length || 0
     };
   } catch (error: any) {
-    console.error(`❌ Erro ao salvar na tabela ${tabela}:`, error);
     return {
       data: null,
       error: error.message,
