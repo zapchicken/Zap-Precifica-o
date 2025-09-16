@@ -32,11 +32,6 @@ import type { InsumoComFornecedor } from "@/integrations/supabase/types"
 
 // Lista padrão de depósitos
 const DEPOSITOS_PADRAO = [
-  'Depósito Principal',
-  'Depósito Seco',
-  'Depósito Congelados',
-  'Câmara Fria',
-  'Depósito Padaria',
   'Balcão',
   'Cozinha',
   'Freezers',
@@ -143,11 +138,32 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   ).sort()
   
   // Aplicar filtros de depósito e fornecedor
-  const insumosFiltrados = insumosParaCompra.filter(insumo => {
-    const passaFiltroDeposito = filtroDeposito === "todos" || insumo.deposito === filtroDeposito
-    const passaFiltroFornecedor = filtroFornecedor === "todos" || (insumo as any).fornecedor === filtroFornecedor
-    return passaFiltroDeposito && passaFiltroFornecedor
-  })
+  const insumosFiltrados = insumosParaCompra
+    .filter(insumo => {
+      const passaFiltroDeposito = filtroDeposito === "todos" || insumo.deposito === filtroDeposito
+      const passaFiltroFornecedor = filtroFornecedor === "todos" || (insumo as any).fornecedor === filtroFornecedor
+      return passaFiltroDeposito && passaFiltroFornecedor
+    })
+    .sort((a, b) => {
+      // 1º critério: Depósito
+      const depositoA = a.deposito || ''
+      const depositoB = b.deposito || ''
+      if (depositoA !== depositoB) {
+        return depositoA.localeCompare(depositoB)
+      }
+      
+      // 2º critério: Categoria
+      const categoriaA = a.categoria || ''
+      const categoriaB = b.categoria || ''
+      if (categoriaA !== categoriaB) {
+        return categoriaA.localeCompare(categoriaB)
+      }
+      
+      // 3º critério: Fornecedor
+      const fornecedorA = (a as any).fornecedor || ''
+      const fornecedorB = (b as any).fornecedor || ''
+      return fornecedorA.localeCompare(fornecedorB)
+    })
 
   // Contar insumos verificados na lista filtrada
   const insumosVerificadosNaLista = insumosFiltrados.filter(insumo => insumosVerificados.has(insumo.id)).length

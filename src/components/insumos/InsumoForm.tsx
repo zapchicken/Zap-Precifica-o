@@ -42,11 +42,6 @@ const UNIDADES_MEDIDA = [
 ]
 
 const DEPOSITOS = [
-  'Depósito Principal',
-  'Depósito Seco',
-  'Depósito Congelados',
-  'Câmara Fria',
-  'Depósito Padaria',
   'Balcão',
   'Cozinha',
   'Freezers',
