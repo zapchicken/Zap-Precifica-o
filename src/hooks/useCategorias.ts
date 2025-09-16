@@ -23,34 +23,33 @@ export const useCategorias = () => {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  // Carregar categorias únicas das tabelas existentes
+  // Carregar categorias únicas das tabelas produtos e fichas_tecnicas
   const carregarCategorias = async () => {
     try {
       setLoading(true)
       
-      // Buscar APENAS categorias de fichas_tecnicas
+      // Buscar categorias de fichas_tecnicas
       const { data: fichasData } = await supabase
         .from('fichas_tecnicas')
         .select('categoria')
         .not('categoria', 'is', null)
         .not('categoria', 'eq', '')
       
-      // ❌ PROBLEMA: Buscar categorias de insumos (não deveria estar aqui)
-      const { data: insumosData } = await supabase
-        .from('insumos')
+      // Buscar categorias de produtos
+      const { data: produtosData } = await supabase
+        .from('produtos')
         .select('categoria')
         .not('categoria', 'is', null)
         .not('categoria', 'eq', '')
       
-      // Combinar apenas as categorias de fichas técnicas
+      // Combinar categorias das duas tabelas
       const categoriasDB = new Set<string>()
       
       fichasData?.forEach(item => {
         if (item.categoria) categoriasDB.add(item.categoria)
       })
       
-      // ❌ PROBLEMA: Adicionando categorias de insumos
-      insumosData?.forEach(item => {
+      produtosData?.forEach(item => {
         if (item.categoria) categoriasDB.add(item.categoria)
       })
       

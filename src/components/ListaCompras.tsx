@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,7 +25,8 @@ import {
   Circle,
   MessageCircle,
   Send,
-  Loader2
+  Loader2,
+  X
 } from "lucide-react"
 import type { InsumoComFornecedor } from "@/integrations/supabase/types"
 
@@ -56,10 +57,72 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
   const [insumosVerificados, setInsumosVerificados] = useState<Set<string>>(new Set())
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [botoesEnviados, setBotoesEnviados] = useState<Set<string>>(new Set())
+
+  // Chaves para localStorage
+  const STORAGE_KEYS = {
+    quantidades: 'listaCompras_quantidades',
+    verificados: 'listaCompras_verificados',
+    botoesEnviados: 'listaCompras_botoesEnviados'
+  }
+
+  // Carregar dados salvos do localStorage
+  useEffect(() => {
+    try {
+      // Carregar quantidades
+      const quantidadesSalvas = localStorage.getItem(STORAGE_KEYS.quantidades)
+      if (quantidadesSalvas) {
+        setQuantidades(JSON.parse(quantidadesSalvas))
+      }
+
+      // Carregar insumos verificados
+      const verificadosSalvos = localStorage.getItem(STORAGE_KEYS.verificados)
+      if (verificadosSalvos) {
+        setInsumosVerificados(new Set(JSON.parse(verificadosSalvos)))
+      }
+
+      // Carregar botões enviados
+      const botoesSalvos = localStorage.getItem(STORAGE_KEYS.botoesEnviados)
+      if (botoesSalvos) {
+        setBotoesEnviados(new Set(JSON.parse(botoesSalvos)))
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados salvos:', error)
+    }
+  }, [])
+
+  // Salvar quantidades no localStorage sempre que mudarem
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.quantidades, JSON.stringify(quantidades))
+    } catch (error) {
+      console.error('Erro ao salvar quantidades:', error)
+    }
+  }, [quantidades])
+
+  // Salvar insumos verificados no localStorage sempre que mudarem
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.verificados, JSON.stringify(Array.from(insumosVerificados)))
+    } catch (error) {
+      console.error('Erro ao salvar verificados:', error)
+    }
+  }, [insumosVerificados])
+
+  // Salvar botões enviados no localStorage sempre que mudarem
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.botoesEnviados, JSON.stringify(Array.from(botoesEnviados)))
+    } catch (error) {
+      console.error('Erro ao salvar botões enviados:', error)
+    }
+  }, [botoesEnviados])
+
   
-  // Filtrar apenas insumos ativos
+  // Filtrar apenas insumos ativos (não bases)
   const insumosParaCompra = insumos.filter(insumo => 
-    insumo.ativo === true
+    insumo.ativo === true && 
+    insumo.tipo !== 'base' && 
+    insumo.tipo !== 'Base'
   )
   
   // Obter lista de depósitos únicos dos insumos
@@ -237,9 +300,11 @@ export function ListaCompras({ open, onOpenChange }: ListaComprasProps) {
 
   const limparQuantidades = () => {
     setQuantidades({})
+    setInsumosVerificados(new Set())
+    setBotoesEnviados(new Set())
     toast({
-      title: "Quantidades zeradas",
-      description: "Todas as quantidades foram zeradas"
+      title: "Lista limpa",
+      description: "Todas as quantidades, verificações e envios foram zerados"
     })
   }
 
