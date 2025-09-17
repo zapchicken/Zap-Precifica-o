@@ -114,12 +114,41 @@ export default function ImportarVendas() {
   useEffect(() => {
     const carregarResumoVendas = async () => {
       try {
-        const { data: vendas, error } = await supabase
-          .from('vendas')
-          .select('data_venda, valor_total')
-          .order('data_venda', { ascending: true });
+        // Obter usuário atual
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          return;
+        }
 
-        if (error) throw error;
+        // Buscar todas as vendas com paginação
+        const fetchAllVendas = async () => {
+          const batchSize = 1000;
+          let allVendas = [];
+          let offset = 0;
+
+          while (true) {
+            const { data: batch, error } = await supabase
+              .from('vendas')
+              .select('data_venda, valor_total')
+              .eq('user_id', user.id)
+              .order('data_venda', { ascending: true })
+              .range(offset, offset + batchSize - 1);
+
+            if (error) {
+              throw error;
+            }
+
+            if (batch.length === 0) break;
+
+            allVendas = [...allVendas, ...batch];
+            offset += batchSize;
+          }
+
+          return allVendas;
+        };
+
+        const vendas = await fetchAllVendas();
 
         if (vendas && vendas.length > 0) {
           const datas = vendas.map(v => v.data_venda).sort();
