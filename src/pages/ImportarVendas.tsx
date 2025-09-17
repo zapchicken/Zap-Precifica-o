@@ -724,17 +724,22 @@ export default function ImportarVendas() {
                         <Calendar className="h-4 w-4" />
                         <span className="text-sm font-medium">Período das vendas:</span>
                         <span className="text-sm">
-                          {(() => {
-                            const dataInicio = new Date(resumo.dataInicio);
-                            const dataFim = new Date(resumo.dataFim);
-                            console.log('🔍 Exibindo datas:', {
-                              dataInicioOriginal: resumo.dataInicio,
-                              dataFimOriginal: resumo.dataFim,
-                              dataInicioConvertida: dataInicio.toLocaleDateString('pt-BR'),
-                              dataFimConvertida: dataFim.toLocaleDateString('pt-BR')
-                            });
-                            return `${dataInicio.toLocaleDateString('pt-BR')} até ${dataFim.toLocaleDateString('pt-BR')}`;
-                          })()}
+            {(() => {
+              // Converter data ISO (YYYY-MM-DD) para formato brasileiro (DD/MM/YYYY) sem problemas de timezone
+              const formatarDataBrasileira = (dataISO: string) => {
+                const [ano, mes, dia] = dataISO.split('-');
+                return `${dia}/${mes}/${ano}`;
+              };
+              
+              console.log('🔍 Exibindo datas:', {
+                dataInicioOriginal: resumo.dataInicio,
+                dataFimOriginal: resumo.dataFim,
+                dataInicioFormatada: formatarDataBrasileira(resumo.dataInicio),
+                dataFimFormatada: formatarDataBrasileira(resumo.dataFim)
+              });
+              
+              return `${formatarDataBrasileira(resumo.dataInicio)} até ${formatarDataBrasileira(resumo.dataFim)}`;
+            })()}
                         </span>
                       </div>
                     </div>
