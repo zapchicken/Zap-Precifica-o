@@ -355,7 +355,7 @@ export function useDashboardStats() {
           .from('produtos')
           .select('*')
           .eq('user_id', user.id)
-          .eq('status', 'ativo'),
+          .eq('ativo', true),
         supabase
           .from('vendas')
           .select('valor_total, data_venda')
@@ -367,8 +367,14 @@ export function useDashboardStats() {
         throw new Error(produtosResult.error.message);
       }
 
+      if (vendasResult.error) {
+        console.warn('Erro ao carregar vendas para dashboard:', vendasResult.error.message);
+      }
+
       const produtos = produtosResult.data || [];
       const vendas = vendasResult.data || [];
+      
+      console.log('Dashboard Stats - Produtos:', produtos.length, 'Vendas:', vendas.length);
       
       const totalProdutos = produtos.length;
       const margemMedia = produtos.length > 0 
@@ -378,7 +384,7 @@ export function useDashboardStats() {
       const alertasPreco = produtos.filter(p => !p.preco_venda || p.preco_venda <= 0).length;
       
       // Calcular vendas do mês atual
-      const vendasMes = vendas.reduce((acc, v) => acc + (v.valor_total || 0), 0);
+      const vendasMes = vendas.reduce((acc, v) => acc + parseFloat(v.valor_total || 0), 0);
       
       setStats({
         totalProdutos,
