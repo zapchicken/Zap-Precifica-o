@@ -44,6 +44,7 @@ export default function Produtos() {
   const [userData, setUserData] = useState<any>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [selectedStatusPreco, setSelectedStatusPreco] = useState<string>("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduto, setEditingProduto] = useState<any>(null)
   const [isModalCategoriaOpen, setIsModalCategoriaOpen] = useState(false)
@@ -72,10 +73,130 @@ export default function Produtos() {
     fichaTecnicaId: ""
   })
 
+  // Função para arredondar para .90
+  const arredondarPara90 = (preco: number): number => {
+    const precoInteiro = Math.floor(preco)
+    return precoInteiro + 0.90
+  }
+
+  // Função para calcular markup simples
+  const calcularMarkupSimples = (categoria: string, canal: string): number => {
+    // Verificações de segurança para evitar erros
+    if (!categoria || categoria.trim() === '') {
+      return 0
+    }
+    
+    // Verificar se os dados dos hooks estão carregados
+    if (!configCategorias || !canaisVenda || !configGeral) {
+      return 0
+    }
+    
+    const categoriaMapeada = mapearCategoria(categoria)
+    
+    const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
+    if (!configCategoria) {
+      return 0
+    }
+
+    const canalVenda = canaisVenda.find(c => c.nome === canal)
+    if (!canalVenda) {
+      return 0
+    }
+
+    const custosTotais = 
+      (configGeral?.impostos_faturamento || 0) +
+      (configGeral?.taxa_cartao || 0) +
+      (configGeral?.outros_custos || 0) +
+      (percentualDespesasFixas || 0) +
+      canalVenda.taxa_marketplace +
+      canalVenda.taxa_antecipacao
+
+    if (custosTotais >= 100) {
+      return 0
+    }
+
+    const markup = (1 + (configCategoria.lucro_desejado / 100) + (configCategoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
+
+    return Math.round(markup * 100) / 100
+  }
+
+  // Função para mapear categoria
+  const mapearCategoria = (categoriaProduto: string): string => {
+    const mapeamento: { [key: string]: string } = {
+      'ACOMPANHAMENTOS': 'ACOMPANHAMENTOS',
+      'BEBIDAS CERVEJAS E CHOPP': 'BEBIDAS CERVEJAS E CHOPP',
+      'BEBIDAS REFRIGERANTES': 'BEBIDAS REFRIGERANTES',
+      'BEBIDAS SUCOS': 'BEBIDAS SUCOS',
+      'COMBO LANCHES CARNE ANGUS': 'COMBO LANCHES CARNE ANGUS',
+      'COMBO LANCHES FRANGO': 'COMBO LANCHES FRANGO',
+      'FRANGO AMERICANO': 'FRANGO AMERICANO',
+      'JUMBOS (COMBINADOS GRANDES)': 'JUMBOS (COMBINADOS GRANDES)',
+      'LANCHES': 'LANCHES',
+      'MOLHOS': 'MOLHOS',
+      'PROMOÇÕES': 'PROMOÇÕES',
+      'SALADAS': 'SALADAS',
+      'SOBREMESAS': 'SOBREMESAS',
+      'ZAPBOX (COMBINADOS INDIVIDUÁIS)': 'ZAPBOX (COMBINADOS INDIVIDUÁIS)',
+      'Bebida': 'BEBIDAS REFRIGERANTES',
+      'Bebidas': 'BEBIDAS REFRIGERANTES', 
+      'BEBIDAS': 'BEBIDAS REFRIGERANTES',
+      'Hambúrguer': 'LANCHES',
+      'Hamburguer': 'LANCHES',
+      'Combo': 'COMBO LANCHES FRANGO',
+      'Balde': 'FRANGO AMERICANO',
+      'Porção': 'ACOMPANHAMENTOS',
+      'Sobremesa': 'SOBREMESAS',
+      'ALIMENTOS': 'LANCHES'
+    }
+    
+    return mapeamento[categoriaProduto] || 'LANCHES'
+  }
+
+  // Função para calcular preço sugerido (movida para antes do filtro)
+  const calcularPrecoSugerido = (precoCusto: number, categoria: string, canal: string): number => {
+    if (!precoCusto || precoCusto <= 0) return 0
+
+    const markup = calcularMarkupSimples(categoria, canal)
+    if (markup <= 0) return 0
+
+    const precoSugerido = precoCusto * markup
+    return arredondarPara90(precoSugerido)
+  }
+
+  // Função para calcular status do preço baseado no preço sugerido (movida para antes do filtro)
+  const calcularStatusPreco = (precoVenda: number, precoSugerido: number) => {
+    if (precoSugerido === 0) return { status: 'indefinido', cor: 'gray', texto: 'N/A' }
+    
+    const diferencaPercentual = ((precoVenda - precoSugerido) / precoSugerido) * 100
+    
+    if (diferencaPercentual < -5) {
+      return { status: 'ruim', cor: 'red', texto: 'Ruim' }
+    } else if (diferencaPercentual >= -5 && diferencaPercentual <= 5) {
+      return { status: 'bom', cor: 'green', texto: 'Bom' }
+    } else {
+      return { status: 'otimo', cor: 'blue', texto: 'Ótimo' }
+    }
+  }
+
   const filteredProdutos = produtos.filter(produto => {
     const matchesSearch = produto.nome?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === "all" || produto.categoria === selectedCategory
-    return matchesSearch && matchesCategory
+    
+    // Filtro por status do preço
+    let matchesStatusPreco = true
+    if (selectedStatusPreco !== "all") {
+      try {
+        const precoSugerido = calcularPrecoSugerido(produto.preco_custo || 0, produto.categoria || '', 'Venda Direta')
+        const statusPreco = calcularStatusPreco(produto.preco_venda || 0, precoSugerido)
+        matchesStatusPreco = statusPreco.status === selectedStatusPreco
+      } catch (error) {
+        // Se houver erro no cálculo, não filtrar por status
+        console.warn('Erro ao calcular status do preço:', error)
+        matchesStatusPreco = true
+      }
+    }
+    
+    return matchesSearch && matchesCategory && matchesStatusPreco
   })
 
   const { toast } = useToast()
@@ -257,85 +378,6 @@ export default function Produtos() {
     return colors[categoria as keyof typeof colors] || "bg-muted/50 text-muted-foreground"
   }
 
-  const arredondarPara90 = (preco: number): number => {
-    const precoInteiro = Math.floor(preco)
-    return precoInteiro + 0.90
-  }
-
-  const calcularPrecoSugerido = (precoCusto: number, categoria: string, canal: string): number => {
-    if (!precoCusto || precoCusto <= 0) return 0
-
-    const markup = calcularMarkupSimples(categoria, canal)
-    if (markup <= 0) return 0
-
-    const precoSugerido = precoCusto * markup
-    return arredondarPara90(precoSugerido)
-  }
-
-  const mapearCategoria = (categoriaProduto: string): string => {
-    const mapeamento: { [key: string]: string } = {
-      'ACOMPANHAMENTOS': 'ACOMPANHAMENTOS',
-      'BEBIDAS CERVEJAS E CHOPP': 'BEBIDAS CERVEJAS E CHOPP',
-      'BEBIDAS REFRIGERANTES': 'BEBIDAS REFRIGERANTES',
-      'BEBIDAS SUCOS': 'BEBIDAS SUCOS',
-      'COMBO LANCHES CARNE ANGUS': 'COMBO LANCHES CARNE ANGUS',
-      'COMBO LANCHES FRANGO': 'COMBO LANCHES FRANGO',
-      'FRANGO AMERICANO': 'FRANGO AMERICANO',
-      'JUMBOS (COMBINADOS GRANDES)': 'JUMBOS (COMBINADOS GRANDES)',
-      'LANCHES': 'LANCHES',
-      'MOLHOS': 'MOLHOS',
-      'PROMOÇÕES': 'PROMOÇÕES',
-      'SALADAS': 'SALADAS',
-      'SOBREMESAS': 'SOBREMESAS',
-      'ZAPBOX (COMBINADOS INDIVIDUÁIS)': 'ZAPBOX (COMBINADOS INDIVIDUÁIS)',
-      'Bebida': 'BEBIDAS REFRIGERANTES',
-      'Bebidas': 'BEBIDAS REFRIGERANTES', 
-      'BEBIDAS': 'BEBIDAS REFRIGERANTES',
-      'Hambúrguer': 'LANCHES',
-      'Hamburguer': 'LANCHES',
-      'Combo': 'COMBO LANCHES FRANGO',
-      'Balde': 'FRANGO AMERICANO',
-      'Porção': 'ACOMPANHAMENTOS',
-      'Sobremesa': 'SOBREMESAS',
-      'ALIMENTOS': 'LANCHES'
-    }
-    
-    return mapeamento[categoriaProduto] || 'LANCHES'
-  }
-
-  const calcularMarkupSimples = (categoria: string, canal: string): number => {
-    if (!categoria || categoria.trim() === '') {
-      return 0
-    }
-    
-    const categoriaMapeada = mapearCategoria(categoria)
-    
-    const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
-    if (!configCategoria) {
-      return 0
-    }
-
-    const canalVenda = canaisVenda.find(c => c.nome === canal)
-    if (!canalVenda) {
-      return 0
-    }
-
-    const custosTotais = 
-      (configGeral?.impostos_faturamento || 0) +
-      (configGeral?.taxa_cartao || 0) +
-      (configGeral?.outros_custos || 0) +
-      (percentualDespesasFixas || 0) +
-      canalVenda.taxa_marketplace +
-      canalVenda.taxa_antecipacao
-
-    if (custosTotais >= 100) {
-      return 0
-    }
-
-    const markup = (1 + (configCategoria.lucro_desejado / 100) + (configCategoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
-
-    return Math.round(markup * 100) / 100
-  }
 
   // Funções para calcular margens de contribuição
   const calcularMargemContribuicao = (precoVenda: number, precoCusto: number) => {
@@ -349,6 +391,7 @@ export default function Produtos() {
     const margemPercentual = precoVendaIfood > 0 ? (margemValor / precoVendaIfood) * 100 : 0
     return { valor: margemValor, percentual: margemPercentual }
   }
+
 
   // 🔄 Sincronização automática apenas quando necessário
   useEffect(() => {
@@ -644,6 +687,32 @@ export default function Produtos() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={selectedStatusPreco} onValueChange={setSelectedStatusPreco}>
+                <SelectTrigger className="md:w-48">
+                  <SelectValue placeholder="Status Preço" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="ruim">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      Ruim
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="bom">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      Bom
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="otimo">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      Ótimo
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -891,6 +960,19 @@ export default function Produtos() {
                          </Tooltip>
                        </TooltipProvider>
                      </TableHead>
+                     <TableHead>
+                       <TooltipProvider>
+                         <Tooltip>
+                           <TooltipTrigger className="cursor-help">Status Preço</TooltipTrigger>
+                           <TooltipContent>
+                             <p>Status baseado na comparação com preço sugerido</p>
+                             <p>• Ruim: PV menor que 5% do sugerido</p>
+                             <p>• Bom: PV entre -5% a +5% do sugerido</p>
+                             <p>• Ótimo: PV maior que 5% do sugerido</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       </TooltipProvider>
+                     </TableHead>
                      <TableHead>Ações</TableHead>
                    </TableRow>
                  </TableHeader>
@@ -964,6 +1046,34 @@ export default function Produtos() {
                       </TableCell>
                       <TableCell className="font-medium text-accent">
                         R$ {calcularPrecoSugerido(produto.preco_custo || 0, produto.categoria || '', 'iFood').toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          try {
+                            const precoSugerido = calcularPrecoSugerido(produto.preco_custo || 0, produto.categoria || '', 'Venda Direta')
+                            const statusPreco = calcularStatusPreco(produto.preco_venda || 0, precoSugerido)
+                            return (
+                              <Badge 
+                                variant={statusPreco.status === 'ruim' ? 'destructive' : statusPreco.status === 'bom' ? 'default' : 'secondary'}
+                                className={`text-xs ${
+                                  statusPreco.status === 'ruim' ? 'bg-red-100 text-red-800' :
+                                  statusPreco.status === 'bom' ? 'bg-green-100 text-green-800' :
+                                  statusPreco.status === 'otimo' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}
+                              >
+                                {statusPreco.texto}
+                              </Badge>
+                            )
+                          } catch (error) {
+                            console.warn('Erro ao calcular status do preço na tabela:', error)
+                            return (
+                              <Badge variant="outline" className="text-xs bg-gray-100 text-gray-800">
+                                N/A
+                              </Badge>
+                            )
+                          }
+                        })()}
                       </TableCell>
                        <TableCell>
                          <div className="flex items-center gap-2">
