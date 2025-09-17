@@ -228,12 +228,30 @@ export const processarVendas = async (file: File) => {
             dia = parte2;
             console.log(`📅 Data detectada como formato americano (MM/DD/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
           }
-          // Se ambas partes são <= 12, priorizar formato brasileiro (DD/MM/YYYY)
+          // Se ambas partes são <= 12, usar heurística mais inteligente
           else {
-            // FORMATO BRASILEIRO por padrão: DD/MM/YYYY
-            dia = parte1;
-            mes = parte2;
-            console.log(`📅 Data ambígua detectada (ambas partes <= 12), usando FORMATO BRASILEIRO (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
+            // Se a primeira parte é <= 12 e a segunda também, verificar contexto
+            // Se a primeira parte é 1-12 e a segunda é 1-31, assumir MM/DD (americano)
+            // Mas se parece com datas brasileiras (ex: 6/1, 7/1, 8/1), assumir DD/MM
+            if (num1 <= 12 && num2 <= 31) {
+              // Verificar se parece com formato brasileiro (dia 1-31, mês 1-12)
+              if (num2 <= 12) {
+                // Ambas <= 12, assumir brasileiro por padrão
+                dia = parte1;
+                mes = parte2;
+                console.log(`📅 Data ambígua detectada (ambas partes <= 12), usando FORMATO BRASILEIRO (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
+              } else {
+                // Primeira <= 12, segunda > 12, assumir americano
+                mes = parte1;
+                dia = parte2;
+                console.log(`📅 Data detectada como formato americano (MM/DD/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
+              }
+            } else {
+              // Fallback: assumir brasileiro
+              dia = parte1;
+              mes = parte2;
+              console.log(`📅 Data ambígua detectada, usando FORMATO BRASILEIRO (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
+            }
           }
           
           dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
