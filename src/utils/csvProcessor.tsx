@@ -286,46 +286,106 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
       throw new Error(`Usuário não autenticado: ${userError?.message || 'Usuário não encontrado'}`);
     }
 
-    // Adicionar user_id aos dados
-    const dadosComUserId = dados.map(item => ({
-      ...item,
-      user_id: user.id
-    }));
+    // Validar dados antes de processar
+    if (!dados || dados.length === 0) {
+      throw new Error('Nenhum dado fornecido para salvar');
+    }
 
-    let result;
+    // Adicionar user_id aos dados e validar campos obrigatórios
+    const dadosComUserId = dados.map((item, index) => {
+      // Validar campos obrigatórios para vendas
+      if (tabela === 'vendas') {
+        if (!item.data_venda || !item.pedido_numero || !item.produto_nome || 
+            item.quantidade === undefined || item.valor_unitario === undefined || item.valor_total === undefined) {
+          throw new Error(`Linha ${index + 1}: Campos obrigatórios faltando para venda`);
+        }
+        
+        // Validar tipos de dados
+        if (typeof item.quantidade !== 'number' || item.quantidade <= 0) {
+          throw new Error(`Linha ${index + 1}: Quantidade deve ser um número positivo`);
+        }
+        
+        if (typeof item.valor_unitario !== 'number' || item.valor_unitario <= 0) {
+          throw new Error(`Linha ${index + 1}: Valor unitário deve ser um número positivo`);
+        }
+        
+        if (typeof item.valor_total !== 'number' || item.valor_total <= 0) {
+          throw new Error(`Linha ${index + 1}: Valor total deve ser um número positivo`);
+        }
+        
+        // Validar formato da data
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(item.data_venda)) {
+          throw new Error(`Linha ${index + 1}: Data deve estar no formato YYYY-MM-DD`);
+        }
+      }
+      
+      return {
+        ...item,
+        user_id: user.id
+      };
+    });
+
+    console.log(`📊 Salvando ${dadosComUserId.length} registros na tabela ${tabela}`);
     
-    if (tabela === 'vendas') {
-      // Salvar vendas
-      result = await supabase
-        .from('vendas')
-        .insert(dadosComUserId)
-        .select();
-    } else if (tabela === 'produtos') {
-      // Salvar produtos
-      result = await supabase
-        .from('produtos')
-        .insert(dadosComUserId)
-        .select();
-    } else if (tabela === 'insumos') {
-      // Salvar insumos
-      result = await supabase
-        .from('insumos')
-        .insert(dadosComUserId)
-        .select();
-    } else {
-      throw new Error(`Tabela ${tabela} não suportada`);
+    // Processar em lotes para evitar timeout em grandes volumes
+    const BATCH_SIZE = 1000;
+    const batches = [];
+    
+    for (let i = 0; i < dadosComUserId.length; i += BATCH_SIZE) {
+      batches.push(dadosComUserId.slice(i, i + BATCH_SIZE));
+    }
+    
+    let allResults = [];
+    let totalCount = 0;
+    
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(`📦 Processando lote ${i + 1}/${batches.length} (${batch.length} registros)`);
+      
+      let result;
+      
+      if (tabela === 'vendas') {
+        // Salvar vendas
+        result = await supabase
+          .from('vendas')
+          .insert(batch)
+          .select();
+      } else if (tabela === 'produtos') {
+        // Salvar produtos
+        result = await supabase
+          .from('produtos')
+          .insert(batch)
+          .select();
+      } else if (tabela === 'insumos') {
+        // Salvar insumos
+        result = await supabase
+          .from('insumos')
+          .insert(batch)
+          .select();
+      } else {
+        throw new Error(`Tabela ${tabela} não suportada`);
+      }
+
+      if (result.error) {
+        console.error(`❌ Erro no lote ${i + 1}:`, result.error);
+        throw new Error(`Erro do Supabase no lote ${i + 1}: ${result.error.message} (${result.error.code})`);
+      }
+      
+      if (result.data) {
+        allResults.push(...result.data);
+        totalCount += result.data.length;
+      }
     }
 
-    if (result.error) {
-      throw new Error(`Erro do Supabase: ${result.error.message} (${result.error.code})`);
-    }
+    console.log(`✅ Total de ${totalCount} registros salvos com sucesso`);
     
     return {
-      data: result.data,
+      data: allResults,
       error: null,
-      count: result.data?.length || 0
+      count: totalCount
     };
   } catch (error: any) {
+    console.error('❌ Erro ao salvar no Supabase:', error);
     return {
       data: null,
       error: error.message,
