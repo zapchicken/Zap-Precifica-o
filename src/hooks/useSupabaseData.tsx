@@ -249,6 +249,9 @@ export function useVendas() {
         throw new Error(error.message);
       }
 
+      console.log('🔍 useVendas - Vendas carregadas do Supabase:', data?.length || 0);
+      console.log('🔍 useVendas - Primeiras 3 vendas:', data?.slice(0, 3));
+      
       setVendas(data || []);
     } catch (error: any) {
       console.error('Erro ao carregar vendas:', error);

@@ -33,24 +33,45 @@ export default function Dashboard() {
   }
 
   // Calcular produtos top baseado nas vendas reais
+  console.log('🔍 Dashboard - Vendas carregadas:', vendas.length);
+  console.log('🔍 Dashboard - Primeiras 3 vendas:', vendas.slice(0, 3));
+  
   const produtosTop = vendas
     .reduce((acc: any[], venda: any) => {
+      console.log('🔍 Processando venda:', {
+        produto: venda.produto_nome,
+        valor_total: venda.valor_total,
+        quantidade: venda.quantidade,
+        valor_total_tipo: typeof venda.valor_total,
+        quantidade_tipo: typeof venda.quantidade
+      });
+      
       const existing = acc.find(p => p.nome === venda.produto_nome)
       if (existing) {
+        const valorAnterior = existing.vendas;
+        const quantidadeAnterior = existing.quantidade;
+        
         existing.vendas += parseFloat(venda.valor_total) || 0
         existing.quantidade += parseInt(venda.quantidade) || 0
+        
+        console.log(`📊 Produto existente "${venda.produto_nome}": ${valorAnterior} + ${venda.valor_total} = ${existing.vendas}, ${quantidadeAnterior} + ${venda.quantidade} = ${existing.quantidade}`);
       } else {
-        acc.push({
+        const novoProduto = {
           nome: venda.produto_nome,
           vendas: parseFloat(venda.valor_total) || 0,
           quantidade: parseInt(venda.quantidade) || 0,
           margem: "Calculando..." // Seria calculado com base na ficha técnica
-        })
+        };
+        
+        acc.push(novoProduto);
+        console.log(`🆕 Novo produto "${venda.produto_nome}": vendas=${novoProduto.vendas}, quantidade=${novoProduto.quantidade}`);
       }
       return acc
     }, [])
     .sort((a: any, b: any) => b.vendas - a.vendas)
     .slice(0, 3)
+  
+  console.log('🏆 Produtos mais vendidos calculados:', produtosTop);
 
   return (
     <Layout currentPage="dashboard">
