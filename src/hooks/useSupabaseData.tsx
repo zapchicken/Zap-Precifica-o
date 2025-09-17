@@ -67,7 +67,7 @@ const MOCK_DATA = {
   fichas_tecnicas: []
 };
 
-// Hook para produtos
+// Hook para produtos - INTEGRAÇÃO REAL COM SUPABASE
 export function useProdutos() {
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,21 +76,35 @@ export function useProdutos() {
   const fetchProdutos = async () => {
     try {
       setLoading(true);
-      // Simular delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setProdutos(MOCK_DATA.produtos);
       
-      toast({
-        title: "Dados carregados (Modo Local)",
-        description: "Usando dados simulados para desenvolvimento",
-        variant: "default"
-      });
+      // Obter usuário atual
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        setProdutos([]);
+        return;
+      }
+
+      // Buscar produtos do usuário
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('nome');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setProdutos(data || []);
     } catch (error: any) {
+      console.error('Erro ao carregar produtos:', error);
       toast({
         title: "Erro ao carregar produtos",
         description: error.message,
         variant: "destructive"
       });
+      setProdutos([]);
     } finally {
       setLoading(false);
     }
@@ -156,7 +170,7 @@ export function useInsumos() {
   return { insumos, loading, refetch: fetchInsumos };
 }
 
-// Hook para bases
+// Hook para bases - INTEGRAÇÃO REAL COM SUPABASE
 export function useBases() {
   const [bases, setBases] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -165,14 +179,35 @@ export function useBases() {
   const fetchBases = async () => {
     try {
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setBases(MOCK_DATA.bases);
+      
+      // Obter usuário atual
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        setBases([]);
+        return;
+      }
+
+      // Buscar bases do usuário
+      const { data, error } = await supabase
+        .from('bases')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('nome');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setBases(data || []);
     } catch (error: any) {
+      console.error('Erro ao carregar bases:', error);
       toast({
         title: "Erro ao carregar bases",
         description: error.message,
         variant: "destructive"
       });
+      setBases([]);
     } finally {
       setLoading(false);
     }
@@ -235,16 +270,47 @@ export function useVendas() {
   return { vendas, loading, refetch: fetchVendas };
 }
 
-// Hook para fichas técnicas
+// Hook para fichas técnicas - INTEGRAÇÃO REAL COM SUPABASE
 export function useFichasTecnicas() {
   const [fichas, setFichas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const fetchFichas = async () => {
-    setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setFichas(MOCK_DATA.fichas_tecnicas);
-    setLoading(false);
+    try {
+      setLoading(true);
+      
+      // Obter usuário atual
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        setFichas([]);
+        return;
+      }
+
+      // Buscar fichas técnicas do usuário
+      const { data, error } = await supabase
+        .from('fichas_tecnicas')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('produto_nome');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setFichas(data || []);
+    } catch (error: any) {
+      console.error('Erro ao carregar fichas técnicas:', error);
+      toast({
+        title: "Erro ao carregar fichas técnicas",
+        description: error.message,
+        variant: "destructive"
+      });
+      setFichas([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
