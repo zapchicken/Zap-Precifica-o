@@ -200,14 +200,40 @@ export const processarVendas = async (file: File) => {
         const dataExcel = new Date((dataSerial - 25569) * 86400 * 1000);
         dataFormatada = dataExcel.toISOString().split('T')[0];
       } else if (dataFormatada.includes('/')) {
-        // Se a data está no formato DD/MM/YYYY ou DD/MM/YY, converter para YYYY-MM-DD
+        // Se a data está no formato DD/MM/YYYY, MM/DD/YYYY ou DD/MM/YY, MM/DD/YY
         const partes = dataFormatada.split('/');
         if (partes.length === 3) {
-          let [dia, mes, ano] = partes;
+          let [parte1, parte2, ano] = partes;
           
           // Se o ano tem 2 dígitos, assumir 20XX
           if (ano.length === 2) {
             ano = '20' + ano;
+          }
+          
+          // Detectar se é formato brasileiro (DD/MM/YYYY) ou americano (MM/DD/YYYY)
+          const num1 = parseInt(parte1);
+          const num2 = parseInt(parte2);
+          
+          let dia, mes;
+          
+          // Se a primeira parte é > 12, então é formato brasileiro (DD/MM/YYYY)
+          if (num1 > 12) {
+            dia = parte1;
+            mes = parte2;
+            console.log(`📅 Data detectada como formato brasileiro (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
+          }
+          // Se a segunda parte é > 12, então é formato americano (MM/DD/YYYY)
+          else if (num2 > 12) {
+            mes = parte1;
+            dia = parte2;
+            console.log(`📅 Data detectada como formato americano (MM/DD/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
+          }
+          // Se ambas partes são <= 12, priorizar formato brasileiro (DD/MM/YYYY)
+          else {
+            // FORMATO BRASILEIRO por padrão: DD/MM/YYYY
+            dia = parte1;
+            mes = parte2;
+            console.log(`📅 Data ambígua detectada (ambas partes <= 12), usando FORMATO BRASILEIRO (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
           }
           
           dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
