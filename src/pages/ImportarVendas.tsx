@@ -292,6 +292,10 @@ export default function ImportarVendas() {
       const datas = vendasParaSalvar.map((venda: any) => venda.data_venda).sort();
       const dataInicioPeriodo = datas.length > 0 ? datas[0] : undefined;
       const dataFimPeriodo = datas.length > 0 ? datas[datas.length - 1] : undefined;
+      
+      console.log('📊 Datas das vendas (primeiras 5):', datas.slice(0, 5));
+      console.log('📅 Data início período:', dataInicioPeriodo);
+      console.log('📅 Data fim período:', dataFimPeriodo);
 
       const novoResumo = {
         totalVendas: vendasParaSalvar.length,
@@ -720,7 +724,17 @@ export default function ImportarVendas() {
                         <Calendar className="h-4 w-4" />
                         <span className="text-sm font-medium">Período das vendas:</span>
                         <span className="text-sm">
-                          {new Date(resumo.dataInicio).toLocaleDateString('pt-BR')} até {new Date(resumo.dataFim).toLocaleDateString('pt-BR')}
+                          {(() => {
+                            const dataInicio = new Date(resumo.dataInicio);
+                            const dataFim = new Date(resumo.dataFim);
+                            console.log('🔍 Exibindo datas:', {
+                              dataInicioOriginal: resumo.dataInicio,
+                              dataFimOriginal: resumo.dataFim,
+                              dataInicioConvertida: dataInicio.toLocaleDateString('pt-BR'),
+                              dataFimConvertida: dataFim.toLocaleDateString('pt-BR')
+                            });
+                            return `${dataInicio.toLocaleDateString('pt-BR')} até ${dataFim.toLocaleDateString('pt-BR')}`;
+                          })()}
                         </span>
                       </div>
                     </div>
