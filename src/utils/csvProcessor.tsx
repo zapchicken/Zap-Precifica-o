@@ -213,6 +213,51 @@ export const processarVendas = async (file: File) => {
           dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
         }
       }
+      
+      // Validar e corrigir data inválida
+      const validarECorrigirData = (dataStr: string): string => {
+        // Verificar se está no formato YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
+          throw new Error(`Formato de data inválido: ${dataStr}`);
+        }
+        
+        const [ano, mes, dia] = dataStr.split('-').map(Number);
+        
+        // Validar ano
+        if (ano < 1900 || ano > 2100) {
+          throw new Error(`Ano inválido: ${ano}`);
+        }
+        
+        // Validar mês
+        if (mes < 1 || mes > 12) {
+          throw new Error(`Mês inválido: ${mes}`);
+        }
+        
+        // Validar dia
+        if (dia < 1 || dia > 31) {
+          throw new Error(`Dia inválido: ${dia}`);
+        }
+        
+        // Verificar se o dia existe no mês
+        const diasNoMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // Verificar ano bissexto
+        if (mes === 2 && ((ano % 4 === 0 && ano % 100 !== 0) || (ano % 400 === 0))) {
+          diasNoMes[1] = 29;
+        }
+        
+        if (dia > diasNoMes[mes - 1]) {
+          // Corrigir dia inválido para o último dia do mês
+          const diaCorrigido = diasNoMes[mes - 1];
+          console.warn(`⚠️ Data inválida corrigida: ${dataStr} → ${ano}-${mes.toString().padStart(2, '0')}-${diaCorrigido.toString().padStart(2, '0')}`);
+          return `${ano}-${mes.toString().padStart(2, '0')}-${diaCorrigido.toString().padStart(2, '0')}`;
+        }
+        
+        return dataStr;
+      };
+      
+      // Aplicar validação e correção
+      dataFormatada = validarECorrigirData(dataFormatada);
 
       // Limpar valor unitário - tratar diferentes formatos
       let valorOriginal = camposMapeados.valor_unitario;
