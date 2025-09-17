@@ -304,24 +304,63 @@ export const processarVendas = async (file: File) => {
       // Aplicar validação e correção
       dataFormatada = validarECorrigirData(dataFormatada);
 
-      // Limpar valor unitário - tratar diferentes formatos
-      let valorOriginal = camposMapeados.valor_unitario;
+      // Função para processar valores monetários brasileiros
+      const processarValorBrasileiro = (valor: any): number => {
+        if (valor === null || valor === undefined || valor === '') {
+          throw new Error('Valor vazio ou nulo');
+        }
+        
+        let valorStr = valor.toString().trim();
+        console.log(`💰 Processando valor: "${valorStr}"`);
+        
+        // Se já é um número, verificar se precisa de correção
+        if (typeof valor === 'number') {
+          // Se o valor é muito grande (ex: 799 em vez de 79,90), pode ter sido multiplicado por 100
+          if (valor > 1000) {
+            console.log(`⚠️ Valor muito grande detectado (${valor}), tentando correção...`);
+            // Tentar dividir por 100 para valores muito grandes
+            const valorCorrigido = valor / 100;
+            console.log(`✅ Valor corrigido: ${valor} → ${valorCorrigido}`);
+            return valorCorrigido;
+          }
+          return valor;
+        }
+        
+        // Remover caracteres não numéricos exceto vírgula e ponto
+        valorStr = valorStr.replace(/[^\d,.-]/g, '');
+        
+        // Tratar formato brasileiro (vírgula como separador decimal)
+        if (valorStr.includes(',') && !valorStr.includes('.')) {
+          // Formato brasileiro: 79,90
+          valorStr = valorStr.replace(',', '.');
+          console.log(`🇧🇷 Formato brasileiro detectado: ${valor} → ${valorStr}`);
+        } else if (valorStr.includes(',') && valorStr.includes('.')) {
+          // Formato com milhares: 1.234,56
+          const partes = valorStr.split(',');
+          if (partes.length === 2) {
+            const parteInteira = partes[0].replace(/\./g, '');
+            const parteDecimal = partes[1];
+            valorStr = `${parteInteira}.${parteDecimal}`;
+            console.log(`🇧🇷 Formato brasileiro com milhares: ${valor} → ${valorStr}`);
+          }
+        }
+        
+        const valorNumerico = parseFloat(valorStr);
+        
+        if (isNaN(valorNumerico)) {
+          throw new Error(`Valor não é um número válido: "${valor}" → "${valorStr}"`);
+        }
+        
+        if (valorNumerico <= 0) {
+          throw new Error(`Valor deve ser maior que zero: ${valorNumerico}`);
+        }
+        
+        console.log(`✅ Valor processado com sucesso: ${valor} → ${valorNumerico}`);
+        return valorNumerico;
+      };
       
-      // Se o valor já foi convertido incorretamente (ex: 799 em vez de 79,90)
-      if (typeof valorOriginal === 'number' && valorOriginal > 100) {
-        // Tentar reconstruir o valor decimal dividindo por 10 ou 100
-        // Assumir que valores grandes foram multiplicados por 100
-        valorOriginal = (valorOriginal / 100).toString();
-      }
-      
-      const valorLimpo = valorOriginal.toString().replace(',', '.').trim();
-      
-      // Validar se o valor é um número válido
-      const valorNumerico = parseFloat(valorLimpo);
-      
-      if (isNaN(valorNumerico) || valorNumerico <= 0) {
-        throw new Error(`Valor unitário inválido: "${camposMapeados.valor_unitario}" → "${valorLimpo}"`);
-      }
+      // Processar valor unitário
+      const valorNumerico = processarValorBrasileiro(camposMapeados.valor_unitario);
       
       
       // Lógica inteligente para nome do produto (otimizada)
@@ -339,8 +378,15 @@ export const processarVendas = async (file: File) => {
         nomeProduto = 'Produto N/A';
       }
 
-      const quantidade = parseInt(camposMapeados.quantidade);
+      // Processar quantidade
+      const quantidade = parseInt(camposMapeados.quantidade.toString());
+      if (isNaN(quantidade) || quantidade <= 0) {
+        throw new Error(`Quantidade inválida: "${camposMapeados.quantidade}"`);
+      }
+      
+      // Calcular valor total
       const valorTotal = quantidade * valorNumerico;
+      console.log(`🧮 Cálculo: ${quantidade} × ${valorNumerico} = ${valorTotal}`);
       
       
       const venda = {
