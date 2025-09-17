@@ -358,7 +358,7 @@ export function useDashboardStats() {
           .from('produtos')
           .select('*')
           .eq('user_id', user.id)
-          .eq('ativo', true),
+          .eq('status', 'ativo'),
         supabase
           .from('vendas')
           .select('valor_total, data_venda')
