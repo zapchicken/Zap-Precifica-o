@@ -221,13 +221,11 @@ export const processarVendas = async (file: File) => {
           if (num1 > 12) {
             dia = parte1;
             mes = parte2;
-            console.log(`📅 Data detectada como formato brasileiro (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
           }
           // Se a segunda parte é > 12, então é formato americano (MM/DD/YYYY)
           else if (num2 > 12) {
             mes = parte1;
             dia = parte2;
-            console.log(`📅 Data detectada como formato americano (MM/DD/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
           }
           // Se ambas partes são <= 12, usar heurística mais inteligente
           else {
@@ -240,25 +238,22 @@ export const processarVendas = async (file: File) => {
                 // Ambas <= 12, assumir brasileiro por padrão
                 dia = parte1;
                 mes = parte2;
-                console.log(`📅 Data ambígua detectada (ambas partes <= 12), usando FORMATO BRASILEIRO (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
               } else {
                 // Primeira <= 12, segunda > 12, assumir americano
                 mes = parte1;
                 dia = parte2;
-                console.log(`📅 Data detectada como formato americano (MM/DD/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
               }
             } else {
               // Fallback: assumir brasileiro
               dia = parte1;
               mes = parte2;
-              console.log(`📅 Data ambígua detectada, usando FORMATO BRASILEIRO (DD/MM/YYYY): ${dataFormatada} → ${dia}/${mes}/${ano}`);
             }
           }
           
           dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
         }
       }
-      
+
       // Validar e corrigir data inválida
       const validarECorrigirData = (dataStr: string): string => {
         // Verificar se está no formato YYYY-MM-DD
@@ -311,16 +306,13 @@ export const processarVendas = async (file: File) => {
         }
         
         let valorStr = valor.toString().trim();
-        console.log(`💰 Processando valor: "${valorStr}"`);
         
         // Se já é um número, verificar se precisa de correção
         if (typeof valor === 'number') {
           // Se o valor é muito grande (ex: 799 em vez de 79,90), pode ter sido multiplicado por 100
           if (valor > 1000) {
-            console.log(`⚠️ Valor muito grande detectado (${valor}), tentando correção...`);
             // Tentar dividir por 100 para valores muito grandes
             const valorCorrigido = valor / 100;
-            console.log(`✅ Valor corrigido: ${valor} → ${valorCorrigido}`);
             return valorCorrigido;
           }
           return valor;
@@ -355,7 +347,6 @@ export const processarVendas = async (file: File) => {
           throw new Error(`Valor deve ser maior que zero: ${valorNumerico}`);
         }
         
-        console.log(`✅ Valor processado com sucesso: ${valor} → ${valorNumerico}`);
         return valorNumerico;
       };
       
@@ -386,7 +377,6 @@ export const processarVendas = async (file: File) => {
       
       // Calcular valor total
       const valorTotal = quantidade * valorNumerico;
-      console.log(`🧮 Cálculo: ${quantidade} × ${valorNumerico} = ${valorTotal}`);
       
       
       const venda = {
@@ -456,53 +446,58 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
       }
       
       return {
-        ...item,
-        user_id: user.id
+      ...item,
+      user_id: user.id
       };
     });
 
-    console.log(`📊 Salvando ${dadosComUserId.length} registros na tabela ${tabela}`);
     
     // Processar em lotes para evitar timeout em grandes volumes
-    const BATCH_SIZE = 1000;
+    const BATCH_SIZE = 100; // Reduzido ainda mais para testar
     const batches = [];
     
     for (let i = 0; i < dadosComUserId.length; i += BATCH_SIZE) {
       batches.push(dadosComUserId.slice(i, i + BATCH_SIZE));
     }
     
+    
     let allResults = [];
     let totalCount = 0;
     
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
-      console.log(`📦 Processando lote ${i + 1}/${batches.length} (${batch.length} registros)`);
-      
-      let result;
-      
-      if (tabela === 'vendas') {
-        // Salvar vendas
-        result = await supabase
-          .from('vendas')
-          .insert(batch)
-          .select();
-      } else if (tabela === 'produtos') {
-        // Salvar produtos
-        result = await supabase
-          .from('produtos')
-          .insert(batch)
-          .select();
-      } else if (tabela === 'insumos') {
-        // Salvar insumos
-        result = await supabase
-          .from('insumos')
-          .insert(batch)
-          .select();
-      } else {
-        throw new Error(`Tabela ${tabela} não suportada`);
-      }
 
-      if (result.error) {
+    let result;
+    
+    if (tabela === 'vendas') {
+      // Salvar vendas com timeout personalizado
+      const insertPromise = supabase
+        .from('vendas')
+        .insert(batch)
+        .select();
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout na inserção')), 30000)
+      );
+      
+      result = await Promise.race([insertPromise, timeoutPromise]);
+    } else if (tabela === 'produtos') {
+      // Salvar produtos
+      result = await supabase
+        .from('produtos')
+          .insert(batch)
+        .select();
+    } else if (tabela === 'insumos') {
+      // Salvar insumos
+      result = await supabase
+        .from('insumos')
+          .insert(batch)
+        .select();
+    } else {
+      throw new Error(`Tabela ${tabela} não suportada`);
+    }
+
+    if (result.error) {
         console.error(`❌ Erro no lote ${i + 1}:`, result.error);
         throw new Error(`Erro do Supabase no lote ${i + 1}: ${result.error.message} (${result.error.code})`);
       }
@@ -511,9 +506,14 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
         allResults.push(...result.data);
         totalCount += result.data.length;
       }
+      
+      // Pequeno delay entre lotes para evitar sobrecarga
+      if (i < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
     }
+    
 
-    console.log(`✅ Total de ${totalCount} registros salvos com sucesso`);
     
     return {
       data: allResults,

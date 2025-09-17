@@ -247,31 +247,24 @@ export default function ImportarVendas() {
     setProgresso(0)
 
     try {
-      console.log('🔄 Iniciando importação de vendas...');
       
       // Processar arquivo de vendas
       const resultado = await processarVendas(arquivo);
-      console.log('📊 Resultado do processamento:', resultado);
       
       // Filtrar vendas por período se necessário
       let vendasParaSalvar = resultado.dados;
       if (filtrarPorPeriodo) {
         vendasParaSalvar = filtrarVendasPorPeriodo(resultado.dados);
-        console.log(`📅 Filtradas ${vendasParaSalvar.length} vendas do período de ${dataInicio || 'início'} até ${dataFim || 'fim'}`);
       }
       
       if (vendasParaSalvar.length > 0) {
-        console.log(`💾 Salvando ${vendasParaSalvar.length} vendas no Supabase...`);
         const salvamento = await salvarNoSupabase('vendas', vendasParaSalvar);
-        console.log('📋 Resultado do salvamento:', salvamento);
         
         if (!salvamento.data) {
           throw new Error(`Erro ao salvar: ${salvamento.error}`);
         }
         
-        console.log(`✅ ${salvamento.count} vendas salvas com sucesso!`);
       } else {
-        console.log('⚠️ Nenhum dado válido para salvar no período selecionado');
       }
       
       setProgresso(100);
@@ -293,9 +286,6 @@ export default function ImportarVendas() {
       const dataInicioPeriodo = datas.length > 0 ? datas[0] : undefined;
       const dataFimPeriodo = datas.length > 0 ? datas[datas.length - 1] : undefined;
       
-      console.log('📊 Datas das vendas (primeiras 5):', datas.slice(0, 5));
-      console.log('📅 Data início período:', dataInicioPeriodo);
-      console.log('📅 Data fim período:', dataFimPeriodo);
 
       const novoResumo = {
         totalVendas: vendasParaSalvar.length,
@@ -731,12 +721,6 @@ export default function ImportarVendas() {
                 return `${dia}/${mes}/${ano}`;
               };
               
-              console.log('🔍 Exibindo datas:', {
-                dataInicioOriginal: resumo.dataInicio,
-                dataFimOriginal: resumo.dataFim,
-                dataInicioFormatada: formatarDataBrasileira(resumo.dataInicio),
-                dataFimFormatada: formatarDataBrasileira(resumo.dataFim)
-              });
               
               return `${formatarDataBrasileira(resumo.dataInicio)} até ${formatarDataBrasileira(resumo.dataFim)}`;
             })()}

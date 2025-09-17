@@ -144,12 +144,6 @@ export function useInsumos() {
       }
       
       setInsumos(data || []);
-      
-      toast({
-        title: "Insumos carregados com sucesso!",
-        description: `${data?.length || 0} insumos encontrados`,
-        variant: "default"
-      });
     } catch (error: any) {
       console.error('Erro ao carregar insumos:', error);
       toast({
@@ -229,30 +223,43 @@ export function useVendas() {
   const fetchVendas = async () => {
     try {
       setLoading(true);
-      
-      // Obter usuário atual
+
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
       if (userError || !user) {
         setVendas([]);
         return;
       }
 
-      // Buscar vendas do usuário
-      const { data, error } = await supabase
-        .from('vendas')
-        .select('id, data_venda, pedido_numero, produto_nome, produto_codigo, quantidade, valor_unitario, valor_total, canal, observacoes, created_at')
-        .eq('user_id', user.id)
-        .order('data_venda', { ascending: false });
+      // ✅ NOVO CÓDIGO CORRETO — PAGINAÇÃO COM range()
+      const fetchAllVendas = async () => {
+        const batchSize = 1000;
+        let allData = [];
+        let offset = 0;
 
-      if (error) {
-        throw new Error(error.message);
-      }
+        while (true) {
+          const { data: batch, error } = await supabase
+            .from('vendas')
+            .select('id, data_venda, pedido_numero, produto_nome, produto_codigo, quantidade, valor_unitario, valor_total, canal, observacoes, created_at')
+            .eq('user_id', user.id)
+            .order('data_venda', { ascending: true })
+            .range(offset, offset + batchSize - 1);
 
-      console.log('🔍 useVendas - Vendas carregadas do Supabase:', data?.length || 0);
-      console.log('🔍 useVendas - Primeiras 3 vendas:', data?.slice(0, 3));
-      
-      setVendas(data || []);
+          if (error) {
+            throw error;
+          }
+
+          if (batch.length === 0) break;
+
+          allData = [...allData, ...batch];
+          offset += batchSize;
+        }
+
+        return allData;
+      };
+
+      const vendas = await fetchAllVendas();
+      setVendas(vendas || []);
+
     } catch (error: any) {
       console.error('Erro ao carregar vendas:', error);
       toast({
@@ -352,32 +359,46 @@ export function useDashboardStats() {
         return;
       }
 
-      // Buscar produtos e vendas do usuário
-      const [produtosResult, vendasResult] = await Promise.all([
-        supabase
-          .from('produtos')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'ativo'),
-        supabase
-          .from('vendas')
-          .select('valor_total, data_venda')
-          .eq('user_id', user.id)
-          .gte('data_venda', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
-      ]);
+      // Buscar produtos
+      const produtosResult = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'ativo');
+
+      // Buscar todas as vendas com paginação para garantir que não perca nenhuma
+      const fetchAllVendas = async () => {
+        const batchSize = 1000;
+        let allVendas = [];
+        let offset = 0;
+
+        while (true) {
+          const { data: batch, error } = await supabase
+            .from('vendas')
+            .select('valor_total')
+            .eq('user_id', user.id)
+            .range(offset, offset + batchSize - 1);
+
+          if (error) {
+            throw error;
+          }
+
+          if (batch.length === 0) break;
+
+          allVendas = [...allVendas, ...batch];
+          offset += batchSize;
+        }
+
+        return allVendas;
+      };
+
+      const vendasSumResult = { data: await fetchAllVendas() };
 
       if (produtosResult.error) {
         throw new Error(produtosResult.error.message);
       }
 
-      if (vendasResult.error) {
-        console.warn('Erro ao carregar vendas para dashboard:', vendasResult.error.message);
-      }
-
       const produtos = produtosResult.data || [];
-      const vendas = vendasResult.data || [];
-      
-      console.log('Dashboard Stats - Produtos:', produtos.length, 'Vendas:', vendas.length);
       
       const totalProdutos = produtos.length;
       const margemMedia = produtos.length > 0 
@@ -387,7 +408,9 @@ export function useDashboardStats() {
       const alertasPreco = produtos.filter(p => !p.preco_venda || p.preco_venda <= 0).length;
       
       // Calcular vendas do mês atual
-      const vendasMes = vendas.reduce((acc, v) => acc + parseFloat(v.valor_total || 0), 0);
+      const vendasMes = vendasSumResult.data && Array.isArray(vendasSumResult.data) 
+        ? vendasSumResult.data.reduce((total, venda) => total + (parseFloat(venda.valor_total) || 0), 0)
+        : 0;
       
       setStats({
         totalProdutos,

@@ -30,7 +30,6 @@ export const testSupabaseConnection = async () => {
       console.error('❌ Erro na conexão com Supabase:', error)
       return false
     }
-    console.log('✅ Conexão com Supabase estabelecida com sucesso!')
     return true
   } catch (error) {
     console.error('❌ Erro inesperado na conexão:', error)

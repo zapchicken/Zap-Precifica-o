@@ -79,7 +79,6 @@ export function useMarkup() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        console.log('🔄 Usuário autenticado mudou, recarregando dados de markup...')
         carregarDados()
       }
     })
@@ -88,7 +87,6 @@ export function useMarkup() {
   }, [])
 
   const carregarDados = async () => {
-    console.log('🔄 Carregando dados de markup...')
     setLoading(true)
     try {
       await Promise.all([
@@ -97,9 +95,8 @@ export function useMarkup() {
         carregarConfigCategorias(),
         carregarModelos()
       ])
-      console.log('✅ Dados de markup carregados com sucesso')
     } catch (error) {
-      console.error('❌ Erro ao carregar dados de markup:', error)
+      console.error('Erro ao carregar dados de markup:', error)
       toast({
         title: "Erro",
         description: "Erro ao carregar configurações de markup",
@@ -116,7 +113,6 @@ export function useMarkup() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('⚠️ Usuário não autenticado, usando configuração padrão')
         // Se não há usuário logado, usar configuração padrão
         setConfigGeral({
           faturamento_estimado_mensal: 0,
@@ -126,8 +122,6 @@ export function useMarkup() {
         })
         return
       }
-
-      console.log('🔍 Carregando configuração geral para usuário:', user.email)
 
       const { data, error } = await supabase
         .from('config_markup_geral')
@@ -146,7 +140,6 @@ export function useMarkup() {
         outros_custos: 0
       }
       
-      console.log('✅ Configuração geral carregada:', configFinal)
       setConfigGeral(configFinal)
     } catch (error) {
       console.error('Erro ao carregar configuração geral:', error)
@@ -224,12 +217,10 @@ export function useMarkup() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('⚠️ Usuário não autenticado, canais de venda vazios')
         setCanaisVenda([])
         return
       }
 
-      console.log('🔍 Carregando canais de venda para usuário:', user.email)
 
       const { data, error } = await supabase
         .from('canais_venda')
@@ -249,10 +240,8 @@ export function useMarkup() {
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: true })
-        console.log('✅ Canais padrão adicionados:', newData)
         setCanaisVenda(newData || [])
       } else {
-        console.log('✅ Canais de venda carregados:', data)
         setCanaisVenda(data)
       }
     } catch (error) {
@@ -382,12 +371,10 @@ export function useMarkup() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('⚠️ Usuário não autenticado, configurações de categoria vazias')
         setConfigCategorias([])
         return
       }
 
-      console.log('🔍 Carregando configurações de categoria para usuário:', user.email)
 
       const { data, error } = await supabase
         .from('config_markup_categoria')
@@ -396,7 +383,6 @@ export function useMarkup() {
         .order('categoria', { ascending: true })
 
       if (error) throw error
-      console.log('✅ Configurações de categoria carregadas:', data)
       setConfigCategorias(data || [])
     } catch (error) {
       console.error('Erro ao carregar configurações de categoria:', error)
@@ -506,12 +492,10 @@ export function useMarkup() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('⚠️ Usuário não autenticado, modelos vazios')
         setModelos([])
         return
       }
 
-      console.log('🔍 Carregando modelos para usuário:', user.email)
 
       const { data, error } = await supabase
         .from('modelos_markup')
@@ -520,7 +504,6 @@ export function useMarkup() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      console.log('✅ Modelos carregados:', data)
       setModelos(data || [])
     } catch (error) {
       console.error('Erro ao carregar modelos:', error)

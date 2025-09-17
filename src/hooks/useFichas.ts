@@ -165,7 +165,6 @@ export const useFichas = () => {
 
 
       // Carregar insumos com JOIN para pegar o nome
-      if (import.meta.env.DEV) console.log('🔍 Carregando insumos para ficha:', fichaId)
       // ✅ REMOVIDO filtro manual com user_id - RLS já garante segurança
       const { data: insumos, error: insumosError } = await supabase
         .from('fichas_insumos')
@@ -179,9 +178,6 @@ export const useFichas = () => {
         .eq('ficha_id', fichaId)
 
       if (import.meta.env.DEV) {
-        console.log('🔍 Resultado insumos:', { insumos, insumosError })
-        console.log('🔍 Insumos detalhados:', insumos)
-        console.log('🔍 Quantidade de insumos:', insumos?.length || 0)
       }
       
       if (insumosError) {
@@ -189,7 +185,6 @@ export const useFichas = () => {
       }
 
       // Carregar produtos prontos (fichas existentes) com JOIN para pegar o nome
-      if (import.meta.env.DEV) console.log('🔍 Carregando produtos prontos para ficha:', fichaId)
       // ✅ REMOVIDO filtro manual com user_id - RLS já garante segurança
       const { data: produtosProntos, error: produtosError } = await supabase
         .from('fichas_produtosprontos')
@@ -203,9 +198,6 @@ export const useFichas = () => {
         .eq('ficha_id', fichaId)
 
       if (import.meta.env.DEV) {
-        console.log('🔍 Resultado produtos prontos:', { produtosProntos, produtosError })
-        console.log('🔍 Produtos prontos detalhados:', produtosProntos)
-        console.log('🔍 Quantidade de produtos prontos:', produtosProntos?.length || 0)
       }
 
       if (produtosError) {
@@ -220,7 +212,6 @@ export const useFichas = () => {
       }
 
       // Carregar bases (ingredientes prontos) com JOIN para pegar o nome
-      if (import.meta.env.DEV) console.log('🔍 Carregando bases para ficha:', fichaId)
       // ✅ REMOVIDO filtro manual com user_id - RLS já garante segurança
       const { data: bases, error: basesError } = await supabase
         .from('fichas_bases')
