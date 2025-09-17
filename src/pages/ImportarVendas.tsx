@@ -100,6 +100,7 @@ export default function ImportarVendas() {
   const [filtroCanal, setFiltroCanal] = useState<string>("todos")
   const [analiseMargem, setAnaliseMargem] = useState<AnaliseMargem[]>([])
   const [resumoMargem, setResumoMargem] = useState<ResumoMargem | null>(null)
+  const [errosDetalhados, setErrosDetalhados] = useState<string[]>([])
   
   // Estados para controle de período e limpeza
   const [dataInicio, setDataInicio] = useState<string>("")
@@ -303,6 +304,7 @@ export default function ImportarVendas() {
       };
       
       setResumo(novoResumo);
+      setErrosDetalhados(resultado.erros);
 
       const mensagemSucesso = filtrarPorPeriodo 
         ? `${novoResumo.sucessos} vendas importadas do período selecionado!`
@@ -538,9 +540,10 @@ export default function ImportarVendas() {
         </div>
 
         <Tabs defaultValue="importar" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="importar">Importar Arquivo</TabsTrigger>
             <TabsTrigger value="resultados">Resultados</TabsTrigger>
+            <TabsTrigger value="erros" disabled={!errosDetalhados.length}>Erros ({errosDetalhados.length})</TabsTrigger>
             <TabsTrigger value="margem" disabled={!resumo}>Análise de Margem</TabsTrigger>
           </TabsList>
 
@@ -934,6 +937,80 @@ export default function ImportarVendas() {
                     Nenhuma importação realizada ainda. 
                     <br />
                     Volte para a aba "Importar Arquivo" para começar.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Aba de Erros */}
+          <TabsContent value="erros" className="space-y-6">
+            {errosDetalhados.length > 0 ? (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertCircle className="h-5 w-5 text-destructive" />
+                      Erros de Importação ({errosDetalhados.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                          <div>
+                            <h4 className="font-medium text-yellow-800">Por que alguns registros foram ignorados?</h4>
+                            <p className="text-sm text-yellow-700 mt-1">
+                              Os registros abaixo foram ignorados devido a problemas nos dados. 
+                              Verifique e corrija os dados no arquivo CSV para reimportar.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="max-h-96 overflow-y-auto border rounded-lg">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Linha</TableHead>
+                              <TableHead>Erro</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {errosDetalhados.map((erro, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-mono text-sm">
+                                  {erro.split(':')[0]}
+                                </TableCell>
+                                <TableCell className="text-sm text-destructive">
+                                  {erro.split(':').slice(1).join(':').trim()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground">
+                        <p><strong>Dicas para corrigir os erros:</strong></p>
+                        <ul className="list-disc list-inside mt-2 space-y-1">
+                          <li>Verifique se todas as colunas obrigatórias estão preenchidas</li>
+                          <li>Confirme se as datas estão no formato correto (DD/MM/AAAA ou AAAA-MM-DD)</li>
+                          <li>Verifique se os valores numéricos estão corretos (sem caracteres especiais)</li>
+                          <li>Certifique-se de que as quantidades são números positivos</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    Nenhum erro encontrado na última importação!
                   </p>
                 </CardContent>
               </Card>
