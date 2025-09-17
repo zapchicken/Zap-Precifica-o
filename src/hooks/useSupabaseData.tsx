@@ -62,26 +62,7 @@ const MOCK_DATA = {
       user_id: 'mock-user'
     }
   ],
-  vendas: [
-    {
-      id: '1',
-      produto_nome: 'Hambúrguer Clássico',
-      quantidade: 15,
-      valor_unitario: 25.90,
-      valor_total: 388.50,
-      data_venda: new Date().toISOString(),
-      user_id: 'mock-user'
-    },
-    {
-      id: '2',
-      produto_nome: 'Batata Frita Grande',
-      quantidade: 12,
-      valor_unitario: 12.50,
-      valor_total: 150.00,
-      data_venda: new Date().toISOString(),
-      user_id: 'mock-user'
-    }
-  ],
+  vendas: [],
   bases: [],
   fichas_tecnicas: []
 };
@@ -225,7 +206,7 @@ export function useVendas() {
       // Buscar vendas do usuário
       const { data, error } = await supabase
         .from('vendas')
-        .select('*')
+        .select('id, data_venda, pedido_numero, produto_nome, produto_codigo, quantidade, valor_unitario, valor_total, canal, observacoes, created_at')
         .eq('user_id', user.id)
         .order('data_venda', { ascending: false });
 

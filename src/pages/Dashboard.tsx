@@ -37,13 +37,13 @@ export default function Dashboard() {
     .reduce((acc: any[], venda: any) => {
       const existing = acc.find(p => p.nome === venda.produto_nome)
       if (existing) {
-        existing.vendas += venda.valor_total
-        existing.quantidade += venda.quantidade
+        existing.vendas += parseFloat(venda.valor_total) || 0
+        existing.quantidade += parseInt(venda.quantidade) || 0
       } else {
         acc.push({
           nome: venda.produto_nome,
-          vendas: venda.valor_total,
-          quantidade: venda.quantidade,
+          vendas: parseFloat(venda.valor_total) || 0,
+          quantidade: parseInt(venda.quantidade) || 0,
           margem: "Calculando..." // Seria calculado com base na ficha técnica
         })
       }
