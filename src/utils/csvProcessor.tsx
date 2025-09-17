@@ -197,7 +197,8 @@ export const processarVendas = async (file: File) => {
         // É uma data serial do Excel - converter para data
         const dataSerial = parseFloat(dataFormatada);
         // Excel conta dias desde 1 de janeiro de 1900 (com correção para bug do Excel)
-        const dataExcel = new Date((dataSerial - 25569) * 86400 * 1000);
+        // Usar UTC para evitar problemas de timezone
+        const dataExcel = new Date(Date.UTC(1900, 0, dataSerial - 1));
         dataFormatada = dataExcel.toISOString().split('T')[0];
       } else if (dataFormatada.includes('/')) {
         // Se a data está no formato DD/MM/YYYY, MM/DD/YYYY ou DD/MM/YY, MM/DD/YY
