@@ -83,7 +83,7 @@ export default function Dashboard() {
           />
           <StatCard
             title="Margem de Contribuição"
-            value={`${stats.margemMedia.toFixed(1)}%`}
+            value={`${(stats.margemContribuicaoPonderada || 0).toFixed(1)}%`}
             subtitle="Média dos produtos cadastrados"
             icon={TrendingUp}
             trend="up"
@@ -247,7 +247,7 @@ export default function Dashboard() {
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground uppercase">Margem Média</p>
-                <p className="text-3xl font-bold text-accent">{stats.margemMedia.toFixed(1)}%</p>
+                <p className="text-3xl font-bold text-accent">{(stats.margemContribuicaoPonderada || 0).toFixed(1)}%</p>
                 <p className="text-sm text-muted-foreground">dos produtos</p>
               </div>
             </div>

@@ -7,14 +7,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Trash2, Edit, Plus, Search, X } from 'lucide-react'
+import { Trash2, Edit, Plus, Search, X, Copy, Replace } from 'lucide-react'
 import { useFornecedores } from '@/hooks/useFornecedores'
 import { FornecedorInsert } from '@/integrations/supabase/types'
 import { useAuth } from '@/contexts/AuthContext'
 
 const Fornecedor = () => {
   // Usando o hook real do Supabase
-  const { fornecedores, loading, createFornecedor, updateFornecedor, deleteFornecedor } = useFornecedores()
+  const { fornecedores, loading, createFornecedor, updateFornecedor, deleteFornecedor, duplicateFornecedor } = useFornecedores()
   const { user } = useAuth()
   
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -78,10 +78,8 @@ const Fornecedor = () => {
     }
     
     try {
-      const fornecedorData = {
-        ...formData,
-        user_id: user.id
-      }
+      // Remover user_id do formData pois será adicionado automaticamente no hook
+      const { user_id, ...fornecedorData } = formData
       
       if (editingFornecedor) {
         await updateFornecedor(editingFornecedor.id, fornecedorData)
@@ -111,6 +109,26 @@ const Fornecedor = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este fornecedor?')) {
       await deleteFornecedor(id)
+    }
+  }
+
+  const handleDuplicate = async (id: string) => {
+    const confirmMessage = 'Deseja criar uma cópia deste fornecedor para editar?\n\n' +
+      'Seus insumos vinculados a este fornecedor serão automaticamente migrados para a cópia.'
+    
+    if (window.confirm(confirmMessage)) {
+      await duplicateFornecedor(id, false)
+    }
+  }
+
+  const handleReplace = async (id: string) => {
+    const confirmMessage = 'Deseja substituir este fornecedor compartilhado pela sua própria versão?\n\n' +
+      '• Seus insumos serão migrados automaticamente\n' +
+      '• O fornecedor original será oculto da sua lista\n' +
+      '• Você poderá editar a sua versão normalmente'
+    
+    if (window.confirm(confirmMessage)) {
+      await duplicateFornecedor(id, true)
     }
   }
 
@@ -267,6 +285,11 @@ const Fornecedor = () => {
                       <Badge variant={fornecedor.status === 'ativo' ? 'default' : 'secondary'}>
                         {fornecedor.status}
                       </Badge>
+                      {fornecedor.user_id === null && (
+                        <Badge variant="outline" className="text-blue-600 border-blue-600">
+                          Compartilhado
+                        </Badge>
+                      )}
                     </div>
                     {fornecedor.pessoa_contato && (
                       <p className="text-sm text-muted-foreground">
@@ -290,20 +313,46 @@ const Fornecedor = () => {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(fornecedor)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(fornecedor.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {fornecedor.user_id === null ? (
+                      // Fornecedor compartilhado - pode duplicar ou substituir
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDuplicate(fornecedor.id)}
+                          title="Criar uma cópia (manter original)"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleReplace(fornecedor.id)}
+                          title="Substituir (ocultar original)"
+                          className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                        >
+                          <Replace className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      // Fornecedor próprio - pode editar e excluir
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(fornecedor)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(fornecedor.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>

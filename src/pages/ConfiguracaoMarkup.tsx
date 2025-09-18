@@ -113,6 +113,11 @@ export default function ConfiguracaoMarkup() {
     setConfigGeral(updated)
     setHasChanges(true)
     
+    // Salvar faturamento estimado no localStorage para uso no dashboard
+    if (key === 'faturamento_estimado_mensal') {
+      localStorage.setItem('faturamentoEstimado', String(value))
+    }
+    
     try {
       await salvarConfigGeral(updated)
       setHasChanges(false)

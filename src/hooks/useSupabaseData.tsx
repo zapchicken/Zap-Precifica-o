@@ -334,7 +334,7 @@ export function useFichasTecnicas() {
 export function useDashboardStats() {
   const [stats, setStats] = useState({
     totalProdutos: 0,
-    margemMedia: 0,
+    margemContribuicaoPonderada: 0,
     produtosLucrativos: 0,
     alertasPreco: 0,
     vendasMes: 0
@@ -351,7 +351,7 @@ export function useDashboardStats() {
       if (userError || !user) {
         setStats({
           totalProdutos: 0,
-          margemMedia: 0,
+          margemContribuicaoPonderada: 0,
           produtosLucrativos: 0,
           alertasPreco: 0,
           vendasMes: 0
@@ -365,6 +365,26 @@ export function useDashboardStats() {
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'ativo');
+
+      // Buscar insumos - CORRIGIDO: usando preco_por_unidade
+      const insumosResult = await supabase
+        .from('insumos')
+        .select('id, preco_por_unidade')
+        .eq('user_id', user.id);
+
+      // Buscar fichas técnicas com insumos - CORRIGIDO: usando fichas_insumos
+      const fichasResult = await supabase
+        .from('fichas_insumos')
+        .select('ficha_id, insumo_id, quantidade')
+        .eq('user_id', user.id);
+
+      // Verificar erros nas consultas
+      if (insumosResult.error) {
+        console.warn('Erro ao buscar insumos:', insumosResult.error);
+      }
+      if (fichasResult.error) {
+        console.warn('Erro ao buscar fichas técnicas:', fichasResult.error);
+      }
 
       // Buscar todas as vendas com paginação para garantir que não perca nenhuma
       const fetchAllVendas = async () => {
@@ -399,11 +419,112 @@ export function useDashboardStats() {
       }
 
       const produtos = produtosResult.data || [];
+      const insumos = insumosResult.data || [];
+      const fichas_insumos = fichasResult.data || [];
       
       const totalProdutos = produtos.length;
-      const margemMedia = produtos.length > 0 
-        ? produtos.reduce((acc, p) => acc + (p.margem_lucro || 0), 0) / produtos.length 
+      
+      // --- CÁLCULO DA MARGEM DE CONTRIBUIÇÃO PONDERADA COM BASE NOS PRODUTOS CADASTRADOS ---
+      // 1. Buscar todos os produtos ativos com seus preços de venda e user_id
+      const produtosAtivos = produtos.filter(p => p.status === 'ativo');
+       
+      // 2. Buscar todos os insumos para montar o custo por produto via ficha técnica
+      const insumosMap = new Map(insumos.map(i => [i.id, i.preco_por_unidade]));
+       
+      // 3. Buscar todas as fichas técnicas e agrupar por ficha_id
+      const fichasPorFicha = new Map();
+      fichas_insumos.forEach(f => {
+        if (!fichasPorFicha.has(f.ficha_id)) {
+          fichasPorFicha.set(f.ficha_id, []);
+        }
+        fichasPorFicha.get(f.ficha_id).push({
+          insumo_id: f.insumo_id,
+          quantidade: f.quantidade
+        });
+      });
+       
+      // 4. Calcular custo total por ficha técnica
+      const custoPorFicha = new Map();
+      for (const [fichaId, fichas] of fichasPorFicha) {
+        let custoTotal = 0;
+        for (const ficha of fichas) {
+          const custoInsumo = insumosMap.get(ficha.insumo_id);
+          if (custoInsumo !== undefined) {
+            custoTotal += custoInsumo * ficha.quantidade;
+          }
+        }
+        custoPorFicha.set(fichaId, custoTotal);
+      }
+       
+      // 5. Mapear custo por produto através da ficha técnica
+      const custoPorProduto = new Map();
+      let produtosComFicha = 0;
+      let produtosSemFicha = 0;
+      
+      produtosAtivos.forEach(produto => {
+        if (produto.ficha_tecnica_id) {
+          const custoFicha = custoPorFicha.get(produto.ficha_tecnica_id) || 0;
+          custoPorProduto.set(produto.id, custoFicha);
+          produtosComFicha++;
+        } else {
+          // Se não tem ficha técnica, usar preco_custo se disponível
+          custoPorProduto.set(produto.id, produto.preco_custo || 0);
+          produtosSemFicha++;
+        }
+      });
+      
+       
+      // 6. Calcular margem de contribuição ponderada com base no faturamento estimado
+      // O faturamento estimado vem do campo "Faturamento Estimado Mensal (R$)" da página Taxa de Marcação
+      // Como não há um hook para ele, assumimos que ele está armazenado em localStorage ou state global
+      // Se não existir, use 0 para evitar divisão por zero
+      const faturamentoEstimado = parseFloat(localStorage.getItem('faturamentoEstimado') || '0');
+       
+      // Se não houver faturamento estimado, calcule a MC média simples (fallback)
+      let totalMargemPonderada = 0;
+      let totalFaturamento = 0;
+       
+      if (faturamentoEstimado > 0) {
+        // Calcula o peso de cada produto com base na proporção do faturamento estimado
+        produtosAtivos.forEach(produto => {
+          const precoVenda = produto.preco_venda || 0;
+          const custoUnitario = custoPorProduto.get(produto.id) || 0;
+          
+          // Evita divisão por zero
+          if (precoVenda <= 0 || custoUnitario < 0) return;
+          
+          // Margem unitária
+          const margemUnitaria = (precoVenda - custoUnitario) / precoVenda;
+          
+          // Peso: quanto esse produto representa do faturamento estimado
+          // Assume-se que cada produto tem o mesmo peso proporcional ao seu preço
+          // Isso é uma aproximação válida quando não temos dados de vendas reais por produto
+          const peso = precoVenda / faturamentoEstimado;
+          
+          totalMargemPonderada += margemUnitaria * peso;
+          totalFaturamento += peso;
+        });
+      } else {
+        // Fallback: se não tiver faturamento estimado, usa média simples dos produtos
+        produtosAtivos.forEach(produto => {
+          const precoVenda = produto.preco_venda || 0;
+          const custoUnitario = custoPorProduto.get(produto.id) || 0;
+          
+          if (precoVenda > 0 && custoUnitario >= 0) {
+            const margemUnitaria = (precoVenda - custoUnitario) / precoVenda;
+            totalMargemPonderada += margemUnitaria;
+            totalFaturamento += 1;
+          }
+        });
+      }
+       
+      // Margem ponderada final
+      const margemContribuicaoPonderada = totalFaturamento > 0
+        ? Math.round((totalMargemPonderada / totalFaturamento) * 10000) / 100
         : 0;
+       
+      // --- FIM DO CÁLCULO ---
+      
       const produtosLucrativos = produtos.filter(p => (p.margem_lucro || 0) > 30).length;
       const alertasPreco = produtos.filter(p => !p.preco_venda || p.preco_venda <= 0).length;
       
@@ -412,9 +533,10 @@ export function useDashboardStats() {
         ? vendasSumResult.data.reduce((total, venda) => total + (parseFloat(venda.valor_total) || 0), 0)
         : 0;
       
+      
       setStats({
         totalProdutos,
-        margemMedia: Math.round(margemMedia * 100) / 100,
+        margemContribuicaoPonderada: margemContribuicaoPonderada || 0,
         produtosLucrativos,
         alertasPreco,
         vendasMes
