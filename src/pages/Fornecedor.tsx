@@ -84,7 +84,8 @@ const Fornecedor = () => {
       if (editingFornecedor) {
         await updateFornecedor(editingFornecedor.id, fornecedorData)
       } else {
-        await createFornecedor(fornecedorData)
+        // Para create, usar formData completo pois o hook adiciona user_id automaticamente
+        await createFornecedor(formData as any)
       }
       resetForm()
     } catch (error) {
