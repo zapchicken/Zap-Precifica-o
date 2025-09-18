@@ -492,27 +492,38 @@ export function useMarkup() {
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
+        console.log('🔍 Usuário não autenticado, modelos vazios')
         setModelos([])
         return
       }
 
-
+      console.log('🔍 Carregando modelos para usuário:', user.id)
       const { data, error } = await supabase
         .from('modelos_markup')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Erro ao carregar modelos:', error)
+        throw error
+      }
+      
+      console.log('📊 Modelos carregados:', data)
       setModelos(data || [])
     } catch (error) {
-      console.error('Erro ao carregar modelos:', error)
+      console.error('❌ Erro ao carregar modelos:', error)
       setModelos([])
     }
   }
 
   const salvarModelo = async (nome: string) => {
     if (!configGeral || canaisVenda.length === 0 || configCategorias.length === 0) {
+      console.log('❌ Dados insuficientes para salvar modelo:', {
+        configGeral: !!configGeral,
+        canaisVenda: canaisVenda.length,
+        configCategorias: configCategorias.length
+      })
       toast({
         title: "Erro",
         description: "Configure pelo menos as configurações gerais, canais e categorias antes de salvar um modelo",
@@ -536,14 +547,21 @@ export function useMarkup() {
         config_categorias: configCategorias
       }
 
+      console.log('💾 Salvando modelo:', { nome, user_id: user.id })
+      console.log('📊 Dados do modelo:', modelo)
+
       const { data, error } = await supabase
         .from('modelos_markup')
         .insert([{ ...modelo, user_id: user.id }])
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Erro ao salvar modelo no banco:', error)
+        throw error
+      }
 
+      console.log('✅ Modelo salvo com sucesso:', data)
       setModelos(prev => [data, ...prev])
       toast({
         title: "Sucesso",
@@ -551,7 +569,7 @@ export function useMarkup() {
       })
       return data
     } catch (error) {
-      console.error('Erro ao salvar modelo:', error)
+      console.error('❌ Erro ao salvar modelo:', error)
       toast({
         title: "Erro",
         description: "Erro ao salvar modelo",

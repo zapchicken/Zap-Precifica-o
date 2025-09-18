@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -83,6 +83,9 @@ export default function ConfiguracaoMarkup() {
   const [novoModelo, setNovoModelo] = useState('')
   const [showNovoCanal, setShowNovoCanal] = useState(false)
   const [showNovoModelo, setShowNovoModelo] = useState(false)
+  
+  // Estado local para valores em edição (resposta imediata)
+  const [valoresLocais, setValoresLocais] = useState<{[key: string]: {lucro: number, reserva: number}}>({})
 
   // Atualizar cálculos quando dados mudarem
   useEffect(() => {
@@ -90,6 +93,17 @@ export default function ConfiguracaoMarkup() {
       calcularMarkup()
     }
   }, [configGeral, canaisVenda, configCategorias])
+
+  // Cleanup do timeout quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Removido useEffect problemático que estava limpando valores locais
 
   // Funções de atualização
   const updateConfigGeral = async (key: string, value: number) => {
@@ -143,17 +157,53 @@ export default function ConfiguracaoMarkup() {
     }
   }
 
-  const handleSalvarConfigCategoria = async (categoria: string, lucro: number, reserva: number) => {
-    try {
-      await salvarConfigCategoria({
-        categoria,
-        lucro_desejado: lucro,
-        reserva_operacional: reserva
-      })
-    } catch (error) {
-      console.error('Erro ao salvar configuração de categoria:', error)
+  // Debounce para salvamento (mais rápido)
+  const saveTimeoutRef = useRef<NodeJS.Timeout>()
+  
+  const handleSalvarConfigCategoria = useCallback(async (categoria: string, lucro: number, reserva: number) => {
+    // Atualizar estado local imediatamente para resposta visual
+    setValoresLocais(prev => ({
+      ...prev,
+      [categoria]: { lucro, reserva }
+    }))
+    
+    // Limpar timeout anterior se existir
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
     }
-  }
+    
+    // Aguardar apenas 300ms antes de salvar
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        // Encontrar a configuração existente para manter o ID
+        const configExistente = configCategorias.find(c => c.categoria === categoria)
+        
+        const dadosParaSalvar = {
+          id: configExistente?.id,
+          categoria,
+          lucro_desejado: lucro,
+          reserva_operacional: reserva
+        }
+        
+        await salvarConfigCategoria(dadosParaSalvar)
+        
+        // Limpar valor local após salvamento bem-sucedido
+        setValoresLocais(prev => {
+          const newState = { ...prev }
+          delete newState[categoria]
+          return newState
+        })
+      } catch (error) {
+        console.error('Erro ao salvar configuração de categoria:', error)
+        // Em caso de erro, reverter o estado local
+        setValoresLocais(prev => {
+          const newState = { ...prev }
+          delete newState[categoria]
+          return newState
+        })
+      }
+    }, 300)
+  }, [configCategorias, salvarConfigCategoria])
 
   const handleSalvarModelo = async () => {
     if (!novoModelo.trim()) return
@@ -516,6 +566,12 @@ export default function ConfiguracaoMarkup() {
               <TableBody>
                 {categorias.map((categoria) => {
                   const config = configCategorias.find(c => c.categoria === categoria)
+                  const valorLocal = valoresLocais[categoria]
+                  
+                  // Usar valor local se disponível, senão usar valor do banco
+                  const lucroAtual = valorLocal?.lucro ?? config?.lucro_desejado ?? 0
+                  const reservaAtual = valorLocal?.reserva ?? config?.reserva_operacional ?? 0
+                  
                   return (
                     <TableRow key={categoria}>
                       <TableCell className="font-medium">{categoria}</TableCell>
@@ -523,11 +579,11 @@ export default function ConfiguracaoMarkup() {
                         <Input
                           type="number"
                           step="0.1"
-                          value={config?.lucro_desejado || 0}
+                          value={lucroAtual}
                           onChange={(e) => handleSalvarConfigCategoria(
                             categoria, 
                             parseFloat(e.target.value) || 0, 
-                            config?.reserva_operacional || 0
+                            reservaAtual
                           )}
                           className="w-24"
                         />
@@ -536,10 +592,10 @@ export default function ConfiguracaoMarkup() {
                         <Input
                           type="number"
                           step="0.1"
-                          value={config?.reserva_operacional || 0}
+                          value={reservaAtual}
                           onChange={(e) => handleSalvarConfigCategoria(
                             categoria, 
-                            config?.lucro_desejado || 0, 
+                            lucroAtual, 
                             parseFloat(e.target.value) || 0
                           )}
                           className="w-24"
