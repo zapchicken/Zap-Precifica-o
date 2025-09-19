@@ -488,16 +488,7 @@ export function useMarkup() {
       console.log('🔍 Carregando modelos para usuário:', user.id)
       const { data, error } = await supabase
         .from('modelos_markup')
-        .select(`
-          id,
-          nome,
-          config_geral::text,
-          canais_venda::text,
-          config_categorias::text,
-          user_id,
-          created_at,
-          updated_at
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -507,16 +498,7 @@ export function useMarkup() {
       }
       
       console.log('📊 Modelos carregados:', data)
-      
-      // Converter strings JSON de volta para objetos
-      const modelosParsed = data?.map(modelo => ({
-        ...modelo,
-        config_geral: JSON.parse(modelo.config_geral),
-        canais_venda: JSON.parse(modelo.canais_venda),
-        config_categorias: JSON.parse(modelo.config_categorias)
-      })) || []
-      
-      setModelos(modelosParsed)
+      setModelos(data || [])
     } catch (error) {
       console.error('❌ Erro ao carregar modelos:', error)
       setModelos([])
@@ -546,9 +528,9 @@ export function useMarkup() {
 
       const modelo = {
         nome,
-        config_geral: JSON.stringify(configGeral),
-        canais_venda: JSON.stringify(canaisVenda),
-        config_categorias: JSON.stringify(configCategorias),
+        config_geral: configGeral,
+        canais_venda: canaisVenda,
+        config_categorias: configCategorias,
         user_id: user.id
       }
 
@@ -558,16 +540,7 @@ export function useMarkup() {
       const { data, error } = await supabase
         .from('modelos_markup')
         .insert([modelo])
-        .select(`
-          id,
-          nome,
-          config_geral::text,
-          canais_venda::text,
-          config_categorias::text,
-          user_id,
-          created_at,
-          updated_at
-        `)
+        .select()
         .single()
 
       if (error) {
@@ -600,29 +573,16 @@ export function useMarkup() {
     try {
       const { data, error } = await supabase
         .from('modelos_markup')
-        .select(`
-          id,
-          nome,
-          config_geral::text,
-          canais_venda::text,
-          config_categorias::text,
-          user_id,
-          created_at,
-          updated_at
-        `)
+        .select('*')
         .eq('id', id)
         .single()
 
       if (error) throw error
 
       // Carregar as configurações do modelo
-      const configGeral = JSON.parse(data.config_geral)
-      const canaisVenda = JSON.parse(data.canais_venda)
-      const configCategorias = JSON.parse(data.config_categorias)
-      
-      setConfigGeral(configGeral)
-      setCanaisVenda(canaisVenda)
-      setConfigCategorias(configCategorias)
+      setConfigGeral(data.config_geral)
+      setCanaisVenda(data.canais_venda)
+      setConfigCategorias(data.config_categorias)
 
       toast({
         title: "Sucesso",

@@ -66,29 +66,19 @@ export default function ConfiguracaoMarkup() {
 
       const { data, error } = await supabase
         .from('modelos_markup')
-        .select(`
-          id,
-          config_geral::text,
-          config_categorias::text,
-          user_id,
-          nome,
-          created_at,
-          updated_at
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .single();
       if (data) {
-        const configGeral = JSON.parse(data.config_geral);
-        const configCategorias = JSON.parse(data.config_categorias);
-        
-        setValoresPorCategoria(configCategorias || []);
         setConfigGeral({
-          faturamentoEstimado: configGeral?.faturamento_estimado || 0,
-          taxaCartao: configGeral?.taxa_cartao || 4,
-          taxaImposto: configGeral?.taxa_imposto || 4,
-          lucroDesejado: configGeral?.lucro_desejado || 15,
-          reservaOperacional: configGeral?.reserva_operacional || 5,
+          faturamentoEstimado: data.config_geral?.faturamento_estimado || 0,
+          taxaCartao: data.config_geral?.taxa_cartao || 4,
+          taxaImposto: data.config_geral?.taxa_imposto || 4,
+          lucroDesejado: data.config_geral?.lucro_desejado || 15,
+          reservaOperacional: data.config_geral?.reserva_operacional || 5,
         });
+        
+        setValoresPorCategoria(data.config_categorias || []);
       } else {
         // Se não houver configuração no banco, use os padrões
         const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
@@ -120,30 +110,22 @@ export default function ConfiguracaoMarkup() {
       // Verificar se já existe um registro
       const { data: existingData } = await supabase
         .from('modelos_markup')
-        .select(`
-          id,
-          config_geral::text,
-          config_categorias::text,
-          user_id,
-          nome,
-          created_at,
-          updated_at
-        `)
+        .select('id')
         .eq('user_id', user.id)
         .single();
 
       const configData = {
         user_id: user.id,
         nome: 'Configuração Padrão',
-        config_geral: JSON.stringify({
+        config_geral: {
           faturamento_estimado: configGeral.faturamentoEstimado,
           taxa_cartao: configGeral.taxaCartao,
           taxa_imposto: configGeral.taxaImposto,
           lucro_desejado: configGeral.lucroDesejado,
           reserva_operacional: configGeral.reservaOperacional,
-        }),
-        canais_venda: JSON.stringify([]),
-        config_categorias: JSON.stringify(valoresPorCategoria),
+        },
+        canais_venda: [],
+        config_categorias: valoresPorCategoria,
       };
 
       let data, error;
