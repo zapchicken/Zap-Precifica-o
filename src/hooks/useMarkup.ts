@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { useDespesasFixas } from '@/hooks/useDespesasFixas'
 import { useMaoDeObra } from '@/hooks/useMaoDeObra'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Interfaces
 export interface ConfigMarkupGeral {
@@ -55,6 +56,7 @@ export interface CalculoMarkup {
 
 export function useMarkup() {
   const { toast } = useToast()
+  const { user } = useAuth()
   const { getTotalMensal: getTotalDespesasFixas } = useDespesasFixas()
   const { totalGeral: totalMaoDeObra } = useMaoDeObra()
   
@@ -110,8 +112,6 @@ export function useMarkup() {
   // ===== CONFIGURAÇÃO GERAL =====
   const carregarConfigGeral = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         // Se não há usuário logado, usar configuração padrão
         setConfigGeral({
@@ -156,8 +156,6 @@ export function useMarkup() {
   const salvarConfigGeral = async (config: ConfigMarkupGeral) => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         throw new Error('Usuário não autenticado')
       }
@@ -214,8 +212,6 @@ export function useMarkup() {
   // ===== CANAIS DE VENDA =====
   const carregarCanaisVenda = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         setCanaisVenda([])
         return
@@ -273,8 +269,6 @@ export function useMarkup() {
   const adicionarCanalVenda = async (canal: Omit<CanalVenda, 'id' | 'created_at' | 'updated_at'>) => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         throw new Error('Usuário não autenticado')
       }
@@ -368,8 +362,6 @@ export function useMarkup() {
   // ===== CONFIGURAÇÕES POR CATEGORIA =====
   const carregarConfigCategorias = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         setConfigCategorias([])
         return
@@ -393,8 +385,6 @@ export function useMarkup() {
   const salvarConfigCategoria = async (config: ConfigMarkupCategoria) => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         throw new Error('Usuário não autenticado')
       }
@@ -489,8 +479,6 @@ export function useMarkup() {
   // ===== MODELOS DE MARKUP =====
   const carregarModelos = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         console.log('🔍 Usuário não autenticado, modelos vazios')
         setModelos([])
@@ -534,8 +522,6 @@ export function useMarkup() {
 
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         throw new Error('Usuário não autenticado')
       }
