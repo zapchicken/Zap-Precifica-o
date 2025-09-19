@@ -488,7 +488,16 @@ export function useMarkup() {
       console.log('🔍 Carregando modelos para usuário:', user.id)
       const { data, error } = await supabase
         .from('modelos_markup')
-        .select('*')
+        .select(`
+          id,
+          nome,
+          config_geral::text,
+          canais_venda::text,
+          config_categorias::text,
+          user_id,
+          created_at,
+          updated_at
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -498,7 +507,16 @@ export function useMarkup() {
       }
       
       console.log('📊 Modelos carregados:', data)
-      setModelos(data || [])
+      
+      // Converter strings JSON de volta para objetos
+      const modelosParsed = data?.map(modelo => ({
+        ...modelo,
+        config_geral: JSON.parse(modelo.config_geral),
+        canais_venda: JSON.parse(modelo.canais_venda),
+        config_categorias: JSON.parse(modelo.config_categorias)
+      })) || []
+      
+      setModelos(modelosParsed)
     } catch (error) {
       console.error('❌ Erro ao carregar modelos:', error)
       setModelos([])
@@ -526,11 +544,12 @@ export function useMarkup() {
         throw new Error('Usuário não autenticado')
       }
 
-      const modelo: Omit<ModeloMarkup, 'id' | 'created_at' | 'updated_at'> = {
+      const modelo = {
         nome,
-        config_geral: configGeral,
-        canais_venda: canaisVenda,
-        config_categorias: configCategorias
+        config_geral: JSON.stringify(configGeral),
+        canais_venda: JSON.stringify(canaisVenda),
+        config_categorias: JSON.stringify(configCategorias),
+        user_id: user.id
       }
 
       console.log('💾 Salvando modelo:', { nome, user_id: user.id })
@@ -538,8 +557,17 @@ export function useMarkup() {
 
       const { data, error } = await supabase
         .from('modelos_markup')
-        .insert([{ ...modelo, user_id: user.id }])
-        .select()
+        .insert([modelo])
+        .select(`
+          id,
+          nome,
+          config_geral::text,
+          canais_venda::text,
+          config_categorias::text,
+          user_id,
+          created_at,
+          updated_at
+        `)
         .single()
 
       if (error) {
@@ -572,16 +600,29 @@ export function useMarkup() {
     try {
       const { data, error } = await supabase
         .from('modelos_markup')
-        .select('*')
+        .select(`
+          id,
+          nome,
+          config_geral::text,
+          canais_venda::text,
+          config_categorias::text,
+          user_id,
+          created_at,
+          updated_at
+        `)
         .eq('id', id)
         .single()
 
       if (error) throw error
 
       // Carregar as configurações do modelo
-      setConfigGeral(data.config_geral)
-      setCanaisVenda(data.canais_venda)
-      setConfigCategorias(data.config_categorias)
+      const configGeral = JSON.parse(data.config_geral)
+      const canaisVenda = JSON.parse(data.canais_venda)
+      const configCategorias = JSON.parse(data.config_categorias)
+      
+      setConfigGeral(configGeral)
+      setCanaisVenda(canaisVenda)
+      setConfigCategorias(configCategorias)
 
       toast({
         title: "Sucesso",

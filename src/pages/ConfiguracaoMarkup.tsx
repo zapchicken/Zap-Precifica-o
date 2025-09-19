@@ -64,64 +64,40 @@ export default function ConfiguracaoMarkup() {
 
       console.log('Carregando configuração para usuário:', user.id);
 
-      // TEMPORÁRIO: Desabilitar consulta ao Supabase devido ao erro 406
-      // TODO: Resolver problema de RLS no Supabase
-      console.log('Usando configuração padrão (consulta ao Supabase temporariamente desabilitada)');
-      
-      // Inicializar com categorias padrão
-      const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
-        categoria: cat.categoria,
-        lucroDesejado: 15,
-        reservaOperacional: 5,
-      }));
-      setValoresPorCategoria(categoriasIniciais);
-      return;
-
-      /* CÓDIGO TEMPORARIAMENTE DESABILITADO - PROBLEMA DE RLS NO SUPABASE
-      // ✅ PASSO 1: Comece com as categorias fixas e valores padrão
-      const categoriasPadrao = CATEGORIAS_FIXAS.map(categoria => ({
-        categoria: categoria.categoria,
-        lucroDesejado: 15,     // ← valor padrão
-        reservaOperacional: 5, // ← valor padrão
-      }));
-
-      // ✅ PASSO 2: Se houver dados salvos no Supabase, sobrescreva os valores padrão
-      if (data && data.config_categorias && data.config_categorias.length > 0) {
-        // Cria um mapa das categorias salvas
-        const salvosMap = new Map(
-          data.config_categorias.map(item => [item.categoria, item])
-        );
-        
-        // Atualiza cada categoria padrão com o valor salvo, se existir
-        const categoriasComValores = categoriasPadrao.map(categoria => {
-          const salvo = salvosMap.get(categoria.categoria) as any;
-          if (salvo) {
-            return {
-              ...categoria,
-              lucroDesejado: salvo.lucroDesejado,
-              reservaOperacional: salvo.reservaOperacional,
-            };
-          }
-          return categoria; // mantém o padrão
-        });
-        
-        setValoresPorCategoria(categoriasComValores);
-      } else {
-        // Se não tiver nada no banco, usa os padrões
-        setValoresPorCategoria(categoriasPadrao);
-      }
-
-      // ✅ PASSO 3: Carrega config_geral normalmente
+      const { data, error } = await supabase
+        .from('modelos_markup')
+        .select(`
+          id,
+          config_geral::text,
+          config_categorias::text,
+          user_id,
+          nome,
+          created_at,
+          updated_at
+        `)
+        .eq('user_id', user.id)
+        .single();
       if (data) {
+        const configGeral = JSON.parse(data.config_geral);
+        const configCategorias = JSON.parse(data.config_categorias);
+        
+        setValoresPorCategoria(configCategorias || []);
         setConfigGeral({
-          faturamentoEstimado: data.config_geral?.faturamento_estimado || 0,
-          taxaCartao: data.config_geral?.taxa_cartao || 4,
-          taxaImposto: data.config_geral?.taxa_imposto || 4,
-          lucroDesejado: data.config_geral?.lucro_desejado || 15,
-          reservaOperacional: data.config_geral?.reserva_operacional || 5,
+          faturamentoEstimado: configGeral?.faturamento_estimado || 0,
+          taxaCartao: configGeral?.taxa_cartao || 4,
+          taxaImposto: configGeral?.taxa_imposto || 4,
+          lucroDesejado: configGeral?.lucro_desejado || 15,
+          reservaOperacional: configGeral?.reserva_operacional || 5,
         });
+      } else {
+        // Se não houver configuração no banco, use os padrões
+        const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
+          categoria: cat.categoria,
+          lucroDesejado: 15,
+          reservaOperacional: 5,
+        }));
+        setValoresPorCategoria(categoriasIniciais);
       }
-      */
     };
 
     loadConfig();
@@ -141,49 +117,33 @@ export default function ConfiguracaoMarkup() {
     try {
       if (!user) return;
 
-      // TEMPORÁRIO: Desabilitar salvamento no Supabase devido ao erro 406
-      // TODO: Resolver problema de RLS no Supabase
-      console.log('✅ Configuração salva:', {
-        config_geral: {
-          faturamento_estimado: configGeral.faturamentoEstimado,
-          taxa_cartao: configGeral.taxaCartao,
-          taxa_imposto: configGeral.taxaImposto,
-          lucro_desejado: configGeral.lucroDesejado,
-          reserva_operacional: configGeral.reservaOperacional,
-        },
-        config_categorias: valoresPorCategoria
-      });
-      
-      console.log('🔍 Array completo:', valoresPorCategoria);
-      
-      // Simular salvamento bem-sucedido
-      alert('Configuração salva localmente! (Salvamento no Supabase temporariamente desabilitado)');
-      return;
-    } catch (error) {
-      console.error('Erro inesperado:', error);
-      alert('Erro inesperado ao salvar configuração');
-    }
-
-    /* CÓDIGO TEMPORARIAMENTE DESABILITADO - PROBLEMA DE RLS NO SUPABASE
       // Verificar se já existe um registro
       const { data: existingData } = await supabase
         .from('modelos_markup')
-        .select('id')
+        .select(`
+          id,
+          config_geral::text,
+          config_categorias::text,
+          user_id,
+          nome,
+          created_at,
+          updated_at
+        `)
         .eq('user_id', user.id)
         .single();
 
       const configData = {
         user_id: user.id,
         nome: 'Configuração Padrão',
-        config_geral: {
+        config_geral: JSON.stringify({
           faturamento_estimado: configGeral.faturamentoEstimado,
           taxa_cartao: configGeral.taxaCartao,
           taxa_imposto: configGeral.taxaImposto,
           lucro_desejado: configGeral.lucroDesejado,
           reserva_operacional: configGeral.reservaOperacional,
-        },
-        canais_venda: [],
-        config_categorias: valoresPorCategoria,
+        }),
+        canais_venda: JSON.stringify([]),
+        config_categorias: JSON.stringify(valoresPorCategoria),
       };
 
       let data, error;
@@ -223,7 +183,6 @@ export default function ConfiguracaoMarkup() {
       console.error('Erro ao salvar configuração:', error);
       alert('Erro ao salvar configuração');
     }
-    */
   };
 
   return (
