@@ -70,7 +70,8 @@ export default function Produtos() {
     precoVendaIfood: "",
     observacoes: "",
     ativo: true,
-    fichaTecnicaId: ""
+    fichaTecnicaId: "",
+    simulatedAdjustment: null as number | null
   })
 
   // Função para arredondar para .90
@@ -281,7 +282,8 @@ export default function Produtos() {
       precoVendaIfood: (produto.preco_venda_ifood || 0).toString(),
       observacoes: produto.observacoes || "",
       ativo: produto.status === 'ativo',
-      fichaTecnicaId: produto.ficha_tecnica_id || ""
+      fichaTecnicaId: produto.ficha_tecnica_id || "",
+      simulatedAdjustment: produto.simulatedAdjustment || null
     })
     setIsDialogOpen(true)
   }
@@ -467,7 +469,8 @@ export default function Produtos() {
       precoVendaIfood: "",
       observacoes: "",
       ativo: true,
-      fichaTecnicaId: ""
+      fichaTecnicaId: "",
+      simulatedAdjustment: null
     })
   }
 
@@ -590,6 +593,29 @@ export default function Produtos() {
                     onChange={(e) => setFormData(prev => ({ ...prev, precoVendaIfood: e.target.value }))}
                     placeholder="0,00"
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="simulatedAdjustment">Acréscimo Simulado (R$)</Label>
+                  <Input
+                    id="simulatedAdjustment"
+                    type="number"
+                    step="0.01"
+                    min="-9999"
+                    max="9999"
+                    value={formData.simulatedAdjustment || ''}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                      setFormData(prev => ({
+                        ...prev,
+                        simulatedAdjustment: value,
+                      }));
+                    }}
+                    placeholder="0,00"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Simule ajustes no preço (frete, desconto, taxas extras)
+                  </p>
                 </div>
                 
                 <div className="md:col-span-2 space-y-2">
@@ -850,6 +876,70 @@ export default function Produtos() {
                   : '0,0%'
                 }
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cards de Preço Sugerido com Simulação */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Preço Sugerido VD</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {formData.precoCusto && formData.categoria 
+                  ? `R$ ${calcularPrecoSugerido(parseFloat(formData.precoCusto), formData.categoria, 'Venda Direta').toFixed(2)}`
+                  : 'R$ 0,00'
+                }
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Preço Sugerido IFood</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-accent">
+                {formData.precoCusto && formData.categoria 
+                  ? `R$ ${calcularPrecoSugerido(parseFloat(formData.precoCusto), formData.categoria, 'iFood').toFixed(2)}`
+                  : 'R$ 0,00'
+                }
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Preço Simulado Final</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${
+                formData.precoCusto && formData.categoria && formData.precoVenda
+                  ? (() => {
+                      const precoSugerido = calcularPrecoSugerido(parseFloat(formData.precoCusto), formData.categoria, 'Venda Direta');
+                      const valorFinalSimulado = precoSugerido + (formData.simulatedAdjustment || 0);
+                      const precoAtual = parseFloat(formData.precoVenda);
+                      return valorFinalSimulado > precoAtual ? 'text-green-600' : 'text-red-600';
+                    })()
+                  : 'text-gray-600'
+              }`}>
+                {formData.precoCusto && formData.categoria 
+                  ? (() => {
+                      const precoSugerido = calcularPrecoSugerido(parseFloat(formData.precoCusto), formData.categoria, 'Venda Direta');
+                      const valorFinalSimulado = precoSugerido + (formData.simulatedAdjustment || 0);
+                      return `R$ ${valorFinalSimulado.toFixed(2)}`;
+                    })()
+                  : 'R$ 0,00'
+                }
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {formData.simulatedAdjustment 
+                  ? `${formData.simulatedAdjustment > 0 ? '+' : ''}${formData.simulatedAdjustment.toFixed(2)} simulado`
+                  : 'Sem ajuste simulado'
+                }
+              </p>
             </CardContent>
           </Card>
         </div>

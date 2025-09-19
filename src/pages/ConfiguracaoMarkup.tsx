@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,533 +30,283 @@ import {
   Info,
   RefreshCw
 } from "lucide-react"
-import { useMarkup } from "@/hooks/useMarkup"
+import { supabase } from '@/integrations/supabase/client';
+import { CATEGORIAS_FIXAS, CategoriaValor } from '@/data/categorias-fixas';
+
+type ConfigGeral = {
+  faturamentoEstimado: number;
+  taxaCartao: number;
+  taxaImposto: number;
+  lucroDesejado: number;
+  reservaOperacional: number;
+};
 
 export default function ConfiguracaoMarkup() {
-  const { 
-    loading,
-    configGeral,
-    setConfigGeral,
-    canaisVenda,
-    configCategorias,
-    modelos,
-    calculosMarkup,
-    salvarConfigGeral,
-    adicionarCanalVenda,
-    atualizarCanalVenda,
-    removerCanalVenda,
-    salvarConfigCategoria,
-    removerConfigCategoria,
-    salvarModelo,
-    carregarModelo,
-    removerModelo,
-    calcularMarkup,
-    getPercentualDespesasFixas,
-    exportarCSV,
-    totalDespesasFixas,
-    totalMaoDeObra,
-    percentualDespesasFixas
-  } = useMarkup()
+  const [configGeral, setConfigGeral] = useState<ConfigGeral>({
+    faturamentoEstimado: 0,
+    taxaCartao: 4,
+    taxaImposto: 4,
+    lucroDesejado: 15,
+    reservaOperacional: 5,
+  });
 
-  // Categorias hard coded da página de fichas técnicas
-  const categorias = [
-    'ACOMPANHAMENTOS',
-    'BEBIDAS CERVEJAS E CHOPP',
-    'BEBIDAS REFRIGERANTES',
-    'BEBIDAS SUCOS',
-    'COMBO LANCHES CARNE ANGUS',
-    'COMBO LANCHES FRANGO',
-    'FRANGO AMERICANO',
-    'JUMBOS (COMBINADOS GRANDES)',
-    'LANCHES',
-    'MOLHOS',
-    'PROMOÇÕES',
-    'SALADAS',
-    'SOBREMESAS',
-    'ZAPBOX (COMBINADOS INDIVIDUÁIS)'
-  ]
+  const [valoresPorCategoria, setValoresPorCategoria] = useState<CategoriaValor[]>([]);
 
-  // Estados locais
-  const [hasChanges, setHasChanges] = useState(false)
-  const [novoCanal, setNovoCanal] = useState({ nome: '', taxa_marketplace: 0, taxa_antecipacao: 0 })
-  const [editingCanal, setEditingCanal] = useState<string | null>(null)
-  const [novoModelo, setNovoModelo] = useState('')
-  const [showNovoCanal, setShowNovoCanal] = useState(false)
-  const [showNovoModelo, setShowNovoModelo] = useState(false)
-  
-  // Estado local para valores em edição (resposta imediata)
-  const [valoresLocais, setValoresLocais] = useState<{[key: string]: {lucro: number, reserva: number}}>({})
-
-  // Atualizar cálculos quando dados mudarem
+  // Carregar configuração do Supabase
   useEffect(() => {
-    if (configGeral && canaisVenda.length > 0 && configCategorias.length > 0) {
-      calcularMarkup()
-    }
-  }, [configGeral, canaisVenda, configCategorias])
+    const loadConfig = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  // Cleanup do timeout quando o componente for desmontado
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
+      const { data, error } = await supabase
+        .from('modelos_markup')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.warn('Nenhuma configuração encontrada, usando padrões.');
+        // Inicializar com categorias padrão
+        const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
+          categoria: cat.categoria,
+          lucroDesejado: 0,
+          reservaOperacional: 0,
+        }));
+        setValoresPorCategoria(categoriasIniciais);
+        return;
       }
-    }
-  }, [])
 
-  // Removido useEffect problemático que estava limpando valores locais
+      // ✅ PASSO 1: Comece com as categorias fixas e valores padrão
+      const categoriasPadrao = CATEGORIAS_FIXAS.map(categoria => ({
+        categoria: categoria.categoria,
+        lucroDesejado: 15,     // ← valor padrão
+        reservaOperacional: 5, // ← valor padrão
+      }));
 
-  // Funções de atualização
-  const updateConfigGeral = async (key: string, value: number) => {
-    if (!configGeral) return
-
-    const updated = { ...configGeral, [key]: value }
-    setConfigGeral(updated)
-    setHasChanges(true)
-    
-    // Salvar faturamento estimado no localStorage para uso no dashboard
-    if (key === 'faturamento_estimado_mensal') {
-      localStorage.setItem('faturamentoEstimado', String(value))
-    }
-    
-    try {
-      await salvarConfigGeral(updated)
-      setHasChanges(false)
-    } catch (error) {
-      console.error('Erro ao salvar configuração geral:', error)
-    }
-  }
-
-  const handleAdicionarCanal = async () => {
-    if (!novoCanal.nome.trim()) return
-
-    try {
-      await adicionarCanalVenda({
-        nome: novoCanal.nome,
-        taxa_marketplace: novoCanal.taxa_marketplace,
-        taxa_antecipacao: novoCanal.taxa_antecipacao,
-        ativo: true
-      })
-      setNovoCanal({ nome: '', taxa_marketplace: 0, taxa_antecipacao: 0 })
-      setShowNovoCanal(false)
-    } catch (error) {
-      console.error('Erro ao adicionar canal:', error)
-    }
-  }
-
-  const handleAtualizarCanal = async (id: string, updates: Partial<typeof novoCanal>) => {
-    try {
-      await atualizarCanalVenda(id, updates)
-      setEditingCanal(null)
-    } catch (error) {
-      console.error('Erro ao atualizar canal:', error)
-    }
-  }
-
-  const handleRemoverCanal = async (id: string) => {
-    if (confirm('Tem certeza que deseja remover este canal?')) {
-      try {
-        await removerCanalVenda(id)
-      } catch (error) {
-        console.error('Erro ao remover canal:', error)
-      }
-    }
-  }
-
-  // Debounce para salvamento (mais rápido)
-  const saveTimeoutRef = useRef<NodeJS.Timeout>()
-  
-  const handleSalvarConfigCategoria = useCallback(async (categoria: string, lucro: number, reserva: number) => {
-    // Atualizar estado local imediatamente para resposta visual
-    setValoresLocais(prev => ({
-      ...prev,
-      [categoria]: { lucro, reserva }
-    }))
-    
-    // Limpar timeout anterior se existir
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-    }
-    
-    // Aguardar apenas 300ms antes de salvar
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        // Encontrar a configuração existente para manter o ID
-        const configExistente = configCategorias.find(c => c.categoria === categoria)
+      // ✅ PASSO 2: Se houver dados salvos no Supabase, sobrescreva os valores padrão
+      if (data && data.config_categorias && data.config_categorias.length > 0) {
+        // Cria um mapa das categorias salvas
+        const salvosMap = new Map(
+          data.config_categorias.map(item => [item.categoria, item])
+        );
         
-        const dadosParaSalvar = {
-          id: configExistente?.id,
-          categoria,
-          lucro_desejado: lucro,
-          reserva_operacional: reserva
-        }
+        // Atualiza cada categoria padrão com o valor salvo, se existir
+        const categoriasComValores = categoriasPadrao.map(categoria => {
+          const salvo = salvosMap.get(categoria.categoria) as any;
+          if (salvo) {
+            return {
+              ...categoria,
+              lucroDesejado: salvo.lucroDesejado,
+              reservaOperacional: salvo.reservaOperacional,
+            };
+          }
+          return categoria; // mantém o padrão
+        });
         
-        await salvarConfigCategoria(dadosParaSalvar)
-        
-        // Limpar valor local após salvamento bem-sucedido
-        setValoresLocais(prev => {
-          const newState = { ...prev }
-          delete newState[categoria]
-          return newState
-        })
-      } catch (error) {
-        console.error('Erro ao salvar configuração de categoria:', error)
-        // Em caso de erro, reverter o estado local
-        setValoresLocais(prev => {
-          const newState = { ...prev }
-          delete newState[categoria]
-          return newState
-        })
+        setValoresPorCategoria(categoriasComValores);
+      } else {
+        // Se não tiver nada no banco, usa os padrões
+        setValoresPorCategoria(categoriasPadrao);
       }
-    }, 300)
-  }, [configCategorias, salvarConfigCategoria])
 
-  const handleSalvarModelo = async () => {
-    if (!novoModelo.trim()) return
-
-    try {
-      await salvarModelo(novoModelo)
-      setNovoModelo('')
-      setShowNovoModelo(false)
-    } catch (error) {
-      console.error('Erro ao salvar modelo:', error)
-    }
-  }
-
-  const handleCarregarModelo = async (id: string) => {
-    try {
-      await carregarModelo(id)
-      setHasChanges(false)
-    } catch (error) {
-      console.error('Erro ao carregar modelo:', error)
-    }
-  }
-
-  const handleRemoverModelo = async (id: string) => {
-    if (confirm('Tem certeza que deseja remover este modelo?')) {
-      try {
-        await removerModelo(id)
-      } catch (error) {
-        console.error('Erro ao remover modelo:', error)
+      // ✅ PASSO 3: Carrega config_geral normalmente
+      if (data) {
+        setConfigGeral({
+          faturamentoEstimado: data.config_geral?.faturamento_estimado || 0,
+          taxaCartao: data.config_geral?.taxa_cartao || 4,
+          taxaImposto: data.config_geral?.taxa_imposto || 4,
+          lucroDesejado: data.config_geral?.lucro_desejado || 15,
+          reservaOperacional: data.config_geral?.reserva_operacional || 5,
+        });
       }
-    }
-  }
+    };
 
-  // Verificar se há custos excedendo 100%
-  const hasInvalidCalculations = calculosMarkup.some(calc => calc.custos_totais >= 100)
+    loadConfig();
+  }, []);
+
+  const updateCategoria = (categoria: string, field: 'lucroDesejado' | 'reservaOperacional', value: number) => {
+    setValoresPorCategoria(prev => 
+      prev.map(cat => 
+        cat.categoria === categoria 
+          ? { ...cat, [field]: value }
+          : cat
+      )
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Verificar se já existe um registro
+      const { data: existingData } = await supabase
+        .from('modelos_markup')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      const configData = {
+        user_id: user.id,
+        nome: 'Configuração Padrão',
+        config_geral: {
+          faturamento_estimado: configGeral.faturamentoEstimado,
+          taxa_cartao: configGeral.taxaCartao,
+          taxa_imposto: configGeral.taxaImposto,
+          lucro_desejado: configGeral.lucroDesejado,
+          reserva_operacional: configGeral.reservaOperacional,
+        },
+        canais_venda: [],
+        config_categorias: valoresPorCategoria,
+      };
+
+      let data, error;
+
+      if (existingData) {
+        // Atualizar registro existente
+        const { data: updateData, error: updateError } = await supabase
+          .from('modelos_markup')
+          .update(configData)
+          .eq('user_id', user.id)
+          .select();
+        data = updateData;
+        error = updateError;
+      } else {
+        // Inserir novo registro
+        const { data: insertData, error: insertError } = await supabase
+          .from('modelos_markup')
+          .insert(configData)
+          .select();
+        data = insertData;
+        error = insertError;
+      }
+
+      if (error) {
+        console.error('Erro ao salvar configuração:', error);
+        alert('Erro ao salvar configuração');
+        return;
+      }
+
+      console.log('✅ Configuração salva:', {
+        config_geral: configData.config_geral,
+        config_categorias: configData.config_categorias
+      });
+      console.log('🔍 Array completo:', JSON.stringify(configData.config_categorias, null, 2));
+      alert('Configuração salva com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar configuração:', error);
+      alert('Erro ao salvar configuração');
+    }
+  };
 
   return (
-    <Layout currentPage="markup">
+    <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Taxa de Marcação
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Configure as taxas e custos necessários para calcular o markup por categoria e canal de venda
+            <h1 className="text-3xl font-bold tracking-tight">Configuração de Markup</h1>
+            <p className="text-muted-foreground">
+              Configure as margens e taxas para cálculo automático de preços
             </p>
           </div>
-          
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => calcularMarkup()}>
-              <RefreshCw className="h-4 w-4" />
-              Atualizar
-            </Button>
-            <Button variant="outline" onClick={exportarCSV} disabled={calculosMarkup.length === 0}>
-              <Download className="h-4 w-4" />
-              Exportar CSV
-            </Button>
-            <Dialog open={showNovoModelo} onOpenChange={setShowNovoModelo}>
-              <DialogTrigger asChild>
-                <Button variant="default">
+          <Button onClick={handleSave} className="flex items-center gap-2">
                   <Save className="h-4 w-4" />
-                  Salvar como Modelo
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Salvar Modelo de Markup</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="nomeModelo">Nome do Modelo</Label>
-                    <Input
-                      id="nomeModelo"
-                      value={novoModelo}
-                      onChange={(e) => setNovoModelo(e.target.value)}
-                      placeholder="Ex: Configuração Padrão 2024"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setShowNovoModelo(false)}>
-                      Cancelar
+            Salvar Configuração
                     </Button>
-                    <Button onClick={handleSalvarModelo} disabled={!novoModelo.trim()}>
-                      Salvar
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
         </div>
 
-        {/* Alert para custos excedendo 100% */}
-        {hasInvalidCalculations && (
-          <Alert className="border-destructive/20 bg-destructive/5">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-            <AlertDescription className="text-destructive">
-              <strong>Atenção:</strong> Alguns cálculos mostram custos excedendo 100% do faturamento. 
-              Verifique as configurações para garantir a viabilidade dos negócios.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Alert para mudanças não salvas */}
-        {hasChanges && (
-          <Alert className="border-warning/20 bg-warning/5">
-            <Settings className="h-4 w-4 text-warning" />
-            <AlertDescription className="text-warning">
-              Você tem alterações não salvas. As configurações serão salvas automaticamente.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* 1. Bloco: Configurações Básicas */}
+        {/* 1. Bloco: Configurações Gerais */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-primary" />
-              Configurações Básicas
+              <Settings className="h-5 w-5 text-primary" />
+              Configurações Gerais
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="faturamento">Faturamento Estimado Mensal (R$)</Label>
                   <Input
                     id="faturamento"
                     type="number"
-                    step="0.01"
-                    value={configGeral?.faturamento_estimado_mensal || 0}
-                    onChange={(e) => updateConfigGeral('faturamento_estimado_mensal', parseFloat(e.target.value) || 0)}
+                  value={configGeral.faturamentoEstimado}
+                  onChange={(e) => setConfigGeral(prev => ({
+                    ...prev,
+                    faturamentoEstimado: parseFloat(e.target.value) || 0
+                  }))}
+                  placeholder="Ex: 50000"
                   />
                 </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="impostos">% Impostos sobre faturamento</Label>
+                <Label htmlFor="taxa-cartao">Taxa de Cartão (%)</Label>
                   <Input
-                    id="impostos"
+                  id="taxa-cartao"
                     type="number"
                     step="0.1"
-                    value={configGeral?.impostos_faturamento || 0}
-                    onChange={(e) => updateConfigGeral('impostos_faturamento', parseFloat(e.target.value) || 0)}
-                  />
-                </div>
+                  value={configGeral.taxaCartao}
+                  onChange={(e) => setConfigGeral(prev => ({
+                    ...prev,
+                    taxaCartao: parseFloat(e.target.value) || 0
+                  }))}
+                  placeholder="Ex: 4.5"
+                />
               </div>
-              
-              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="taxaCartao">% Taxa de cartão (crédito/débito)</Label>
+                <Label htmlFor="taxa-imposto">Taxa de Impostos (%)</Label>
                   <Input
-                    id="taxaCartao"
+                  id="taxa-imposto"
                     type="number"
                     step="0.1"
-                    value={configGeral?.taxa_cartao || 0}
-                    onChange={(e) => updateConfigGeral('taxa_cartao', parseFloat(e.target.value) || 0)}
+                  value={configGeral.taxaImposto}
+                  onChange={(e) => setConfigGeral(prev => ({
+                    ...prev,
+                    taxaImposto: parseFloat(e.target.value) || 0
+                  }))}
+                  placeholder="Ex: 4.0"
                   />
                 </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="outrosCustos">% Outros custos</Label>
+                <Label htmlFor="lucro-desejado">Lucro Desejado (%)</Label>
                   <Input
-                    id="outrosCustos"
+                  id="lucro-desejado"
                     type="number"
                     step="0.1"
-                    value={configGeral?.outros_custos || 0}
-                    onChange={(e) => updateConfigGeral('outros_custos', parseFloat(e.target.value) || 0)}
-                  />
-                </div>
+                  value={configGeral.lucroDesejado}
+                  onChange={(e) => setConfigGeral(prev => ({
+                    ...prev,
+                    lucroDesejado: parseFloat(e.target.value) || 0
+                  }))}
+                  placeholder="Ex: 15.0"
+                />
               </div>
-            </div>
-
-            {/* Campo calculado: % Despesas Fixas / Faturamento */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label>% Despesas Fixas / Faturamento</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="space-y-2">
-                        <p><strong>Despesas Fixas:</strong> R$ {totalDespesasFixas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                        <p><strong>Mão de Obra:</strong> R$ {totalMaoDeObra.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                        <p><strong>Total:</strong> R$ {(totalDespesasFixas + totalMaoDeObra).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <div className="bg-muted/30 p-3 rounded-lg">
-                <span className="text-2xl font-bold text-primary">
-                  {percentualDespesasFixas.toFixed(2)}%
-                </span>
+                <Label htmlFor="reserva-operacional">Reserva Operacional (%)</Label>
+                <Input
+                  id="reserva-operacional"
+                  type="number"
+                  step="0.1"
+                  value={configGeral.reservaOperacional}
+                  onChange={(e) => setConfigGeral(prev => ({
+                    ...prev,
+                    reservaOperacional: parseFloat(e.target.value) || 0
+                  }))}
+                  placeholder="Ex: 5.0"
+                />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 2. Bloco: Canais de Venda */}
+        {/* 2. Bloco: Configurações por Categoria */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5 text-primary" />
-                Canais de Venda
+                <Target className="h-5 w-5 text-primary" />
+                Configurações por Categoria
               </CardTitle>
-              <Dialog open={showNovoCanal} onOpenChange={setShowNovoCanal}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4" />
-                    Adicionar Canal
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Novo Canal</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="nomeCanal">Nome do Canal</Label>
-                      <Input
-                        id="nomeCanal"
-                        value={novoCanal.nome}
-                        onChange={(e) => setNovoCanal(prev => ({ ...prev, nome: e.target.value }))}
-                        placeholder="Ex: 99Food, Uber Eats"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="taxaMarketplace">% Taxa do Marketplace</Label>
-                      <Input
-                        id="taxaMarketplace"
-                        type="number"
-                        step="0.1"
-                        value={novoCanal.taxa_marketplace}
-                        onChange={(e) => setNovoCanal(prev => ({ ...prev, taxa_marketplace: parseFloat(e.target.value) || 0 }))}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="taxaAntecipacao">% Taxa de Antecipação (opcional)</Label>
-                      <Input
-                        id="taxaAntecipacao"
-                        type="number"
-                        step="0.1"
-                        value={novoCanal.taxa_antecipacao}
-                        onChange={(e) => setNovoCanal(prev => ({ ...prev, taxa_antecipacao: parseFloat(e.target.value) || 0 }))}
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setShowNovoCanal(false)}>
-                        Cancelar
-                      </Button>
-                      <Button onClick={handleAdicionarCanal} disabled={!novoCanal.nome.trim()}>
-                        Adicionar
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Canal</TableHead>
-                  <TableHead>% Taxa Marketplace</TableHead>
-                  <TableHead>% Taxa Antecipação</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {canaisVenda.map((canal) => (
-                  <TableRow key={canal.id}>
-                    <TableCell className="font-medium">{canal.nome}</TableCell>
-                    <TableCell>
-                      {editingCanal === canal.id ? (
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={canal.taxa_marketplace}
-                          onChange={(e) => handleAtualizarCanal(canal.id!, { taxa_marketplace: parseFloat(e.target.value) || 0 })}
-                          className="w-20"
-                        />
-                      ) : (
-                        canal.taxa_marketplace.toFixed(1) + '%'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingCanal === canal.id ? (
-                        <Input
-                          type="number"
-                          step="0.1"
-                          value={canal.taxa_antecipacao}
-                          onChange={(e) => handleAtualizarCanal(canal.id!, { taxa_antecipacao: parseFloat(e.target.value) || 0 })}
-                          className="w-20"
-                        />
-                      ) : (
-                        canal.taxa_antecipacao.toFixed(1) + '%'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={canal.ativo ? "default" : "secondary"}>
-                        {canal.ativo ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditingCanal(editingCanal === canal.id ? null : canal.id!)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleAtualizarCanal(canal.id!, { nome: canal.nome, taxa_marketplace: canal.taxa_marketplace, taxa_antecipacao: canal.taxa_antecipacao })}
-                        >
-                          {canal.ativo ? "Desativar" : "Ativar"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleRemoverCanal(canal.id!)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* 3. Bloco: Configurações por Categoria */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              Configurações por Categoria
-            </CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -565,30 +315,26 @@ export default function ConfiguracaoMarkup() {
                   <TableHead>Categoria</TableHead>
                   <TableHead>% Lucro Desejado</TableHead>
                   <TableHead>% Reserva Operacional</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categorias.map((categoria) => {
-                  const config = configCategorias.find(c => c.categoria === categoria)
-                  const valorLocal = valoresLocais[categoria]
-                  
-                  // Usar valor local se disponível, senão usar valor do banco
-                  const lucroAtual = valorLocal?.lucro ?? config?.lucro_desejado ?? 0
-                  const reservaAtual = valorLocal?.reserva ?? config?.reserva_operacional ?? 0
+                {CATEGORIAS_FIXAS.map((categoria) => {
+                  const valor = valoresPorCategoria.find(v => v.categoria === categoria.categoria);
+                  const lucroAtual = valor?.lucroDesejado || 0;
+                  const reservaAtual = valor?.reservaOperacional || 0;
                   
                   return (
-                    <TableRow key={categoria}>
-                      <TableCell className="font-medium">{categoria}</TableCell>
+                    <TableRow key={categoria.categoria}>
+                      <TableCell className="font-medium">{categoria.label}</TableCell>
                       <TableCell>
                         <Input
                           type="number"
                           step="0.1"
                           value={lucroAtual}
-                          onChange={(e) => handleSalvarConfigCategoria(
-                            categoria, 
-                            parseFloat(e.target.value) || 0, 
-                            reservaAtual
+                          onChange={(e) => updateCategoria(
+                            categoria.categoria, 
+                            'lucroDesejado', 
+                            parseFloat(e.target.value) || 0
                           )}
                           className="w-24"
                         />
@@ -598,170 +344,22 @@ export default function ConfiguracaoMarkup() {
                           type="number"
                           step="0.1"
                           value={reservaAtual}
-                          onChange={(e) => handleSalvarConfigCategoria(
-                            categoria, 
-                            lucroAtual, 
+                          onChange={(e) => updateCategoria(
+                            categoria.categoria, 
+                            'reservaOperacional', 
                             parseFloat(e.target.value) || 0
                           )}
                           className="w-24"
                         />
                       </TableCell>
-                      <TableCell className="text-right">
-                        {config && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removerConfigCategoria(config.id!)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-
-        {/* 4. Bloco: Resultado – Tabela de Markup */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Tabela de Markup
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {calculosMarkup.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Configure as categorias e canais para ver os cálculos de markup</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Categoria</TableHead>
-                      {canaisVenda.filter(c => c.ativo).map((canal) => (
-                        <TableHead key={canal.id} className="text-center">
-                          {canal.nome}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {categorias.map((categoria) => (
-                      <TableRow key={categoria}>
-                        <TableCell className="font-medium">{categoria}</TableCell>
-                        {canaisVenda.filter(c => c.ativo).map((canal) => {
-                          const calculo = calculosMarkup.find(
-                            calc => calc.categoria === categoria && calc.canal === canal.nome
-                          )
-                          return (
-                            <TableCell key={canal.id} className="text-center">
-                              {calculo ? (
-                                <div className="space-y-1">
-                                  <div className={`text-lg font-bold ${
-                                    calculo.custos_totais >= 100 ? 'text-destructive' : 'text-primary'
-                                  }`}>
-                                    {calculo.custos_totais >= 100 ? 'N/A' : `${calculo.markup}x`}
-                                  </div>
-                                  {calculo.custos_totais >= 100 && (
-                                    <div className="text-xs text-destructive">
-                                      Custos: {calculo.custos_totais.toFixed(1)}%
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
-                            </TableCell>
-                          )
-                        })}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Modelos Salvos */}
-        {modelos.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Save className="h-5 w-5 text-primary" />
-                Modelos Salvos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {modelos.map((modelo) => (
-                  <div key={modelo.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold">{modelo.nome}</h4>
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCarregarModelo(modelo.id!)}
-                        >
-                          Carregar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleRemoverModelo(modelo.id!)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      <p>Criado em: {new Date(modelo.created_at!).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Explicação da Fórmula */}
-        <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-primary" />
-              Como Funciona o Cálculo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-background p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Fórmula do Markup:</h4>
-                <div className="text-center text-lg font-mono">
-                  M = (1 + L + R) / (1 - T)
-                </div>
-                <div className="mt-3 text-sm space-y-1">
-                  <p><strong>M</strong> = Markup (fator multiplicador)</p>
-                  <p><strong>L</strong> = % Lucro desejado</p>
-                  <p><strong>R</strong> = % Reserva operacional</p>
-                  <p><strong>T</strong> = Soma de todos os % sobre faturamento</p>
-                </div>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <p><strong>Exemplo:</strong> Se um produto custa R$ 10,00 e o markup calculado é 2,5x, 
-                o preço de venda será R$ 25,00 (R$ 10,00 × 2,5).</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </Layout>
-  )
+  );
 }
