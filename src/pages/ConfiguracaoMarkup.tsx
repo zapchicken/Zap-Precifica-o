@@ -31,6 +31,7 @@ import {
   RefreshCw
 } from "lucide-react"
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIAS_FIXAS, CategoriaValor } from '@/data/categorias-fixas';
 
 type ConfigGeral = {
@@ -42,6 +43,7 @@ type ConfigGeral = {
 };
 
 export default function ConfiguracaoMarkup() {
+  const { user } = useAuth();
   const [configGeral, setConfigGeral] = useState<ConfigGeral>({
     faturamentoEstimado: 0,
     taxaCartao: 4,
@@ -55,7 +57,6 @@ export default function ConfiguracaoMarkup() {
   // Carregar configuração do Supabase
   useEffect(() => {
     const loadConfig = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
@@ -136,7 +137,6 @@ export default function ConfiguracaoMarkup() {
 
   const handleSave = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Verificar se já existe um registro

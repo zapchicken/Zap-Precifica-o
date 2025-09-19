@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Interfaces
 export interface Prolabore {
@@ -45,6 +46,7 @@ export interface Freelancer {
 
 export function useMaoDeObra() {
   const { toast } = useToast()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   
   // Estados para os dados
@@ -91,8 +93,6 @@ export function useMaoDeObra() {
   const adicionarProlabore = async (prolabore: Omit<Prolabore, 'id' | 'created_at' | 'updated_at'>) => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         throw new Error('Usuário não autenticado')
       }
@@ -197,8 +197,6 @@ export function useMaoDeObra() {
   const adicionarFuncionario = async (funcionario: Omit<FuncionarioCLT, 'id' | 'created_at' | 'updated_at'>) => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         throw new Error('Usuário não autenticado')
       }
@@ -303,8 +301,6 @@ export function useMaoDeObra() {
   const adicionarFreelancer = async (freelancer: Omit<Freelancer, 'id' | 'created_at' | 'updated_at'>) => {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) {
         throw new Error('Usuário não autenticado')
       }
