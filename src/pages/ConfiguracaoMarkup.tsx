@@ -57,26 +57,27 @@ export default function ConfiguracaoMarkup() {
   // Carregar configuração do Supabase
   useEffect(() => {
     const loadConfig = async () => {
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('modelos_markup')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        console.warn('Nenhuma configuração encontrada, usando padrões.');
-        // Inicializar com categorias padrão
-        const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
-          categoria: cat.categoria,
-          lucroDesejado: 0,
-          reservaOperacional: 0,
-        }));
-        setValoresPorCategoria(categoriasIniciais);
+      if (!user) {
+        console.log('Usuário não autenticado, pulando carregamento de configuração');
         return;
       }
 
+      console.log('Carregando configuração para usuário:', user.id);
+
+      // TEMPORÁRIO: Desabilitar consulta ao Supabase devido ao erro 406
+      // TODO: Resolver problema de RLS no Supabase
+      console.log('Usando configuração padrão (consulta ao Supabase temporariamente desabilitada)');
+      
+      // Inicializar com categorias padrão
+      const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
+        categoria: cat.categoria,
+        lucroDesejado: 15,
+        reservaOperacional: 5,
+      }));
+      setValoresPorCategoria(categoriasIniciais);
+      return;
+
+      /* CÓDIGO TEMPORARIAMENTE DESABILITADO - PROBLEMA DE RLS NO SUPABASE
       // ✅ PASSO 1: Comece com as categorias fixas e valores padrão
       const categoriasPadrao = CATEGORIAS_FIXAS.map(categoria => ({
         categoria: categoria.categoria,
@@ -120,10 +121,11 @@ export default function ConfiguracaoMarkup() {
           reservaOperacional: data.config_geral?.reserva_operacional || 5,
         });
       }
+      */
     };
 
     loadConfig();
-  }, []);
+  }, [user]);
 
   const updateCategoria = (categoria: string, field: 'lucroDesejado' | 'reservaOperacional', value: number) => {
     setValoresPorCategoria(prev => 
