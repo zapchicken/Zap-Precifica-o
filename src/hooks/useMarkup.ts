@@ -485,9 +485,7 @@ export function useMarkup() {
         return
       }
 
-      console.log('🔍 Carregando modelos para usuário:', user.id)
       // TEMPORÁRIO: Desabilitar consulta ao Supabase devido ao erro 406
-      console.log('Usando modelos vazios (consulta ao Supabase temporariamente desabilitada)');
       const data = [];
       const error = null;
 
@@ -496,7 +494,6 @@ export function useMarkup() {
         throw error
       }
       
-      console.log('📊 Modelos carregados:', data)
       setModelos(data || [])
     } catch (error) {
       console.error('❌ Erro ao carregar modelos:', error)
@@ -533,11 +530,7 @@ export function useMarkup() {
         user_id: user.id
       }
 
-      console.log('💾 Salvando modelo:', { nome, user_id: user.id })
-      console.log('📊 Dados do modelo:', modelo)
-
       // TEMPORÁRIO: Simular salvamento bem-sucedido
-      console.log('Modelo salvo localmente (consulta ao Supabase temporariamente desabilitada)');
       const data = { id: 'temp-' + Date.now(), ...modelo, created_at: new Date().toISOString() };
       const error = null;
 
@@ -546,7 +539,6 @@ export function useMarkup() {
         throw error
       }
 
-      console.log('✅ Modelo salvo com sucesso:', data)
       setModelos(prev => [data, ...prev])
       toast({
         title: "Sucesso",
@@ -570,7 +562,6 @@ export function useMarkup() {
     setLoading(true)
     try {
       // TEMPORÁRIO: Simular carregamento de modelo
-      console.log('Modelo carregado localmente (consulta ao Supabase temporariamente desabilitada)');
       const data = null;
       const error = new Error('Modelo não encontrado (funcionalidade temporariamente desabilitada)');
 

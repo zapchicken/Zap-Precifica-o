@@ -62,11 +62,8 @@ export default function ConfiguracaoMarkup() {
         return;
       }
 
-      console.log('Carregando configuração para usuário:', user.id);
-
       // TEMPORÁRIO: Desabilitar consulta ao Supabase devido ao erro 406 persistente
       // TODO: Resolver problema de RLS no Supabase
-      console.log('Usando configuração padrão (consulta ao Supabase temporariamente desabilitada)');
       const data = null;
       const error = null;
       if (data) {
@@ -108,7 +105,6 @@ export default function ConfiguracaoMarkup() {
       if (!user) return;
 
       // TEMPORÁRIO: Desabilitar verificação no Supabase devido ao erro 406
-      console.log('Salvamento local (consulta ao Supabase temporariamente desabilitada)');
       const existingData = null;
 
       const configData = {
@@ -126,11 +122,6 @@ export default function ConfiguracaoMarkup() {
       };
 
       // TEMPORÁRIO: Simular salvamento bem-sucedido
-      console.log('✅ Configuração salva localmente:', {
-        config_geral: configData.config_geral,
-        config_categorias: configData.config_categorias
-      });
-      console.log('🔍 Array completo:', JSON.stringify(configData.config_categorias, null, 2));
       alert('Configuração salva localmente! (Salvamento no Supabase temporariamente desabilitado)');
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
