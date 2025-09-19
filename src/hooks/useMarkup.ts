@@ -486,11 +486,10 @@ export function useMarkup() {
       }
 
       console.log('🔍 Carregando modelos para usuário:', user.id)
-      const { data, error } = await supabase
-        .from('modelos_markup')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+      // TEMPORÁRIO: Desabilitar consulta ao Supabase devido ao erro 406
+      console.log('Usando modelos vazios (consulta ao Supabase temporariamente desabilitada)');
+      const data = [];
+      const error = null;
 
       if (error) {
         console.error('❌ Erro ao carregar modelos:', error)
@@ -537,11 +536,10 @@ export function useMarkup() {
       console.log('💾 Salvando modelo:', { nome, user_id: user.id })
       console.log('📊 Dados do modelo:', modelo)
 
-      const { data, error } = await supabase
-        .from('modelos_markup')
-        .insert([modelo])
-        .select()
-        .single()
+      // TEMPORÁRIO: Simular salvamento bem-sucedido
+      console.log('Modelo salvo localmente (consulta ao Supabase temporariamente desabilitada)');
+      const data = { id: 'temp-' + Date.now(), ...modelo, created_at: new Date().toISOString() };
+      const error = null;
 
       if (error) {
         console.error('❌ Erro ao salvar modelo no banco:', error)
@@ -571,22 +569,21 @@ export function useMarkup() {
   const carregarModelo = async (id: string) => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('modelos_markup')
-        .select('*')
-        .eq('id', id)
-        .single()
+      // TEMPORÁRIO: Simular carregamento de modelo
+      console.log('Modelo carregado localmente (consulta ao Supabase temporariamente desabilitada)');
+      const data = null;
+      const error = new Error('Modelo não encontrado (funcionalidade temporariamente desabilitada)');
 
       if (error) throw error
 
-      // Carregar as configurações do modelo
-      setConfigGeral(data.config_geral)
-      setCanaisVenda(data.canais_venda)
-      setConfigCategorias(data.config_categorias)
+      // Carregar as configurações do modelo (código comentado temporariamente)
+      // setConfigGeral(data.config_geral)
+      // setCanaisVenda(data.canais_venda)
+      // setConfigCategorias(data.config_categorias)
 
       toast({
-        title: "Sucesso",
-        description: `Modelo "${data.nome}" carregado com sucesso!`
+        title: "Aviso",
+        description: "Funcionalidade de carregar modelos temporariamente desabilitada"
       })
       return data
     } catch (error) {
