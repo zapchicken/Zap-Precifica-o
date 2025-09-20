@@ -104,19 +104,22 @@ export default function Produtos() {
       return 0
     }
 
-    const custosTotais = 
-      (configGeral?.impostos_faturamento || 0) +
-      (configGeral?.taxa_cartao || 0) +
-      (configGeral?.outros_custos || 0) +
+    // Calcular percentual total usando a fórmula tradicional
+    // Preço de venda = Custo × ( 1 / ( 1 - (DF + TaxaCartao + Impostos + Reserva + Lucro)) )
+    const percentualTotal = 
       (percentualDespesasFixas || 0) +
-      canalVenda.taxa_marketplace +
-      canalVenda.taxa_antecipacao
+      (configGeral?.taxa_cartao || 0) +
+      (configGeral?.impostos_faturamento || 0) +
+      configCategoria.reserva_operacional +
+      configCategoria.lucro_desejado
 
-    if (custosTotais >= 100) {
+    // Se o percentual total for >= 100%, retornar 0 (impossível calcular)
+    if (percentualTotal >= 100) {
       return 0
     }
 
-    const markup = (1 + (configCategoria.lucro_desejado / 100) + (configCategoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
+    // Aplicar a fórmula tradicional: 1 / (1 - (percentualTotal / 100))
+    const markup = 1 / (1 - (percentualTotal / 100))
 
     return Math.round(markup * 100) / 100
   }

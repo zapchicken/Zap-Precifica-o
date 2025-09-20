@@ -31,6 +31,7 @@ export interface ConfigMarkupCategoria {
   categoria: string
   lucro_desejado: number
   reserva_operacional: number
+  taxa_cupons: number
   created_at?: string
   updated_at?: string
 }

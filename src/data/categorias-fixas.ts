@@ -21,4 +21,6 @@ export type CategoriaValor = {
   categoria: CategoriaFixa;
   lucroDesejado: number;
   reservaOperacional: number;
+  valorCupomVd: number;
+  valorCupomMkt: number;
 };

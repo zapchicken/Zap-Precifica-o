@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,55 +33,289 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIAS_FIXAS, CategoriaValor } from '@/data/categorias-fixas';
+import { useDespesasFixas } from '@/hooks/useDespesasFixas';
+import { useMaoDeObra } from '@/hooks/useMaoDeObra';
+import { useMarkup } from '@/hooks/useMarkup';
 
 type ConfigGeral = {
-  faturamentoEstimado: number;
-  taxaCartao: number;
-  taxaImposto: number;
-  lucroDesejado: number;
-  reservaOperacional: number;
+  faturamento_estimado: number;
+  taxa_cartao: number;
+  taxa_imposto: number;
+  lucro_desejado: number;
+  reserva_operacional: number;
+  despesas_fixas: number;
+  lucro_desejado_acompanhamentos: number;
+  reserva_operacional_acompanhamentos: number;
+  valor_cupom_vd_acompanhamentos: number;
+  valor_cupom_mkt_acompanhamentos: number;
+  lucro_desejado_bebidas_cervejas_e_chopp: number;
+  reserva_operacional_bebidas_cervejas_e_chopp: number;
+  valor_cupom_vd_bebidas_cervejas_e_chopp: number;
+  valor_cupom_mkt_bebidas_cervejas_e_chopp: number;
+  lucro_desejado_bebidas_refrigerantes: number;
+  reserva_operacional_bebidas_refrigerantes: number;
+  valor_cupom_vd_bebidas_refrigerantes: number;
+  valor_cupom_mkt_bebidas_refrigerantes: number;
+  lucro_desejado_bebidas_sucos: number;
+  reserva_operacional_bebidas_sucos: number;
+  valor_cupom_vd_bebidas_sucos: number;
+  valor_cupom_mkt_bebidas_sucos: number;
+  lucro_desejado_combo_lanches_carne_angus: number;
+  reserva_operacional_combo_lanches_carne_angus: number;
+  valor_cupom_vd_combo_lanches_carne_angus: number;
+  valor_cupom_mkt_combo_lanches_carne_angus: number;
+  lucro_desejado_combo_lanches_frango: number;
+  reserva_operacional_combo_lanches_frango: number;
+  valor_cupom_vd_combo_lanches_frango: number;
+  valor_cupom_mkt_combo_lanches_frango: number;
+  lucro_desejado_frango_americano: number;
+  reserva_operacional_frango_americano: number;
+  valor_cupom_vd_frango_americano: number;
+  valor_cupom_mkt_frango_americano: number;
+  lucro_desejado_jumbos: number;
+  reserva_operacional_jumbos: number;
+  valor_cupom_vd_jumbos: number;
+  valor_cupom_mkt_jumbos: number;
+  lucro_desejado_lanches: number;
+  reserva_operacional_lanches: number;
+  valor_cupom_vd_lanches: number;
+  valor_cupom_mkt_lanches: number;
+  lucro_desejado_molhos: number;
+  reserva_operacional_molhos: number;
+  valor_cupom_vd_molhos: number;
+  valor_cupom_mkt_molhos: number;
+  lucro_desejado_promocoes: number;
+  reserva_operacional_promocoes: number;
+  valor_cupom_vd_promocoes: number;
+  valor_cupom_mkt_promocoes: number;
+  lucro_desejado_saladas: number;
+  reserva_operacional_saladas: number;
+  valor_cupom_vd_saladas: number;
+  valor_cupom_mkt_saladas: number;
+  lucro_desejado_sobremesas: number;
+  reserva_operacional_sobremesas: number;
+  valor_cupom_vd_sobremesas: number;
+  valor_cupom_mkt_sobremesas: number;
+  lucro_desejado_zapbox: number;
+  reserva_operacional_zapbox: number;
+  valor_cupom_vd_zapbox: number;
+  valor_cupom_mkt_zapbox: number;
 };
 
 export default function ConfiguracaoMarkup() {
   const { user } = useAuth();
+  const { getTotalMensal: getTotalDespesasFixas } = useDespesasFixas();
+  const { totalGeral: totalMaoDeObra } = useMaoDeObra();
+  const { canaisVenda, adicionarCanalVenda, atualizarCanalVenda, removerCanalVenda } = useMarkup();
   const [configGeral, setConfigGeral] = useState<ConfigGeral>({
-    faturamentoEstimado: 0,
-    taxaCartao: 4,
-    taxaImposto: 4,
-    lucroDesejado: 15,
-    reservaOperacional: 5,
+    faturamento_estimado: 0,
+    taxa_cartao: 4,
+    taxa_imposto: 4,
+    lucro_desejado: 15,
+    reserva_operacional: 5,
+    despesas_fixas: 10,
+    lucro_desejado_acompanhamentos: 17,
+    reserva_operacional_acompanhamentos: 5,
+    valor_cupom_vd_acompanhamentos: 0,
+    valor_cupom_mkt_acompanhamentos: 0,
+    lucro_desejado_bebidas_cervejas_e_chopp: 15,
+    reserva_operacional_bebidas_cervejas_e_chopp: 5,
+    valor_cupom_vd_bebidas_cervejas_e_chopp: 0,
+    valor_cupom_mkt_bebidas_cervejas_e_chopp: 0,
+    lucro_desejado_bebidas_refrigerantes: 15,
+    reserva_operacional_bebidas_refrigerantes: 5,
+    valor_cupom_vd_bebidas_refrigerantes: 0,
+    valor_cupom_mkt_bebidas_refrigerantes: 0,
+    lucro_desejado_bebidas_sucos: 15,
+    reserva_operacional_bebidas_sucos: 5,
+    valor_cupom_vd_bebidas_sucos: 0,
+    valor_cupom_mkt_bebidas_sucos: 0,
+    lucro_desejado_combo_lanches_carne_angus: 15,
+    reserva_operacional_combo_lanches_carne_angus: 5,
+    valor_cupom_vd_combo_lanches_carne_angus: 0,
+    valor_cupom_mkt_combo_lanches_carne_angus: 0,
+    lucro_desejado_combo_lanches_frango: 15,
+    reserva_operacional_combo_lanches_frango: 5,
+    valor_cupom_vd_combo_lanches_frango: 0,
+    valor_cupom_mkt_combo_lanches_frango: 0,
+    lucro_desejado_frango_americano: 15,
+    reserva_operacional_frango_americano: 5,
+    valor_cupom_vd_frango_americano: 0,
+    valor_cupom_mkt_frango_americano: 0,
+    lucro_desejado_jumbos: 15,
+    reserva_operacional_jumbos: 5,
+    valor_cupom_vd_jumbos: 0,
+    valor_cupom_mkt_jumbos: 0,
+    lucro_desejado_lanches: 15,
+    reserva_operacional_lanches: 5,
+    valor_cupom_vd_lanches: 0,
+    valor_cupom_mkt_lanches: 0,
+    lucro_desejado_molhos: 15,
+    reserva_operacional_molhos: 5,
+    valor_cupom_vd_molhos: 0,
+    valor_cupom_mkt_molhos: 0,
+    lucro_desejado_promocoes: 15,
+    reserva_operacional_promocoes: 5,
+    valor_cupom_vd_promocoes: 0,
+    valor_cupom_mkt_promocoes: 0,
+    lucro_desejado_saladas: 15,
+    reserva_operacional_saladas: 5,
+    valor_cupom_vd_saladas: 0,
+    valor_cupom_mkt_saladas: 0,
+    lucro_desejado_sobremesas: 15,
+    reserva_operacional_sobremesas: 5,
+    valor_cupom_vd_sobremesas: 0,
+    valor_cupom_mkt_sobremesas: 0,
+    lucro_desejado_zapbox: 15,
+    reserva_operacional_zapbox: 5,
+    valor_cupom_vd_zapbox: 0,
+    valor_cupom_mkt_zapbox: 0,
   });
 
   const [valoresPorCategoria, setValoresPorCategoria] = useState<CategoriaValor[]>([]);
 
-  // Carregar configuração do Supabase
+  // Calcular percentual de despesas fixas automaticamente
+  const percentualDespesasFixasCalculado = useMemo(() => {
+    if (configGeral.faturamento_estimado > 0) {
+      const totalDespesasFixas = getTotalDespesasFixas();
+      const totalMaoDeObraCalculado = totalMaoDeObra;
+      const totalDespesasOperacionais = totalDespesasFixas + totalMaoDeObraCalculado;
+      
+      // Calcular % de despesas fixas sobre faturamento
+      return Math.round((totalDespesasOperacionais / configGeral.faturamento_estimado) * 100 * 100) / 100;
+    }
+    return 0;
+  }, [configGeral.faturamento_estimado, getTotalDespesasFixas, totalMaoDeObra]);
+
+  // Atualizar o estado quando o valor calculado mudar
+  useEffect(() => {
+    setConfigGeral(prev => ({
+      ...prev,
+      despesas_fixas: percentualDespesasFixasCalculado
+    }));
+  }, [percentualDespesasFixasCalculado]);
+
   useEffect(() => {
     const loadConfig = async () => {
       if (!user) {
-        console.log('Usuário não autenticado, pulando carregamento de configuração');
         return;
       }
 
-      // TEMPORÁRIO: Desabilitar consulta ao Supabase devido ao erro 406 persistente
-      // TODO: Resolver problema de RLS no Supabase
-      const data = null;
-      const error = null;
-      if (data) {
-        setConfigGeral({
-          faturamentoEstimado: data.config_geral?.faturamento_estimado || 0,
-          taxaCartao: data.config_geral?.taxa_cartao || 4,
-          taxaImposto: data.config_geral?.taxa_imposto || 4,
-          lucroDesejado: data.config_geral?.lucro_desejado || 15,
-          reservaOperacional: data.config_geral?.reserva_operacional || 5,
-        });
-        
-        setValoresPorCategoria(data.config_categorias || []);
-      } else {
-        // Se não houver configuração no banco, use os padrões
+      try {
+      const { data, error } = await supabase
+        .from('modelos_markup')
+        .select('*')
+        .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+      if (error) {
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          const item = data[0]; // Agora é um array, não objeto único
+          setConfigGeral(prev => ({
+            ...prev,
+            faturamento_estimado: parseFloat(item.faturamento_estimado) || 0,
+            taxa_cartao: parseFloat(item.taxa_cartao) || 0,
+            taxa_imposto: parseFloat(item.taxa_imposto) || 0,
+            lucro_desejado: parseFloat(item.lucro_desejado) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional) || 0,
+            lucro_desejado_acompanhamentos: parseFloat(item.lucro_desejado_acompanhamentos) || 0,
+            reserva_operacional_acompanhamentos: parseFloat(item.reserva_operacional_acompanhamentos) || 0,
+            valor_cupom_vd_acompanhamentos: parseFloat(item.valor_cupom_vd_acompanhamentos) || 0,
+            valor_cupom_mkt_acompanhamentos: parseFloat(item.valor_cupom_mkt_acompanhamentos) || 0,
+            lucro_desejado_bebidas_cervejas_e_chopp: parseFloat(item.lucro_desejado_bebidas_cervejas_e_chopp) || 0,
+            reserva_operacional_bebidas_cervejas_e_chopp: parseFloat(item.reserva_operacional_bebidas_cervejas_e_chopp) || 0,
+            valor_cupom_vd_bebidas_cervejas_e_chopp: parseFloat(item.valor_cupom_vd_bebidas_cervejas_e_chopp) || 0,
+            valor_cupom_mkt_bebidas_cervejas_e_chopp: parseFloat(item.valor_cupom_mkt_bebidas_cervejas_e_chopp) || 0,
+            lucro_desejado_bebidas_refrigerantes: parseFloat(item.lucro_desejado_bebidas_refrigerantes) || 0,
+            reserva_operacional_bebidas_refrigerantes: parseFloat(item.reserva_operacional_bebidas_refrigerantes) || 0,
+            valor_cupom_vd_bebidas_refrigerantes: parseFloat(item.valor_cupom_vd_bebidas_refrigerantes) || 0,
+            valor_cupom_mkt_bebidas_refrigerantes: parseFloat(item.valor_cupom_mkt_bebidas_refrigerantes) || 0,
+            lucro_desejado_bebidas_sucos: parseFloat(item.lucro_desejado_bebidas_sucos) || 0,
+            reserva_operacional_bebidas_sucos: parseFloat(item.reserva_operacional_bebidas_sucos) || 0,
+            valor_cupom_vd_bebidas_sucos: parseFloat(item.valor_cupom_vd_bebidas_sucos) || 0,
+            valor_cupom_mkt_bebidas_sucos: parseFloat(item.valor_cupom_mkt_bebidas_sucos) || 0,
+            lucro_desejado_combo_lanches_carne_angus: parseFloat(item.lucro_desejado_combo_lanches_carne_angus) || 0,
+            reserva_operacional_combo_lanches_carne_angus: parseFloat(item.reserva_operacional_combo_lanches_carne_angus) || 0,
+            valor_cupom_vd_combo_lanches_carne_angus: parseFloat(item.valor_cupom_vd_combo_lanches_carne_angus) || 0,
+            valor_cupom_mkt_combo_lanches_carne_angus: parseFloat(item.valor_cupom_mkt_combo_lanches_carne_angus) || 0,
+            lucro_desejado_combo_lanches_frango: parseFloat(item.lucro_desejado_combo_lanches_frango) || 0,
+            reserva_operacional_combo_lanches_frango: parseFloat(item.reserva_operacional_combo_lanches_frango) || 0,
+            valor_cupom_vd_combo_lanches_frango: parseFloat(item.valor_cupom_vd_combo_lanches_frango) || 0,
+            valor_cupom_mkt_combo_lanches_frango: parseFloat(item.valor_cupom_mkt_combo_lanches_frango) || 0,
+            lucro_desejado_frango_americano: parseFloat(item.lucro_desejado_frango_americano) || 0,
+            reserva_operacional_frango_americano: parseFloat(item.reserva_operacional_frango_americano) || 0,
+            valor_cupom_vd_frango_americano: parseFloat(item.valor_cupom_vd_frango_americano) || 0,
+            valor_cupom_mkt_frango_americano: parseFloat(item.valor_cupom_mkt_frango_americano) || 0,
+            lucro_desejado_jumbos: parseFloat(item.lucro_desejado_jumbos) || 0,
+            reserva_operacional_jumbos: parseFloat(item.reserva_operacional_jumbos) || 0,
+            valor_cupom_vd_jumbos: parseFloat(item.valor_cupom_vd_jumbos) || 0,
+            valor_cupom_mkt_jumbos: parseFloat(item.valor_cupom_mkt_jumbos) || 0,
+            lucro_desejado_lanches: parseFloat(item.lucro_desejado_lanches) || 0,
+            reserva_operacional_lanches: parseFloat(item.reserva_operacional_lanches) || 0,
+            valor_cupom_vd_lanches: parseFloat(item.valor_cupom_vd_lanches) || 0,
+            valor_cupom_mkt_lanches: parseFloat(item.valor_cupom_mkt_lanches) || 0,
+            lucro_desejado_molhos: parseFloat(item.lucro_desejado_molhos) || 0,
+            reserva_operacional_molhos: parseFloat(item.reserva_operacional_molhos) || 0,
+            valor_cupom_vd_molhos: parseFloat(item.valor_cupom_vd_molhos) || 0,
+            valor_cupom_mkt_molhos: parseFloat(item.valor_cupom_mkt_molhos) || 0,
+            lucro_desejado_promocoes: parseFloat(item.lucro_desejado_promocoes) || 0,
+            reserva_operacional_promocoes: parseFloat(item.reserva_operacional_promocoes) || 0,
+            valor_cupom_vd_promocoes: parseFloat(item.valor_cupom_vd_promocoes) || 0,
+            valor_cupom_mkt_promocoes: parseFloat(item.valor_cupom_mkt_promocoes) || 0,
+            lucro_desejado_saladas: parseFloat(item.lucro_desejado_saladas) || 0,
+            reserva_operacional_saladas: parseFloat(item.reserva_operacional_saladas) || 0,
+            valor_cupom_vd_saladas: parseFloat(item.valor_cupom_vd_saladas) || 0,
+            valor_cupom_mkt_saladas: parseFloat(item.valor_cupom_mkt_saladas) || 0,
+            lucro_desejado_sobremesas: parseFloat(item.lucro_desejado_sobremesas) || 0,
+            reserva_operacional_sobremesas: parseFloat(item.reserva_operacional_sobremesas) || 0,
+            valor_cupom_vd_sobremesas: parseFloat(item.valor_cupom_vd_sobremesas) || 0,
+            valor_cupom_mkt_sobremesas: parseFloat(item.valor_cupom_mkt_sobremesas) || 0,
+            lucro_desejado_zapbox: parseFloat(item.lucro_desejado_zapbox) || 0,
+            reserva_operacional_zapbox: parseFloat(item.reserva_operacional_zapbox) || 0,
+            valor_cupom_vd_zapbox: parseFloat(item.valor_cupom_vd_zapbox) || 0,
+            valor_cupom_mkt_zapbox: parseFloat(item.valor_cupom_mkt_zapbox) || 0,
+          }));
+
+          // Converter campos individuais para o formato antigo de categorias
+          const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => {
+            const categoriaKey = getCategoriaKey(cat.categoria);
+            const lucroField = `lucro_desejado_${categoriaKey}`;
+            const reservaField = `reserva_operacional_${categoriaKey}`;
+            const cupomVdField = `valor_cupom_vd_${categoriaKey}`;
+            const cupomMktField = `valor_cupom_mkt_${categoriaKey}`;
+            return {
+              categoria: cat.categoria,
+              lucroDesejado: parseFloat(item[lucroField]) || 0,
+              reservaOperacional: parseFloat(item[reservaField]) || 0,
+              valorCupomVd: parseFloat(item[cupomVdField]) || 0,
+              valorCupomMkt: parseFloat(item[cupomMktField]) || 0,
+            };
+          });
+          setValoresPorCategoria(categoriasIniciais);
+        } else {
+          // Se não houver configuração no banco, use os padrões
+          const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
+            categoria: cat.categoria,
+            lucroDesejado: 0,
+            reservaOperacional: 0,
+            valorCupomVd: 0,
+            valorCupomMkt: 0,
+          }));
+          setValoresPorCategoria(categoriasIniciais);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar configuração:', err);
+        // Em caso de erro, ainda assim carregue os padrões
         const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
           categoria: cat.categoria,
-          lucroDesejado: 15,
-          reservaOperacional: 5,
+          lucroDesejado: 0,
+          reservaOperacional: 0,
+          valorCupomVd: 0,
+          valorCupomMkt: 0,
         }));
         setValoresPorCategoria(categoriasIniciais);
       }
@@ -90,7 +324,28 @@ export default function ConfiguracaoMarkup() {
     loadConfig();
   }, [user]);
 
-  const updateCategoria = (categoria: string, field: 'lucroDesejado' | 'reservaOperacional', value: number) => {
+  // Mapeamento correto entre categorias e nomes das colunas
+  const getCategoriaKey = (categoria: string): string => {
+    const mapping: { [key: string]: string } = {
+      'ACOMPANHAMENTOS': 'acompanhamentos',
+      'BEBIDAS CERVEJAS E CHOPP': 'bebidas_cervejas_e_chopp',
+      'BEBIDAS REFRIGERANTES': 'bebidas_refrigerantes',
+      'BEBIDAS SUCOS': 'bebidas_sucos',
+      'COMBO LANCHES CARNE ANGUS': 'combo_lanches_carne_angus',
+      'COMBO LANCHES FRANGO': 'combo_lanches_frango',
+      'FRANGO AMERICANO': 'frango_americano',
+      'JUMBOS (COMBINADOS GRANDES)': 'jumbos',
+      'LANCHES': 'lanches',
+      'MOLHOS': 'molhos',
+      'PROMOÇÕES': 'promocoes',
+      'SALADAS': 'saladas',
+      'SOBREMESAS': 'sobremesas',
+      'ZAPBOX (COMBINADOS INDIVIDUAIS)': 'zapbox',
+    };
+    return mapping[categoria] || categoria.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
+  };
+
+  const updateCategoria = (categoria: string, field: 'lucroDesejado' | 'reservaOperacional' | 'valorCupomVd' | 'valorCupomMkt', value: number) => {
     setValoresPorCategoria(prev => 
       prev.map(cat => 
         cat.categoria === categoria 
@@ -98,34 +353,67 @@ export default function ConfiguracaoMarkup() {
           : cat
       )
     );
+
+    // Atualizar também o configGeral com o campo individual correspondente
+    const categoriaKey = getCategoriaKey(categoria);
+    let fieldKey: string;
+    
+    if (field === 'lucroDesejado') {
+      fieldKey = `lucro_desejado_${categoriaKey}`;
+    } else if (field === 'reservaOperacional') {
+      fieldKey = `reserva_operacional_${categoriaKey}`;
+    } else if (field === 'valorCupomVd') {
+      fieldKey = `valor_cupom_vd_${categoriaKey}`;
+    } else if (field === 'valorCupomMkt') {
+      fieldKey = `valor_cupom_mkt_${categoriaKey}`;
+    } else {
+      return; // Campo não reconhecido
+    }
+    
+    setConfigGeral(prev => ({
+      ...prev,
+      [fieldKey]: value
+    }));
   };
 
   const handleSave = async () => {
     try {
       if (!user) return;
 
-      // TEMPORÁRIO: Desabilitar verificação no Supabase devido ao erro 406
-      const existingData = null;
+      // Converter valoresPorCategoria para campos individuais
+        const categoriaData: any = {};
+        valoresPorCategoria.forEach(cat => {
+          const categoriaKey = getCategoriaKey(cat.categoria);
+          categoriaData[`lucro_desejado_${categoriaKey}`] = cat.lucroDesejado;
+          categoriaData[`reserva_operacional_${categoriaKey}`] = cat.reservaOperacional;
+          categoriaData[`valor_cupom_vd_${categoriaKey}`] = cat.valorCupomVd;
+          categoriaData[`valor_cupom_mkt_${categoriaKey}`] = cat.valorCupomMkt;
+        });
 
-      const configData = {
+      const { data, error } = await supabase
+        .from('modelos_markup')
+        .upsert({
         user_id: user.id,
-        nome: 'Configuração Padrão',
-        config_geral: {
-          faturamento_estimado: configGeral.faturamentoEstimado,
-          taxa_cartao: configGeral.taxaCartao,
-          taxa_imposto: configGeral.taxaImposto,
-          lucro_desejado: configGeral.lucroDesejado,
-          reserva_operacional: configGeral.reservaOperacional,
-        },
-        canais_venda: [],
-        config_categorias: valoresPorCategoria,
-      };
+          faturamento_estimado: configGeral.faturamento_estimado,
+          taxa_cartao: configGeral.taxa_cartao,
+          taxa_imposto: configGeral.taxa_imposto,
+          lucro_desejado: configGeral.lucro_desejado,
+          reserva_operacional: configGeral.reserva_operacional,
+          despesas_fixas: configGeral.despesas_fixas,
+          ...categoriaData,
+        }, {
+          onConflict: 'user_id'
+        })
+          .select();
 
-      // TEMPORÁRIO: Simular salvamento bem-sucedido
-      alert('Configuração salva localmente! (Salvamento no Supabase temporariamente desabilitado)');
+      if (error) {
+        throw error;
+      }
+
+      alert('Configuração salva com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
-      alert('Erro ao salvar configuração');
+      alert('Erro ao salvar configuração: ' + (error instanceof Error ? error.message : 'Desconhecido'));
     }
   };
 
@@ -160,10 +448,10 @@ export default function ConfiguracaoMarkup() {
                   <Input
                     id="faturamento"
                     type="number"
-                  value={configGeral.faturamentoEstimado}
+                  value={configGeral.faturamento_estimado}
                   onChange={(e) => setConfigGeral(prev => ({
                     ...prev,
-                    faturamentoEstimado: parseFloat(e.target.value) || 0
+                    faturamento_estimado: parseFloat(e.target.value) || 0
                   }))}
                   placeholder="Ex: 50000"
                   />
@@ -174,10 +462,10 @@ export default function ConfiguracaoMarkup() {
                   id="taxa-cartao"
                     type="number"
                     step="0.1"
-                  value={configGeral.taxaCartao}
+                  value={configGeral.taxa_cartao}
                   onChange={(e) => setConfigGeral(prev => ({
                     ...prev,
-                    taxaCartao: parseFloat(e.target.value) || 0
+                    taxa_cartao: parseFloat(e.target.value) || 0
                   }))}
                   placeholder="Ex: 4.5"
                 />
@@ -188,10 +476,10 @@ export default function ConfiguracaoMarkup() {
                   id="taxa-imposto"
                     type="number"
                     step="0.1"
-                  value={configGeral.taxaImposto}
+                  value={configGeral.taxa_imposto}
                   onChange={(e) => setConfigGeral(prev => ({
                     ...prev,
-                    taxaImposto: parseFloat(e.target.value) || 0
+                    taxa_imposto: parseFloat(e.target.value) || 0
                   }))}
                   placeholder="Ex: 4.0"
                   />
@@ -202,10 +490,10 @@ export default function ConfiguracaoMarkup() {
                   id="lucro-desejado"
                     type="number"
                     step="0.1"
-                  value={configGeral.lucroDesejado}
+                  value={configGeral.lucro_desejado}
                   onChange={(e) => setConfigGeral(prev => ({
                     ...prev,
-                    lucroDesejado: parseFloat(e.target.value) || 0
+                    lucro_desejado: parseFloat(e.target.value) || 0
                   }))}
                   placeholder="Ex: 15.0"
                 />
@@ -216,19 +504,141 @@ export default function ConfiguracaoMarkup() {
                   id="reserva-operacional"
                   type="number"
                   step="0.1"
-                  value={configGeral.reservaOperacional}
+                  value={configGeral.reserva_operacional}
                   onChange={(e) => setConfigGeral(prev => ({
                     ...prev,
-                    reservaOperacional: parseFloat(e.target.value) || 0
+                    reserva_operacional: parseFloat(e.target.value) || 0
                   }))}
                   placeholder="Ex: 5.0"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="despesas-fixas">Despesas Fixas (%)</Label>
+                <Input
+                  id="despesas-fixas"
+                  type="number"
+                  step="0.1"
+                  value={configGeral.despesas_fixas}
+                  readOnly
+                  className="bg-muted"
+                  placeholder="Calculado automaticamente"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Calculado automaticamente: (Despesas Fixas + Mão de Obra) ÷ Faturamento Estimado
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 2. Bloco: Configurações por Categoria */}
+        {/* 2. Bloco: Canais de Venda */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5 text-primary" />
+                Canais de Venda
+              </CardTitle>
+              <Button 
+                onClick={() => {
+                  const nome = prompt('Nome do canal:');
+                  if (nome) {
+                    adicionarCanalVenda({
+                      nome,
+                      taxa_marketplace: 0,
+                      taxa_antecipacao: 0,
+                      ativo: true
+                    } as any);
+                  }
+                }}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Adicionar Canal
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Configure as taxas de marketplace e antecipação para cada canal de venda
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Canal</TableHead>
+                  <TableHead>Taxa Marketplace (%)</TableHead>
+                  <TableHead>Taxa Antecipação (%)</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {canaisVenda.map((canal) => (
+                  <TableRow key={canal.id}>
+                    <TableCell className="font-medium">{canal.nome}</TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={canal.taxa_marketplace}
+                        onChange={(e) => atualizarCanalVenda(canal.id!, {
+                          ...canal,
+                          taxa_marketplace: parseFloat(e.target.value) || 0
+                        })}
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={canal.taxa_antecipacao}
+                        onChange={(e) => atualizarCanalVenda(canal.id!, {
+                          ...canal,
+                          taxa_antecipacao: parseFloat(e.target.value) || 0
+                        })}
+                        className="w-24"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={canal.ativo ? "default" : "secondary"}>
+                        {canal.ativo ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => atualizarCanalVenda(canal.id!, {
+                            ...canal,
+                            ativo: !canal.ativo
+                          })}
+                        >
+                          {canal.ativo ? "Desativar" : "Ativar"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (confirm(`Tem certeza que deseja remover o canal "${canal.nome}"?`)) {
+                              removerCanalVenda(canal.id!);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        {/* 3. Bloco: Configurações por Categoria */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -237,6 +647,10 @@ export default function ConfiguracaoMarkup() {
                 Configurações por Categoria
               </CardTitle>
             </div>
+            <p className="text-sm text-muted-foreground">
+              Taxa de Marcação calculada pela fórmula tradicional: Preço de venda = Custo × ( 1 / ( 1 - (DF + TaxaCartao + Impostos + Reserva + Lucro)) ). 
+              Os valores de cupons serão acrescidos ao preço final (não incluídos na taxa percentual).
+            </p>
           </CardHeader>
           <CardContent>
             <Table>
@@ -245,6 +659,9 @@ export default function ConfiguracaoMarkup() {
                   <TableHead>Categoria</TableHead>
                   <TableHead>% Lucro Desejado</TableHead>
                   <TableHead>% Reserva Operacional</TableHead>
+                  <TableHead>Valor Cupom VD (R$)</TableHead>
+                  <TableHead>Valor Cupom MKT (R$)</TableHead>
+                  <TableHead>Taxa de Marcação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -252,6 +669,19 @@ export default function ConfiguracaoMarkup() {
                   const valor = valoresPorCategoria.find(v => v.categoria === categoria.categoria);
                   const lucroAtual = valor?.lucroDesejado || 0;
                   const reservaAtual = valor?.reservaOperacional || 0;
+                  
+                  // Calcular taxa de marcação usando a fórmula tradicional
+                  // Preço de venda = Custo × ( 1 / ( 1 - (DF + TaxaCartao + Impostos + Reserva + Lucro)) )
+                  const percentualTotal = configGeral.despesas_fixas + configGeral.taxa_cartao + configGeral.taxa_imposto + reservaAtual + lucroAtual;
+                  
+                  // Se o percentual total for >= 100%, a taxa de marcação é infinita
+                  if (percentualTotal >= 100) {
+                    var taxaMarcacao = Infinity;
+                  } else {
+                    // Taxa de marcação = 1 / (1 - percentualTotal) - 1
+                    // Multiplicado por 100 para exibir como percentual
+                    taxaMarcacao = ((1 / (1 - (percentualTotal / 100))) - 1) * 100;
+                  }
                   
                   return (
                     <TableRow key={categoria.categoria}>
@@ -281,6 +711,42 @@ export default function ConfiguracaoMarkup() {
                           )}
                           className="w-24"
                         />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={valor?.valorCupomVd || 0}
+                          onChange={(e) => updateCategoria(
+                            categoria.categoria, 
+                            'valorCupomVd', 
+                            parseFloat(e.target.value) || 0
+                          )}
+                          className="w-24"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={valor?.valorCupomMkt || 0}
+                          onChange={(e) => updateCategoria(
+                            categoria.categoria, 
+                            'valorCupomMkt', 
+                            parseFloat(e.target.value) || 0
+                          )}
+                          className="w-24"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {taxaMarcacao === Infinity ? '∞' : `${taxaMarcacao.toFixed(1)}%`}
+                          </span>
+                          {(taxaMarcacao === Infinity || taxaMarcacao >= 100) && (
+                            <span className="text-xs text-red-500">⚠️</span>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
