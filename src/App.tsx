@@ -1,7 +1,6 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { supabase } from './lib/supabase'
+import { useAuth } from './contexts/AuthContext'
 import FichasTecnicas from './pages/FichasTecnicas'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -19,40 +18,9 @@ import Sugestoes from './pages/Sugestoes'
 import { AuthProvider } from './contexts/AuthContext'
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { user, loading } = useAuth()
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getUser()
-        if (error) {
-          console.error('Erro ao verificar usuário:', error)
-          setIsAuthenticated(false)
-        } else {
-          setIsAuthenticated(!!data.user)
-        }
-      } catch (error) {
-        console.error('Erro inesperado:', error)
-        setIsAuthenticated(false)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkSession()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session?.user)
-      setIsLoading(false)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -63,7 +31,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/login" />
   }
 
@@ -71,31 +39,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { user, loading } = useAuth()
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getUser()
-        if (error) {
-          console.error('Erro ao verificar usuário:', error)
-          setIsAuthenticated(false)
-        } else {
-          setIsAuthenticated(!!data.user)
-        }
-      } catch (error) {
-        console.error('Erro inesperado:', error)
-        setIsAuthenticated(false)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkSession()
-  }, [])
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -106,7 +52,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (isAuthenticated) {
+  if (user) {
     return <Navigate to="/" />
   }
 
