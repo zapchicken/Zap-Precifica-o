@@ -427,7 +427,7 @@ export default function ImportarVendas() {
 
     if (custosTotais >= 100) return 0
 
-    const markup = (1 + (configCategoria.investimento_mkt / 100) + (configCategoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
+    const markup = (1 + (configCategoria.lucro_desejado / 100) + (configCategoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
     return Math.round(markup * 100) / 100
   }
 

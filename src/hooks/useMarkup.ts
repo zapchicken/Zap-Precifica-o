@@ -32,7 +32,7 @@ export interface CanalVenda {
 export interface ConfigMarkupCategoria {
   id?: string
   categoria: string
-  investimento_mkt: number
+  lucro_desejado: number
   reserva_operacional: number
   taxa_cupons: number
   created_at?: string
@@ -54,7 +54,7 @@ export interface CalculoMarkup {
   canal: string
   markup: number
   custos_totais: number
-  investimento_mkt: number
+  lucro_desejado: number
   reserva_operacional: number
 }
 
@@ -666,21 +666,21 @@ export function useMarkup() {
             canal: canal.nome,
             markup: 0,
             custos_totais: custosTotais,
-            investimento_mkt: categoria.investimento_mkt,
+            lucro_desejado: categoria.lucro_desejado,
             reserva_operacional: categoria.reserva_operacional
           })
           return
         }
 
         // Fórmula do markup: M = (1 + L + R) / (1 - T)
-        const markup = (1 + (categoria.investimento_mkt / 100) + (categoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
+        const markup = (1 + (categoria.lucro_desejado / 100) + (categoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
 
         calculos.push({
           categoria: categoria.categoria,
           canal: canal.nome,
           markup: Math.round(markup * 100) / 100, // Arredondar para 2 casas decimais
           custos_totais: Math.round(custosTotais * 100) / 100,
-          investimento_mkt: categoria.investimento_mkt,
+          lucro_desejado: categoria.lucro_desejado,
           reserva_operacional: categoria.reserva_operacional
         })
       })
@@ -722,7 +722,7 @@ export function useMarkup() {
         calc.canal,
         calc.markup,
         calc.custos_totais,
-        calc.investimento_mkt,
+        calc.lucro_desejado,
         calc.reserva_operacional
       ].join(','))
     ].join('\n')

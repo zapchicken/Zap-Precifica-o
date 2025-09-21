@@ -289,7 +289,7 @@ export default function ConfiguracaoMarkup() {
             const cupomMktField = `valor_cupom_mkt_${categoriaKey}`;
             return {
               categoria: cat.categoria,
-              investimentoMkt: parseFloat(item[lucroField]) || 0,
+              lucroDesejado: parseFloat(item[lucroField]) || 0,
               reservaOperacional: parseFloat(item[reservaField]) || 0,
               valorCupomVd: parseFloat(item[cupomVdField]) || 0,
               valorCupomMkt: parseFloat(item[cupomMktField]) || 0,
@@ -300,7 +300,7 @@ export default function ConfiguracaoMarkup() {
           // Se não houver configuração no banco, use os padrões
           const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
             categoria: cat.categoria,
-            investimentoMkt: 0,
+            lucroDesejado: 0,
             reservaOperacional: 0,
             valorCupomVd: 0,
             valorCupomMkt: 0,
@@ -317,7 +317,13 @@ export default function ConfiguracaoMarkup() {
           valorCupomVd: 0,
           valorCupomMkt: 0,
         }));
-        setValoresPorCategoria(categoriasIniciais);
+        setValoresPorCategoria(categoriasIniciais.map(cat => ({
+          categoria: cat.categoria,
+          lucroDesejado: cat.investimentoMkt, // Map investimentoMkt to lucroDesejado
+          reservaOperacional: cat.reservaOperacional,
+          valorCupomVd: cat.valorCupomVd,
+          valorCupomMkt: cat.valorCupomMkt,
+        })));
       }
     };
 
@@ -345,7 +351,7 @@ export default function ConfiguracaoMarkup() {
     return mapping[categoria] || categoria.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
   };
 
-  const updateCategoria = (categoria: string, field: 'investimentoMkt' | 'reservaOperacional' | 'valorCupomVd' | 'valorCupomMkt', value: number) => {
+  const updateCategoria = (categoria: string, field: 'lucroDesejado' | 'reservaOperacional' | 'valorCupomVd' | 'valorCupomMkt', value: number) => {
     setValoresPorCategoria(prev => 
       prev.map(cat => 
         cat.categoria === categoria 
@@ -358,7 +364,7 @@ export default function ConfiguracaoMarkup() {
     const categoriaKey = getCategoriaKey(categoria);
     let fieldKey: string;
     
-    if (field === 'investimentoMkt') {
+    if (field === 'lucroDesejado') {
       fieldKey = `investimento_mkt_${categoriaKey}`;
     } else if (field === 'reservaOperacional') {
       fieldKey = `reserva_operacional_${categoriaKey}`;
@@ -437,7 +443,7 @@ export default function ConfiguracaoMarkup() {
       const categoriaPromises = valoresPorCategoria.map(async cat => {
         const categoriaKey = getCategoriaKey(cat.categoria);
         console.log(`Processando categoria: ${cat.categoria} -> ${categoriaKey}`);
-        console.log(`Valores: investimentoMkt=${cat.investimentoMkt}, reservaOperacional=${cat.reservaOperacional}`);
+        console.log(`Valores: lucroDesejado=${cat.lucroDesejado}, reservaOperacional=${cat.reservaOperacional}`);
         
         // Verificar se já existe categoria para o usuário
         const { data: existingCategoria, error: selectError } = await supabase
@@ -456,7 +462,7 @@ export default function ConfiguracaoMarkup() {
           const result = await supabase
             .from('config_markup_categoria')
             .update({
-              investimento_mkt: cat.investimentoMkt,
+              lucro_desejado: cat.lucroDesejado,
               reserva_operacional: cat.reservaOperacional,
             })
             .eq('user_id', user.id)
@@ -472,7 +478,7 @@ export default function ConfiguracaoMarkup() {
             .from('config_markup_categoria')
             .insert({
               categoria: categoriaKey,
-              investimento_mkt: cat.investimentoMkt,
+              lucro_desejado: cat.lucroDesejado,
               reserva_operacional: cat.reservaOperacional,
               user_id: user.id,
             });
@@ -748,7 +754,7 @@ export default function ConfiguracaoMarkup() {
               <TableBody>
                 {CATEGORIAS_FIXAS.map((categoria) => {
                   const valor = valoresPorCategoria.find(v => v.categoria === categoria.categoria);
-                  const investimentoAtual = valor?.investimentoMkt || 0;
+                  const investimentoAtual = valor?.lucroDesejado || 0;
                   const reservaAtual = valor?.reservaOperacional || 0;
                   
                   // Calcular taxa de marcação usando a nova fórmula
@@ -782,7 +788,7 @@ export default function ConfiguracaoMarkup() {
                           value={investimentoAtual}
                           onChange={(e) => updateCategoria(
                             categoria.categoria, 
-                            'investimentoMkt', 
+                            'lucroDesejado', 
                             parseFloat(e.target.value) || 0
                           )}
                           className="w-24"

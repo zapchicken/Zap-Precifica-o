@@ -112,7 +112,7 @@ export default function Produtos() {
       (configGeral?.taxa_cartao || 0) +
       ((configGeral as any)?.despesas_fixas || 0) +
       ((configGeral as any)?.reserva_operacional || 0) +
-      configCategoria.investimento_mkt +
+        configCategoria.lucro_desejado +
       configCategoria.reserva_operacional
 
     // Se o percentual total for >= 100%, retornar 0 (impossível calcular)
