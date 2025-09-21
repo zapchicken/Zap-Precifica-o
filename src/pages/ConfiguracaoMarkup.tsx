@@ -385,21 +385,50 @@ export default function ConfiguracaoMarkup() {
       console.log('Config Geral:', configGeral);
       console.log('Valores por Categoria:', valoresPorCategoria);
 
-      // Salvar na tabela config_markup_geral
-      const { data: configData, error: configError } = await supabase
+      // Verificar se já existe configuração para o usuário
+      const { data: existingConfig } = await supabase
         .from('config_markup_geral')
-        .upsert({
-          user_id: user.id,
-          faturamento_estimado_mensal: configGeral.faturamento_estimado,
-          impostos_faturamento: configGeral.taxa_imposto,
-          taxa_cartao: configGeral.taxa_cartao,
-          investimento_mkt: configGeral.investimento_mkt,
-          reserva_operacional: configGeral.reserva_operacional,
-          despesas_fixas: configGeral.despesas_fixas,
-        }, {
-          onConflict: 'user_id'
-        })
-        .select();
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let configData, configError;
+
+      if (existingConfig) {
+        // Atualizar configuração existente
+        const { data, error } = await supabase
+          .from('config_markup_geral')
+          .update({
+            faturamento_estimado_mensal: configGeral.faturamento_estimado,
+            impostos_faturamento: configGeral.taxa_imposto,
+            taxa_cartao: configGeral.taxa_cartao,
+            investimento_mkt: configGeral.investimento_mkt,
+            reserva_operacional: configGeral.reserva_operacional,
+            despesas_fixas: configGeral.despesas_fixas,
+          })
+          .eq('user_id', user.id)
+          .select();
+        
+        configData = data;
+        configError = error;
+      } else {
+        // Criar nova configuração
+        const { data, error } = await supabase
+          .from('config_markup_geral')
+          .insert({
+            user_id: user.id,
+            faturamento_estimado_mensal: configGeral.faturamento_estimado,
+            impostos_faturamento: configGeral.taxa_imposto,
+            taxa_cartao: configGeral.taxa_cartao,
+            investimento_mkt: configGeral.investimento_mkt,
+            reserva_operacional: configGeral.reserva_operacional,
+            despesas_fixas: configGeral.despesas_fixas,
+          })
+          .select();
+        
+        configData = data;
+        configError = error;
+      }
 
       if (configError) {
         console.error('Erro ao salvar config geral:', configError);
@@ -409,18 +438,38 @@ export default function ConfiguracaoMarkup() {
       console.log('Config geral salva com sucesso:', configData);
 
       // Salvar categorias na tabela config_markup_categoria
-      const categoriaPromises = valoresPorCategoria.map(cat => {
+      const categoriaPromises = valoresPorCategoria.map(async cat => {
         const categoriaKey = getCategoriaKey(cat.categoria);
-        return supabase
+        
+        // Verificar se já existe categoria para o usuário
+        const { data: existingCategoria } = await supabase
           .from('config_markup_categoria')
-          .upsert({
-            categoria: categoriaKey,
-            investimento_mkt: cat.investimentoMkt,
-            reserva_operacional: cat.reservaOperacional,
-            user_id: user.id,
-        }, {
-          onConflict: 'categoria'
-        });
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('categoria', categoriaKey)
+          .maybeSingle();
+
+        if (existingCategoria) {
+          // Atualizar categoria existente
+          return supabase
+            .from('config_markup_categoria')
+            .update({
+              investimento_mkt: cat.investimentoMkt,
+              reserva_operacional: cat.reservaOperacional,
+            })
+            .eq('user_id', user.id)
+            .eq('categoria', categoriaKey);
+        } else {
+          // Criar nova categoria
+          return supabase
+            .from('config_markup_categoria')
+            .insert({
+              categoria: categoriaKey,
+              investimento_mkt: cat.investimentoMkt,
+              reserva_operacional: cat.reservaOperacional,
+              user_id: user.id,
+            });
+        }
       });
 
       const categoriaResults = await Promise.all(categoriaPromises);
