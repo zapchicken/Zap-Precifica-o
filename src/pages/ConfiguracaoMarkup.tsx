@@ -41,7 +41,7 @@ type ConfigGeral = {
   faturamento_estimado: number;
   taxa_cartao: number;
   taxa_imposto: number;
-  lucro_desejado: number;
+  investimento_mkt: number;
   reserva_operacional: number;
   despesas_fixas: number;
   lucro_desejado_acompanhamentos: number;
@@ -111,7 +111,7 @@ export default function ConfiguracaoMarkup() {
     faturamento_estimado: 0,
     taxa_cartao: 4,
     taxa_imposto: 4,
-    lucro_desejado: 15,
+    investimento_mkt: 15,
     reserva_operacional: 5,
     despesas_fixas: 10,
     lucro_desejado_acompanhamentos: 17,
@@ -220,7 +220,7 @@ export default function ConfiguracaoMarkup() {
             faturamento_estimado: parseFloat(item.faturamento_estimado) || 0,
             taxa_cartao: parseFloat(item.taxa_cartao) || 0,
             taxa_imposto: parseFloat(item.taxa_imposto) || 0,
-            lucro_desejado: parseFloat(item.lucro_desejado) || 0,
+            investimento_mkt: parseFloat(item.investimento_mkt) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional) || 0,
             lucro_desejado_acompanhamentos: parseFloat(item.lucro_desejado_acompanhamentos) || 0,
             reserva_operacional_acompanhamentos: parseFloat(item.reserva_operacional_acompanhamentos) || 0,
@@ -289,7 +289,7 @@ export default function ConfiguracaoMarkup() {
             const cupomMktField = `valor_cupom_mkt_${categoriaKey}`;
             return {
               categoria: cat.categoria,
-              lucroDesejado: parseFloat(item[lucroField]) || 0,
+              investimentoMkt: parseFloat(item[lucroField]) || 0,
               reservaOperacional: parseFloat(item[reservaField]) || 0,
               valorCupomVd: parseFloat(item[cupomVdField]) || 0,
               valorCupomMkt: parseFloat(item[cupomMktField]) || 0,
@@ -300,7 +300,7 @@ export default function ConfiguracaoMarkup() {
           // Se não houver configuração no banco, use os padrões
           const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
             categoria: cat.categoria,
-            lucroDesejado: 0,
+            investimentoMkt: 0,
             reservaOperacional: 0,
             valorCupomVd: 0,
             valorCupomMkt: 0,
@@ -312,7 +312,7 @@ export default function ConfiguracaoMarkup() {
         // Em caso de erro, ainda assim carregue os padrões
         const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
           categoria: cat.categoria,
-          lucroDesejado: 0,
+          investimentoMkt: 0,
           reservaOperacional: 0,
           valorCupomVd: 0,
           valorCupomMkt: 0,
@@ -345,7 +345,7 @@ export default function ConfiguracaoMarkup() {
     return mapping[categoria] || categoria.toLowerCase().replace(/\s+/g, '_').replace(/[()]/g, '');
   };
 
-  const updateCategoria = (categoria: string, field: 'lucroDesejado' | 'reservaOperacional' | 'valorCupomVd' | 'valorCupomMkt', value: number) => {
+  const updateCategoria = (categoria: string, field: 'investimentoMkt' | 'reservaOperacional' | 'valorCupomVd' | 'valorCupomMkt', value: number) => {
     setValoresPorCategoria(prev => 
       prev.map(cat => 
         cat.categoria === categoria 
@@ -358,8 +358,8 @@ export default function ConfiguracaoMarkup() {
     const categoriaKey = getCategoriaKey(categoria);
     let fieldKey: string;
     
-    if (field === 'lucroDesejado') {
-      fieldKey = `lucro_desejado_${categoriaKey}`;
+    if (field === 'investimentoMkt') {
+      fieldKey = `investimento_mkt_${categoriaKey}`;
     } else if (field === 'reservaOperacional') {
       fieldKey = `reserva_operacional_${categoriaKey}`;
     } else if (field === 'valorCupomVd') {
@@ -384,7 +384,7 @@ export default function ConfiguracaoMarkup() {
         const categoriaData: any = {};
         valoresPorCategoria.forEach(cat => {
           const categoriaKey = getCategoriaKey(cat.categoria);
-          categoriaData[`lucro_desejado_${categoriaKey}`] = cat.lucroDesejado;
+          categoriaData[`investimento_mkt_${categoriaKey}`] = cat.investimentoMkt;
           categoriaData[`reserva_operacional_${categoriaKey}`] = cat.reservaOperacional;
           categoriaData[`valor_cupom_vd_${categoriaKey}`] = cat.valorCupomVd;
           categoriaData[`valor_cupom_mkt_${categoriaKey}`] = cat.valorCupomMkt;
@@ -397,7 +397,7 @@ export default function ConfiguracaoMarkup() {
           faturamento_estimado: configGeral.faturamento_estimado,
           taxa_cartao: configGeral.taxa_cartao,
           taxa_imposto: configGeral.taxa_imposto,
-          lucro_desejado: configGeral.lucro_desejado,
+          investimento_mkt: configGeral.investimento_mkt,
           reserva_operacional: configGeral.reserva_operacional,
           despesas_fixas: configGeral.despesas_fixas,
           ...categoriaData,
@@ -485,15 +485,15 @@ export default function ConfiguracaoMarkup() {
                   />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="lucro-desejado">Lucro Desejado (%)</Label>
+                <Label htmlFor="investimento-mkt">Investimento MKT (%)</Label>
                   <Input
-                  id="lucro-desejado"
+                  id="investimento-mkt"
                     type="number"
                     step="0.1"
-                  value={configGeral.lucro_desejado}
+                  value={configGeral.investimento_mkt}
                   onChange={(e) => setConfigGeral(prev => ({
                     ...prev,
-                    lucro_desejado: parseFloat(e.target.value) || 0
+                    investimento_mkt: parseFloat(e.target.value) || 0
                   }))}
                   placeholder="Ex: 15.0"
                 />
@@ -648,7 +648,7 @@ export default function ConfiguracaoMarkup() {
               </CardTitle>
             </div>
             <p className="text-sm text-muted-foreground">
-              Taxa de Marcação calculada pela fórmula tradicional: Preço de venda = Custo × ( 1 / ( 1 - (DF + TaxaCartao + Impostos + Reserva + Lucro)) ). 
+              Taxa de Marcação calculada pela fórmula: 100% / (100% - soma(Taxa de Impostos (%) + Investimento MKT (%) + Taxa de Cartão (%) + Despesas Fixas (%) + Reserva Operacional (%) + Categoria % Investimento MKT + Categoria % Reserva Operacional)). 
               Os valores de cupons serão acrescidos ao preço final (não incluídos na taxa percentual).
             </p>
           </CardHeader>
@@ -657,7 +657,7 @@ export default function ConfiguracaoMarkup() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Categoria</TableHead>
-                  <TableHead>% Lucro Desejado</TableHead>
+                  <TableHead>% Investimento MKT</TableHead>
                   <TableHead>% Reserva Operacional</TableHead>
                   <TableHead>Valor Cupom VD (R$)</TableHead>
                   <TableHead>Valor Cupom MKT (R$)</TableHead>
@@ -667,20 +667,28 @@ export default function ConfiguracaoMarkup() {
               <TableBody>
                 {CATEGORIAS_FIXAS.map((categoria) => {
                   const valor = valoresPorCategoria.find(v => v.categoria === categoria.categoria);
-                  const lucroAtual = valor?.lucroDesejado || 0;
+                  const investimentoAtual = valor?.investimentoMkt || 0;
                   const reservaAtual = valor?.reservaOperacional || 0;
                   
-                  // Calcular taxa de marcação usando a fórmula tradicional
-                  // Preço de venda = Custo × ( 1 / ( 1 - (DF + TaxaCartao + Impostos + Reserva + Lucro)) )
-                  const percentualTotal = configGeral.despesas_fixas + configGeral.taxa_cartao + configGeral.taxa_imposto + reservaAtual + lucroAtual;
+                  // Calcular taxa de marcação usando a nova fórmula
+                  // 100% / (100% - soma(Taxa de Impostos (%) + Investimento MKT (%) + Taxa de Cartão (%) + Despesas Fixas (%) + Reserva Operacional (%) + Categoria % Investimento MKT + Categoria % Reserva Operacional))
+                  
+                  const taxaImposto = configGeral.taxa_imposto || 0;
+                  const investimentoMktGeral = configGeral.investimento_mkt || 0;
+                  const taxaCartao = configGeral.taxa_cartao || 0;
+                  const despesasFixas = configGeral.despesas_fixas || 0;
+                  const reservaOperacionalGeral = configGeral.reserva_operacional || 0;
+                  
+                  const percentualTotal = taxaImposto + investimentoMktGeral + taxaCartao + despesasFixas + reservaOperacionalGeral + investimentoAtual + reservaAtual;
                   
                   // Se o percentual total for >= 100%, a taxa de marcação é infinita
                   if (percentualTotal >= 100) {
                     var taxaMarcacao = Infinity;
                   } else {
-                    // Taxa de marcação = 1 / (1 - percentualTotal) - 1
-                    // Multiplicado por 100 para exibir como percentual
-                    taxaMarcacao = ((1 / (1 - (percentualTotal / 100))) - 1) * 100;
+                    // Nova fórmula: 100% / (100% - percentualTotal)
+                    const denominador = 100 - percentualTotal;
+                    const taxaBruta = 100 / denominador;
+                    taxaMarcacao = (taxaBruta - 1) * 100;
                   }
                   
                   return (
@@ -690,10 +698,10 @@ export default function ConfiguracaoMarkup() {
                         <Input
                           type="number"
                           step="0.1"
-                          value={lucroAtual}
+                          value={investimentoAtual}
                           onChange={(e) => updateCategoria(
                             categoria.categoria, 
-                            'lucroDesejado', 
+                            'investimentoMkt', 
                             parseFloat(e.target.value) || 0
                           )}
                           className="w-24"

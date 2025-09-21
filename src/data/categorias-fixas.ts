@@ -19,7 +19,7 @@ export type CategoriaFixa = typeof CATEGORIAS_FIXAS[number]['categoria'];
 
 export type CategoriaValor = {
   categoria: CategoriaFixa;
-  lucroDesejado: number;
+  investimentoMkt: number;
   reservaOperacional: number;
   valorCupomVd: number;
   valorCupomMkt: number;

@@ -12,6 +12,9 @@ export interface ConfigMarkupGeral {
   impostos_faturamento: number
   taxa_cartao: number
   outros_custos: number
+  investimento_mkt: number
+  reserva_operacional: number
+  despesas_fixas: number
   created_at?: string
   updated_at?: string
 }
@@ -29,7 +32,7 @@ export interface CanalVenda {
 export interface ConfigMarkupCategoria {
   id?: string
   categoria: string
-  lucro_desejado: number
+  investimento_mkt: number
   reserva_operacional: number
   taxa_cupons: number
   created_at?: string
@@ -51,7 +54,7 @@ export interface CalculoMarkup {
   canal: string
   markup: number
   custos_totais: number
-  lucro_desejado: number
+  investimento_mkt: number
   reserva_operacional: number
 }
 
@@ -119,7 +122,10 @@ export function useMarkup() {
           faturamento_estimado_mensal: 0,
           impostos_faturamento: 0,
           taxa_cartao: 0,
-          outros_custos: 0
+          outros_custos: 0,
+          investimento_mkt: 15,
+          reserva_operacional: 5,
+          despesas_fixas: 10
         })
         return
       }
@@ -138,7 +144,10 @@ export function useMarkup() {
         faturamento_estimado_mensal: 0,
         impostos_faturamento: 0,
         taxa_cartao: 0,
-        outros_custos: 0
+        outros_custos: 0,
+        investimento_mkt: 15,
+        reserva_operacional: 5,
+        despesas_fixas: 10
       }
       
       setConfigGeral(configFinal)
@@ -149,7 +158,10 @@ export function useMarkup() {
         faturamento_estimado_mensal: 0,
         impostos_faturamento: 0,
         taxa_cartao: 0,
-        outros_custos: 0
+        outros_custos: 0,
+        investimento_mkt: 15,
+        reserva_operacional: 5,
+        despesas_fixas: 10
       })
     }
   }
@@ -252,7 +264,7 @@ export function useMarkup() {
     try {
       const canaisPadrao = [
         { nome: 'Venda Direta', taxa_marketplace: 0, taxa_antecipacao: 0, ativo: true, user_id: userId },
-        { nome: 'iFood', taxa_marketplace: 12, taxa_antecipacao: 0, ativo: true, user_id: userId }
+        { nome: 'iFood', taxa_marketplace: 12, taxa_antecipacao: 4, ativo: true, user_id: userId }
       ]
 
       const { error } = await supabase
@@ -654,21 +666,21 @@ export function useMarkup() {
             canal: canal.nome,
             markup: 0,
             custos_totais: custosTotais,
-            lucro_desejado: categoria.lucro_desejado,
+            investimento_mkt: categoria.investimento_mkt,
             reserva_operacional: categoria.reserva_operacional
           })
           return
         }
 
         // Fórmula do markup: M = (1 + L + R) / (1 - T)
-        const markup = (1 + (categoria.lucro_desejado / 100) + (categoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
+        const markup = (1 + (categoria.investimento_mkt / 100) + (categoria.reserva_operacional / 100)) / (1 - (custosTotais / 100))
 
         calculos.push({
           categoria: categoria.categoria,
           canal: canal.nome,
           markup: Math.round(markup * 100) / 100, // Arredondar para 2 casas decimais
           custos_totais: Math.round(custosTotais * 100) / 100,
-          lucro_desejado: categoria.lucro_desejado,
+          investimento_mkt: categoria.investimento_mkt,
           reserva_operacional: categoria.reserva_operacional
         })
       })
@@ -702,7 +714,7 @@ export function useMarkup() {
       return
     }
 
-    const headers = ['Categoria', 'Canal', 'Markup', 'Custos Totais (%)', 'Lucro Desejado (%)', 'Reserva Operacional (%)']
+    const headers = ['Categoria', 'Canal', 'Markup', 'Custos Totais (%)', 'Investimento MKT (%)', 'Reserva Operacional (%)']
     const csvContent = [
       headers.join(','),
       ...calculosMarkup.map(calc => [
@@ -710,7 +722,7 @@ export function useMarkup() {
         calc.canal,
         calc.markup,
         calc.custos_totais,
-        calc.lucro_desejado,
+        calc.investimento_mkt,
         calc.reserva_operacional
       ].join(','))
     ].join('\n')

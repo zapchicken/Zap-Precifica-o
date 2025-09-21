@@ -104,24 +104,27 @@ export default function Produtos() {
       return 0
     }
 
-    // Calcular percentual total usando a fórmula tradicional
-    // Preço de venda = Custo × ( 1 / ( 1 - (DF + TaxaCartao + Impostos + Reserva + Lucro)) )
+    // Calcular percentual total usando a nova fórmula
+    // 100% / (100% - soma(Taxa de Impostos (%) + Investimento MKT (%) + Taxa de Cartão (%) + Despesas Fixas (%) + Reserva Operacional (%) + Categoria % Investimento MKT + Categoria % Reserva Operacional))
     const percentualTotal = 
-      (percentualDespesasFixas || 0) +
-      (configGeral?.taxa_cartao || 0) +
       (configGeral?.impostos_faturamento || 0) +
-      configCategoria.reserva_operacional +
-      configCategoria.lucro_desejado
+      ((configGeral as any)?.investimento_mkt || 0) +
+      (configGeral?.taxa_cartao || 0) +
+      ((configGeral as any)?.despesas_fixas || 0) +
+      ((configGeral as any)?.reserva_operacional || 0) +
+      configCategoria.investimento_mkt +
+      configCategoria.reserva_operacional
 
     // Se o percentual total for >= 100%, retornar 0 (impossível calcular)
     if (percentualTotal >= 100) {
       return 0
     }
 
-    // Aplicar a fórmula tradicional: 1 / (1 - (percentualTotal / 100))
-    const markup = 1 / (1 - (percentualTotal / 100))
+    // Aplicar a nova fórmula: 100% / (100% - percentualTotal)
+    const markup = (100 / (100 - percentualTotal)) - 1
+    const markupFinal = markup + 1 // Adicionar 1 para obter o multiplicador final
 
-    return Math.round(markup * 100) / 100
+    return Math.round(markupFinal * 100) / 100
   }
 
   // Função para mapear categoria
@@ -163,7 +166,26 @@ export default function Produtos() {
     const markup = calcularMarkupSimples(categoria, canal)
     if (markup <= 0) return 0
 
-    const precoSugerido = precoCusto * markup
+    let precoSugerido = precoCusto * markup
+
+    // Se for iFood, aplicar a fórmula específica do marketplace
+    if (canal === 'iFood') {
+      const canalVenda = canaisVenda.find(c => c.nome === 'iFood')
+      if (canalVenda) {
+        const taxaMarketplace = canalVenda.taxa_marketplace || 0
+        const taxaAntecipacao = canalVenda.taxa_antecipacao || 0
+        const totalTaxas = taxaMarketplace + taxaAntecipacao
+        
+        if (totalTaxas > 0) {
+          // Fórmula: Preço Final iFood = Preço com Markup ÷ (1 - (Taxa Marketplace + Taxa Antecipação))
+          const divisor = 1 - (totalTaxas / 100)
+          if (divisor > 0) {
+            precoSugerido = precoSugerido / divisor
+          }
+        }
+      }
+    }
+
     return arredondarPara90(precoSugerido)
   }
 
