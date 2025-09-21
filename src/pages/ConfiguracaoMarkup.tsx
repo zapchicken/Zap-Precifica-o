@@ -380,6 +380,10 @@ export default function ConfiguracaoMarkup() {
     try {
       if (!user) return;
 
+      console.log('=== INICIANDO SALVAMENTO ===');
+      console.log('User ID:', user.id);
+      console.log('Config Geral:', configGeral);
+      console.log('Valores por Categoria:', valoresPorCategoria);
 
       // Salvar na tabela config_markup_geral
       const { data: configData, error: configError } = await supabase
@@ -398,8 +402,11 @@ export default function ConfiguracaoMarkup() {
         .select();
 
       if (configError) {
+        console.error('Erro ao salvar config geral:', configError);
         throw configError;
       }
+
+      console.log('Config geral salva com sucesso:', configData);
 
       // Salvar categorias na tabela config_markup_categoria
       const categoriaPromises = valoresPorCategoria.map(cat => {
@@ -411,18 +418,20 @@ export default function ConfiguracaoMarkup() {
             investimento_mkt: cat.investimentoMkt,
             reserva_operacional: cat.reservaOperacional,
             user_id: user.id,
-          }, {
-            onConflict: 'categoria,user_id'
-          });
+        }, {
+          onConflict: 'categoria'
+        });
       });
 
       const categoriaResults = await Promise.all(categoriaPromises);
       const categoriaErrors = categoriaResults.filter(result => result.error);
       
       if (categoriaErrors.length > 0) {
+        console.error('Erro ao salvar categorias:', categoriaErrors[0].error);
         throw categoriaErrors[0].error;
       }
 
+      console.log('Categorias salvas com sucesso');
       const data = configData;
 
       alert('Configuração salva com sucesso!');
