@@ -380,35 +380,50 @@ export default function ConfiguracaoMarkup() {
     try {
       if (!user) return;
 
-      // Converter valoresPorCategoria para campos individuais
-        const categoriaData: any = {};
-        valoresPorCategoria.forEach(cat => {
-          const categoriaKey = getCategoriaKey(cat.categoria);
-          categoriaData[`investimento_mkt_${categoriaKey}`] = cat.investimentoMkt;
-          categoriaData[`reserva_operacional_${categoriaKey}`] = cat.reservaOperacional;
-          categoriaData[`valor_cupom_vd_${categoriaKey}`] = cat.valorCupomVd;
-          categoriaData[`valor_cupom_mkt_${categoriaKey}`] = cat.valorCupomMkt;
-        });
 
-      const { data, error } = await supabase
-        .from('modelos_markup')
+      // Salvar na tabela config_markup_geral
+      const { data: configData, error: configError } = await supabase
+        .from('config_markup_geral')
         .upsert({
-        user_id: user.id,
-          faturamento_estimado: configGeral.faturamento_estimado,
+          user_id: user.id,
+          faturamento_estimado_mensal: configGeral.faturamento_estimado,
+          impostos_faturamento: configGeral.taxa_imposto,
           taxa_cartao: configGeral.taxa_cartao,
-          taxa_imposto: configGeral.taxa_imposto,
           investimento_mkt: configGeral.investimento_mkt,
           reserva_operacional: configGeral.reserva_operacional,
           despesas_fixas: configGeral.despesas_fixas,
-          ...categoriaData,
         }, {
           onConflict: 'user_id'
         })
-          .select();
+        .select();
 
-      if (error) {
-        throw error;
+      if (configError) {
+        throw configError;
       }
+
+      // Salvar categorias na tabela config_markup_categoria
+      const categoriaPromises = valoresPorCategoria.map(cat => {
+        const categoriaKey = getCategoriaKey(cat.categoria);
+        return supabase
+          .from('config_markup_categoria')
+          .upsert({
+            categoria: categoriaKey,
+            investimento_mkt: cat.investimentoMkt,
+            reserva_operacional: cat.reservaOperacional,
+            user_id: user.id,
+          }, {
+            onConflict: 'categoria,user_id'
+          });
+      });
+
+      const categoriaResults = await Promise.all(categoriaPromises);
+      const categoriaErrors = categoriaResults.filter(result => result.error);
+      
+      if (categoriaErrors.length > 0) {
+        throw categoriaErrors[0].error;
+      }
+
+      const data = configData;
 
       alert('Configuração salva com sucesso!');
     } catch (error) {
