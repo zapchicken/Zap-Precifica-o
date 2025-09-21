@@ -711,7 +711,7 @@ export default function ConfiguracaoMarkup() {
               </CardTitle>
             </div>
             <p className="text-sm text-muted-foreground">
-              Taxa de Marcação calculada pela fórmula: 100% / (100% - soma(Taxa de Impostos (%) + Investimento MKT (%) + Taxa de Cartão (%) + Despesas Fixas (%) + Reserva Operacional (%) + Categoria % Investimento MKT + Categoria % Reserva Operacional)). 
+              Taxa de Marcação calculada pela fórmula: 100% / (100% - soma(Taxa de Impostos (%) + Investimento MKT (%) + Taxa de Cartão (%) + Despesas Fixas (%) + Reserva Operacional (%) + Categoria % Lucro Desejado + Categoria % Reserva Operacional)). 
               Os valores de cupons serão acrescidos ao preço final (não incluídos na taxa percentual).
             </p>
           </CardHeader>
@@ -720,7 +720,7 @@ export default function ConfiguracaoMarkup() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Categoria</TableHead>
-                  <TableHead>% Investimento MKT</TableHead>
+                  <TableHead>% Lucro Desejado</TableHead>
                   <TableHead>% Reserva Operacional</TableHead>
                   <TableHead>Valor Cupom VD (R$)</TableHead>
                   <TableHead>Valor Cupom MKT (R$)</TableHead>
@@ -734,7 +734,7 @@ export default function ConfiguracaoMarkup() {
                   const reservaAtual = valor?.reservaOperacional || 0;
                   
                   // Calcular taxa de marcação usando a nova fórmula
-                  // 100% / (100% - soma(Taxa de Impostos (%) + Investimento MKT (%) + Taxa de Cartão (%) + Despesas Fixas (%) + Reserva Operacional (%) + Categoria % Investimento MKT + Categoria % Reserva Operacional))
+                  // 100% / (100% - soma(Taxa de Impostos (%) + Investimento MKT (%) + Taxa de Cartão (%) + Despesas Fixas (%) + Reserva Operacional (%) + Categoria % Lucro Desejado + Categoria % Reserva Operacional))
                   
                   const taxaImposto = configGeral.taxa_imposto || 0;
                   const investimentoMktGeral = configGeral.investimento_mkt || 0;
