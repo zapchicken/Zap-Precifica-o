@@ -59,6 +59,30 @@ export default function Produtos() {
   const { fichas, sincronizarComProdutos } = useFichas()
   const { canaisVenda, configCategorias, calcularMarkup, configGeral, percentualDespesasFixas } = useMarkup()
 
+  // Carregar filtros do localStorage ao inicializar
+  useEffect(() => {
+    const savedSearchTerm = localStorage.getItem('produtos_searchTerm')
+    const savedCategory = localStorage.getItem('produtos_selectedCategory')
+    const savedStatusPreco = localStorage.getItem('produtos_selectedStatusPreco')
+    
+    if (savedSearchTerm) setSearchTerm(savedSearchTerm)
+    if (savedCategory) setSelectedCategory(savedCategory)
+    if (savedStatusPreco) setSelectedStatusPreco(savedStatusPreco)
+  }, [])
+
+  // Salvar filtros no localStorage sempre que mudarem
+  useEffect(() => {
+    localStorage.setItem('produtos_searchTerm', searchTerm)
+  }, [searchTerm])
+
+  useEffect(() => {
+    localStorage.setItem('produtos_selectedCategory', selectedCategory)
+  }, [selectedCategory])
+
+  useEffect(() => {
+    localStorage.setItem('produtos_selectedStatusPreco', selectedStatusPreco)
+  }, [selectedStatusPreco])
+
 
   const [formData, setFormData] = useState({
     nome: "",
@@ -830,7 +854,10 @@ export default function Produtos() {
               </div>
             ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <div className="relative">
+                {/* Cabeçalho fixo da tabela */}
+                <div className="sticky top-0 z-10 bg-background border-b">
+                  <Table>
                                  <TableHeader>
                    <TableRow>
                      <TableHead>Status</TableHead>
@@ -934,7 +961,13 @@ export default function Produtos() {
                      <TableHead>Ações</TableHead>
                    </TableRow>
                  </TableHeader>
-                <TableBody>
+                  </Table>
+                </div>
+                
+                {/* Corpo da tabela com scroll */}
+                <div className="max-h-[600px] overflow-y-auto">
+                  <Table>
+                    <TableBody>
                   {filteredProdutos.map((produto) => (
                     <TableRow key={produto.id} className={produto.status !== 'ativo' ? "opacity-60" : ""}>
                       <TableCell>
@@ -1053,8 +1086,10 @@ export default function Produtos() {
                       </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
-              </Table>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
             )}
           </CardContent>
