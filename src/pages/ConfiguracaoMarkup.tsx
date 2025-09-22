@@ -220,7 +220,7 @@ export default function ConfiguracaoMarkup() {
             faturamento_estimado: parseFloat(item.faturamento_estimado) || 0,
             taxa_cartao: parseFloat(item.taxa_cartao) || 0,
             taxa_imposto: parseFloat(item.taxa_imposto) || 0,
-            investimento_mkt: parseFloat(item.investimento_mkt) || 0,
+            investimento_mkt: parseFloat(item.lucro_desejado) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional) || 0,
             lucro_desejado_acompanhamentos: parseFloat(item.lucro_desejado_acompanhamentos) || 0,
             reserva_operacional_acompanhamentos: parseFloat(item.reserva_operacional_acompanhamentos) || 0,
@@ -312,18 +312,12 @@ export default function ConfiguracaoMarkup() {
         // Em caso de erro, ainda assim carregue os padrões
         const categoriasIniciais = CATEGORIAS_FIXAS.map(cat => ({
           categoria: cat.categoria,
-          investimentoMkt: 0,
+          lucroDesejado: 0,
           reservaOperacional: 0,
           valorCupomVd: 0,
           valorCupomMkt: 0,
         }));
-        setValoresPorCategoria(categoriasIniciais.map(cat => ({
-          categoria: cat.categoria,
-          lucroDesejado: cat.investimentoMkt, // Map investimentoMkt to lucroDesejado
-          reservaOperacional: cat.reservaOperacional,
-          valorCupomVd: cat.valorCupomVd,
-          valorCupomMkt: cat.valorCupomMkt,
-        })));
+        setValoresPorCategoria(categoriasIniciais);
       }
     };
 
@@ -386,98 +380,57 @@ export default function ConfiguracaoMarkup() {
     try {
       if (!user) return;
 
+      // Preparar dados para a tabela modelos_markup
+      const dadosModeloMarkup: any = {
+        user_id: user.id,
+        faturamento_estimado: configGeral.faturamento_estimado,
+        taxa_cartao: configGeral.taxa_cartao,
+        taxa_imposto: configGeral.taxa_imposto,
+        lucro_desejado: configGeral.investimento_mkt,
+        reserva_operacional: configGeral.reserva_operacional,
+        despesas_fixas: configGeral.despesas_fixas,
+      };
+
+      // Adicionar campos específicos de cada categoria
+      valoresPorCategoria.forEach(cat => {
+        const categoriaKey = getCategoriaKey(cat.categoria);
+        
+        // Campos de lucro desejado e reserva operacional por categoria
+        dadosModeloMarkup[`lucro_desejado_${categoriaKey}`] = cat.lucroDesejado;
+        dadosModeloMarkup[`reserva_operacional_${categoriaKey}`] = cat.reservaOperacional;
+        
+        // Campos de cupons por categoria
+        dadosModeloMarkup[`valor_cupom_vd_${categoriaKey}`] = cat.valorCupomVd;
+        dadosModeloMarkup[`valor_cupom_mkt_${categoriaKey}`] = cat.valorCupomMkt;
+      });
 
       // Verificar se já existe configuração para o usuário
       const { data: existingConfig } = await supabase
-        .from('config_markup_geral')
+        .from('modelos_markup')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      let configData, configError;
+      let result;
 
       if (existingConfig) {
         // Atualizar configuração existente
-        const { data, error } = await supabase
-          .from('config_markup_geral')
-          .update({
-            faturamento_estimado_mensal: configGeral.faturamento_estimado,
-            impostos_faturamento: configGeral.taxa_imposto,
-            taxa_cartao: configGeral.taxa_cartao,
-            investimento_mkt: configGeral.investimento_mkt,
-            reserva_operacional: configGeral.reserva_operacional,
-            despesas_fixas: configGeral.despesas_fixas,
-          })
+        result = await supabase
+          .from('modelos_markup')
+          .update(dadosModeloMarkup)
           .eq('user_id', user.id)
           .select();
-        
-        configData = data;
-        configError = error;
       } else {
         // Criar nova configuração
-        const { data, error } = await supabase
-          .from('config_markup_geral')
-          .insert({
-            user_id: user.id,
-            faturamento_estimado_mensal: configGeral.faturamento_estimado,
-            impostos_faturamento: configGeral.taxa_imposto,
-            taxa_cartao: configGeral.taxa_cartao,
-            investimento_mkt: configGeral.investimento_mkt,
-            reserva_operacional: configGeral.reserva_operacional,
-            despesas_fixas: configGeral.despesas_fixas,
-          })
+        result = await supabase
+          .from('modelos_markup')
+          .insert(dadosModeloMarkup)
           .select();
-        
-        configData = data;
-        configError = error;
       }
 
-      if (configError) {
-        throw configError;
+      if (result.error) {
+        throw result.error;
       }
-
-      // Salvar categorias na tabela config_markup_categoria
-      const categoriaPromises = valoresPorCategoria.map(async cat => {
-        const categoriaKey = getCategoriaKey(cat.categoria);
-        
-        // Verificar se já existe categoria para o usuário
-        const { data: existingCategoria } = await supabase
-          .from('config_markup_categoria')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('categoria', categoriaKey)
-          .maybeSingle();
-
-        if (existingCategoria) {
-          // Atualizar categoria existente
-          return supabase
-            .from('config_markup_categoria')
-            .update({
-              lucro_desejado: cat.lucroDesejado,
-              reserva_operacional: cat.reservaOperacional,
-            })
-            .eq('user_id', user.id)
-            .eq('categoria', categoriaKey);
-        } else {
-          // Criar nova categoria
-          return supabase
-            .from('config_markup_categoria')
-            .insert({
-              categoria: categoriaKey,
-              lucro_desejado: cat.lucroDesejado,
-              reserva_operacional: cat.reservaOperacional,
-              user_id: user.id,
-            });
-        }
-      });
-
-      const categoriaResults = await Promise.all(categoriaPromises);
-      const categoriaErrors = categoriaResults.filter(result => result.error);
-      
-      if (categoriaErrors.length > 0) {
-        throw categoriaErrors[0].error;
-      }
-      const data = configData;
 
       alert('Configuração salva com sucesso!');
     } catch (error) {
