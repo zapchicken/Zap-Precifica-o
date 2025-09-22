@@ -437,29 +437,20 @@ export default function ConfiguracaoMarkup() {
       }
 
       // Salvar categorias na tabela config_markup_categoria
-      console.log('=== SALVANDO CATEGORIAS ===');
-      console.log('Total de categorias:', valoresPorCategoria.length);
-      
       const categoriaPromises = valoresPorCategoria.map(async cat => {
         const categoriaKey = getCategoriaKey(cat.categoria);
-        console.log(`Processando categoria: ${cat.categoria} -> ${categoriaKey}`);
-        console.log(`Valores: lucroDesejado=${cat.lucroDesejado}, reservaOperacional=${cat.reservaOperacional}`);
         
         // Verificar se já existe categoria para o usuário
-        const { data: existingCategoria, error: selectError } = await supabase
+        const { data: existingCategoria } = await supabase
           .from('config_markup_categoria')
           .select('id')
           .eq('user_id', user.id)
           .eq('categoria', categoriaKey)
           .maybeSingle();
 
-        console.log(`Categoria ${categoriaKey} existe?`, existingCategoria ? 'SIM' : 'NÃO');
-        if (selectError) console.error('Erro ao verificar categoria:', selectError);
-
         if (existingCategoria) {
           // Atualizar categoria existente
-          console.log(`Atualizando categoria ${categoriaKey}`);
-          const result = await supabase
+          return supabase
             .from('config_markup_categoria')
             .update({
               lucro_desejado: cat.lucroDesejado,
@@ -467,14 +458,9 @@ export default function ConfiguracaoMarkup() {
             })
             .eq('user_id', user.id)
             .eq('categoria', categoriaKey);
-          
-          if (result.error) console.error(`Erro ao atualizar ${categoriaKey}:`, result.error);
-          else console.log(`Categoria ${categoriaKey} atualizada com sucesso`);
-          return result;
         } else {
           // Criar nova categoria
-          console.log(`Criando nova categoria ${categoriaKey}`);
-          const result = await supabase
+          return supabase
             .from('config_markup_categoria')
             .insert({
               categoria: categoriaKey,
@@ -482,10 +468,6 @@ export default function ConfiguracaoMarkup() {
               reserva_operacional: cat.reservaOperacional,
               user_id: user.id,
             });
-          
-          if (result.error) console.error(`Erro ao criar ${categoriaKey}:`, result.error);
-          else console.log(`Categoria ${categoriaKey} criada com sucesso`);
-          return result;
         }
       });
 
