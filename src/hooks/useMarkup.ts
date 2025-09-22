@@ -131,23 +131,41 @@ export function useMarkup() {
       }
 
       const { data, error } = await supabase
-        .from('config_markup_geral')
+        .from('modelos_markup')
         .select('*')
         .eq('user_id', user.id)
-        .maybeSingle()
+        .order('created_at', { ascending: false })
+        .limit(1)
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
         throw error
       }
 
-      const configFinal = data || {
-        faturamento_estimado_mensal: 0,
-        impostos_faturamento: 0,
-        taxa_cartao: 0,
-        outros_custos: 0,
-        investimento_mkt: 15,
-        reserva_operacional: 5,
-        despesas_fixas: 10
+      let configFinal;
+      if (data && data.length > 0) {
+        const item = data[0]
+        configFinal = {
+          id: item.id,
+          faturamento_estimado_mensal: parseFloat(item.faturamento_estimado) || 0,
+          impostos_faturamento: parseFloat(item.taxa_imposto) || 0,
+          taxa_cartao: parseFloat(item.taxa_cartao) || 0,
+          outros_custos: 0, // Campo não existe na nova tabela
+          investimento_mkt: parseFloat(item.lucro_desejado) || 0,
+          reserva_operacional: parseFloat(item.reserva_operacional) || 0,
+          despesas_fixas: parseFloat(item.despesas_fixas) || 0,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        }
+      } else {
+        configFinal = {
+          faturamento_estimado_mensal: 0,
+          impostos_faturamento: 0,
+          taxa_cartao: 0,
+          outros_custos: 0,
+          investimento_mkt: 15,
+          reserva_operacional: 5,
+          despesas_fixas: 10
+        }
       }
       
       setConfigGeral(configFinal)
@@ -380,15 +398,124 @@ export function useMarkup() {
         return
       }
 
-
       const { data, error } = await supabase
-        .from('config_markup_categoria')
+        .from('modelos_markup')
         .select('*')
         .eq('user_id', user.id)
-        .order('categoria', { ascending: true })
+        .order('created_at', { ascending: false })
+        .limit(1)
 
       if (error) throw error
-      setConfigCategorias(data || [])
+
+      if (data && data.length > 0) {
+        const item = data[0]
+        
+        // Converter dados da tabela modelos_markup para o formato esperado
+        const categorias = [
+          {
+            id: 'acompanhamentos',
+            categoria: 'acompanhamentos',
+            lucro_desejado: parseFloat(item.lucro_desejado_acompanhamentos) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_acompanhamentos) || 0,
+            taxa_cupons: 0 // Campo não existe na nova estrutura
+          },
+          {
+            id: 'bebidas_cervejas_e_chopp',
+            categoria: 'bebidas_cervejas_e_chopp',
+            lucro_desejado: parseFloat(item.lucro_desejado_bebidas_cervejas_e_chopp) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_bebidas_cervejas_e_chopp) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'bebidas_refrigerantes',
+            categoria: 'bebidas_refrigerantes',
+            lucro_desejado: parseFloat(item.lucro_desejado_bebidas_refrigerantes) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_bebidas_refrigerantes) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'bebidas_sucos',
+            categoria: 'bebidas_sucos',
+            lucro_desejado: parseFloat(item.lucro_desejado_bebidas_sucos) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_bebidas_sucos) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'combo_lanches_carne_angus',
+            categoria: 'combo_lanches_carne_angus',
+            lucro_desejado: parseFloat(item.lucro_desejado_combo_lanches_carne_angus) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_combo_lanches_carne_angus) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'combo_lanches_frango',
+            categoria: 'combo_lanches_frango',
+            lucro_desejado: parseFloat(item.lucro_desejado_combo_lanches_frango) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_combo_lanches_frango) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'frango_americano',
+            categoria: 'frango_americano',
+            lucro_desejado: parseFloat(item.lucro_desejado_frango_americano) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_frango_americano) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'jumbos',
+            categoria: 'jumbos',
+            lucro_desejado: parseFloat(item.lucro_desejado_jumbos) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_jumbos) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'lanches',
+            categoria: 'lanches',
+            lucro_desejado: parseFloat(item.lucro_desejado_lanches) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_lanches) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'molhos',
+            categoria: 'molhos',
+            lucro_desejado: parseFloat(item.lucro_desejado_molhos) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_molhos) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'promocoes',
+            categoria: 'promocoes',
+            lucro_desejado: parseFloat(item.lucro_desejado_promocoes) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_promocoes) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'saladas',
+            categoria: 'saladas',
+            lucro_desejado: parseFloat(item.lucro_desejado_saladas) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_saladas) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'sobremesas',
+            categoria: 'sobremesas',
+            lucro_desejado: parseFloat(item.lucro_desejado_sobremesas) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_sobremesas) || 0,
+            taxa_cupons: 0
+          },
+          {
+            id: 'zapbox',
+            categoria: 'zapbox',
+            lucro_desejado: parseFloat(item.lucro_desejado_zapbox) || 0,
+            reserva_operacional: parseFloat(item.reserva_operacional_zapbox) || 0,
+            taxa_cupons: 0
+          }
+        ]
+        
+        setConfigCategorias(categorias)
+      } else {
+        setConfigCategorias([])
+      }
     } catch (error) {
       console.error('Erro ao carregar configurações de categoria:', error)
       setConfigCategorias([])
