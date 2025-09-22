@@ -781,41 +781,6 @@ export default function Produtos() {
             </CardContent>
           </Card>
           
-                             <Card>
-                     <CardContent className="p-4">
-                       <div className="flex items-center gap-3">
-                         <DollarSign className="h-8 w-8 text-success" />
-                         <div>
-                           <p className="text-sm text-muted-foreground">Preço Médio Venda</p>
-                           <p className="text-2xl font-bold">
-                             R$ {produtos.length > 0 
-                               ? (produtos.reduce((sum, p) => sum + (p.preco_venda || 0), 0) / produtos.length).toFixed(2)
-                               : '0,00'
-                             }
-                           </p>
-                         </div>
-                       </div>
-                     </CardContent>
-                   </Card>
-                   
-                   <Card>
-                     <CardContent className="p-4">
-                       <div className="flex items-center gap-3">
-                         <TrendingUp className="h-8 w-8 text-accent" />
-                         <div>
-                           <p className="text-sm text-muted-foreground">Margem Média</p>
-                           <p className="text-2xl font-bold">
-                             {produtos.filter(p => p.preco_custo && p.preco_custo > 0).length > 0 
-                               ? (produtos.filter(p => p.preco_custo && p.preco_custo > 0)
-                                   .reduce((sum, p) => sum + (p.margem_lucro || 0), 0) / 
-                                   produtos.filter(p => p.preco_custo && p.preco_custo > 0).length).toFixed(1)
-                               : '0,0'
-                             }%
-                           </p>
-                         </div>
-                       </div>
-                     </CardContent>
-                   </Card>
           
           <Card>
             <CardContent className="p-4">
