@@ -1,0 +1,1659 @@
+%PDF-1.3
+%ºß¬à
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 2372
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 785.1970866141732586 Td
+(MANUAL DO USUÁRIO - ZAPPRICE) Tj
+ET
+BT
+/F2 14 Tf
+16.0999999999999979 TL
+0. g
+56.6929133858267775 756.8506299212598378 Td
+(Sistema de Gestão de Preços e Cálculo de Markup) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+56.6929133858267775 728.5041732283464171 Td
+(Versão 1.0 - 23/09/2025) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 615.1183464566928478 Td
+(ÍNDICE) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 586.7718897637794271 Td
+(1. 1. Introdução ao Sistema) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 558.42543307086612 Td
+(2. 2. Conceitos Fundamentais de Markup) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 530.0789763779526993 Td
+(3. 3. Configuração Inicial) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 501.7325196850393354 Td
+(4. 4. Gestão de Produtos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 473.3860629921259147 Td
+(5. 5. Fichas Técnicas) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 445.0396062992125508 Td
+(6. 6. Configuração de Markup) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 416.69314960629913 Td
+(7. 7. Cálculo de Preços Sugeridos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 388.3466929133857661 Td
+(8. 8. Importação e Exportação de Dados) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 360.0002362204724022 Td
+(9. 9. Relatórios e Análises) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 331.6537795275589815 Td
+(10. 10. Solução de Problemas Comuns) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 218.2679527559054122 Td
+(1. INTRODUÇÃO AO SISTEMA) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 189.9214960629919915 Td
+(O ZAPPRICE é um sistema completo de gestão de preços para estabelecimentos de) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 170.0789763779526993 Td
+(alimentação, desenvolvido para auxiliar no cálculo preciso de markup e definição de) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 150.2364566929132934 Td
+(preços de venda otimizados.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 3167
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 785.1970866141732586 Td
+(1.1 Objetivos do Sistema) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 756.8506299212598378 Td
+(• Calcular markup baseado em custos operacionais reais) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 728.5041732283464171 Td
+(• Definir preços de venda competitivos e lucrativos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 700.15771653543311 Td
+(• Gerenciar fichas técnicas de produtos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 671.8112598425196893 Td
+(• Controlar custos de insumos e mão de obra) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 643.4648031496062686 Td
+(• Analisar margens de contribuição por produto) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 615.1183464566928478 Td
+(• Exportar relatórios para análise externa) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 558.42543307086612 Td
+(1.2 Principais Funcionalidades) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 530.0789763779526993 Td
+(• Painel Geral: Visão consolidada do negócio) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 501.7325196850393354 Td
+(• Produtos de Venda: Cadastro e gestão de produtos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 473.3860629921259147 Td
+(• Fichas Técnicas: Detalhamento de receitas e custos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 445.0396062992125508 Td
+(• Configuração de Markup: Parâmetros para cálculo de preços) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 416.69314960629913 Td
+(• Despesas Fixas: Controle de custos operacionais) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 388.3466929133857661 Td
+(• Mão de Obra: Gestão de funcionários e custos trabalhistas) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 360.0002362204724022 Td
+(• Insumos: Cadastro de ingredientes e materiais) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 331.6537795275589815 Td
+(• Bases: Preparações base para múltiplos produtos) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 274.9608661417322537 Td
+(2. CONCEITOS FUNDAMENTAIS DE MARKUP) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 218.2679527559054122 Td
+(2.1 O que é Markup?) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 189.9214960629919915 Td
+(Markup é o percentual adicionado ao custo de um produto para determinar seu preço de) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 170.0789763779526993 Td
+(venda. É uma ferramenta essencial para garantir que o preço cubra todos os custos e gere) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 150.2364566929132934 Td
+(o lucro desejado.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 93.5435433070865656 Td
+(2.2 Fórmula do Markup) Tj
+ET
+endstream
+endobj
+7 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 8 0 R
+>>
+endobj
+8 0 obj
+<<
+/Length 2838
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 785.1970866141732586 Td
+(O sistema utiliza uma fórmula avançada que considera todos os custos operacionais:) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 756.8506299212598378 Td
+(Taxa de Marcação = 100% / \(100% - Soma dos Percentuais\)) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 722.8348818897637784 Td
+(Onde a Soma dos Percentuais inclui:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 694.4884251968503577 Td
+(• Taxa de Impostos \(%\)) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 666.1419685039369369 Td
+(• Investimento MKT \(%\)) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 637.7955118110235162 Td
+(• Taxa de Cartão \(%\)) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 609.4490551181102092 Td
+(• Despesas Fixas \(%\)) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 581.1025984251967884 Td
+(• Reserva Operacional \(%\)) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 552.7561417322833677 Td
+(• Categoria % Lucro Desejado) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 524.4096850393700606 Td
+(• Categoria % Reserva Operacional) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 467.716771653543276 Td
+(2.3 Exemplo Prático) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 439.3703149606298552 Td
+(Considere um produto com custo de R$ 10,00 e os seguintes percentuais:) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 411.0238582677164914 Td
+(Taxa de Impostos: 4%) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 377.0081102362204319 Td
+(Investimento MKT: 15%) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 342.9923622047243725 Td
+(Taxa de Cartão: 4%) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 308.9766141732283131 Td
+(Despesas Fixas: 10%) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 274.9608661417322537 Td
+(Reserva Operacional: 5%) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 240.9451181102361943 Td
+(Lucro Desejado \(categoria\): 20%) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 206.9293700787401349 Td
+(Reserva Operacional \(categoria\): 5%) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 172.9136220472439618 Td
+(Soma total: 63%) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 144.5671653543306547 Td
+(Taxa de Marcação = 100% / \(100% - 63%\) = 100% / 37% = 2,70) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 116.220708661417234 Td
+(Preço Sugerido = R$ 10,00 × 2,70 = R$ 27,00) Tj
+ET
+endstream
+endobj
+9 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 10 0 R
+>>
+endobj
+10 0 obj
+<<
+/Length 3167
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 785.1970866141732586 Td
+(3. CONFIGURAÇÃO INICIAL) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 728.5041732283464171 Td
+(3.1 Configurações Gerais) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 700.15771653543311 Td
+(Acesse "Config. Markup" no menu lateral para configurar os parâmetros gerais:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 671.8112598425196893 Td
+(• Faturamento Estimado Mensal: Projeção de receita) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 643.4648031496062686 Td
+(• Taxa de Impostos: Percentual sobre faturamento) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 615.1183464566928478 Td
+(• Taxa de Cartão: Comissões de cartão de crédito/débito) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 586.7718897637794271 Td
+(• Investimento MKT: Percentual para marketing) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 558.42543307086612 Td
+(• Reserva Operacional: Reserva para imprevistos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 530.0789763779526993 Td
+(• Despesas Fixas: Custos fixos do estabelecimento) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 473.3860629921259147 Td
+(3.2 Configurações por Categoria) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 445.0396062992125508 Td
+(Para cada categoria de produto, configure:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 416.69314960629913 Td
+(• Lucro Desejado: Margem de lucro específica da categoria) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 388.3466929133857661 Td
+(• Reserva Operacional: Reserva específica da categoria) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 360.0002362204724022 Td
+(• Valor Cupom VD: Valor fixo para cupons de venda direta) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 331.6537795275589815 Td
+(• Valor Cupom MKT: Valor fixo para cupons de marketplace) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 274.9608661417322537 Td
+(4. GESTÃO DE PRODUTOS) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 218.2679527559054122 Td
+(4.1 Cadastro de Produtos) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 189.9214960629919915 Td
+(Na página "Produtos de Venda", você pode:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 161.5750393700786844 Td
+(• Adicionar novos produtos com informações básicas) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 133.2285826771652637 Td
+(• Definir preços de custo, venda direta e iFood) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 104.882125984251843 Td
+(• Categorizar produtos para aplicação de markup específico) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 76.5356692913385359 Td
+(• Ativar/desativar produtos conforme necessidade) Tj
+ET
+endstream
+endobj
+11 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 12 0 R
+>>
+endobj
+12 0 obj
+<<
+/Length 2996
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 785.1970866141732586 Td
+(• Editar informações de produtos existentes) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 728.5041732283464171 Td
+(4.2 Cálculo Automático de Preços) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 700.15771653543311 Td
+(O sistema calcula automaticamente:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 671.8112598425196893 Td
+(• Preço Sugerido Venda Direta: Baseado no markup da categoria) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 643.4648031496062686 Td
+(• Preço Sugerido iFood: Inclui taxas de marketplace e antecipação) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 615.1183464566928478 Td
+(• Margem de Contribuição: Diferença entre preço de venda e custo) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 586.7718897637794271 Td
+(• Status do Preço: Comparação entre preço atual e sugerido) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 530.0789763779526993 Td
+(4.3 Filtros e Busca) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 501.7325196850393354 Td
+(Utilize os filtros para:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 473.3860629921259147 Td
+(• Buscar produtos por nome ou código PDV) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 445.0396062992125508 Td
+(• Filtrar por categoria específica) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 416.69314960629913 Td
+(• Filtrar por status do preço \(adequado, baixo, alto\)) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 388.3466929133857661 Td
+(• Os filtros são mantidos ao navegar entre páginas) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 331.6537795275589815 Td
+(5. FICHAS TÉCNICAS) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 274.9608661417322537 Td
+(5.1 O que são Fichas Técnicas?) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 246.614409448818833 Td
+(As fichas técnicas são receitas detalhadas que especificam todos os ingredientes,) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 226.7718897637794271 Td
+(quantidades e custos necessários para produzir um produto. Elas são fundamentais para o) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 206.9293700787401349 Td
+(cálculo preciso do custo de produção.) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 150.2364566929132934 Td
+(5.2 Criando uma Ficha Técnica) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 121.8899999999998727 Td
+(Para criar uma ficha técnica:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 93.5435433070865656 Td
+(• Acesse "Fichas Técnicas" no menu) Tj
+ET
+endstream
+endobj
+13 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 14 0 R
+>>
+endobj
+14 0 obj
+<<
+/Length 2814
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 785.1970866141732586 Td
+(• Clique em "Adicionar Ficha Técnica") Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 756.8506299212598378 Td
+(• Preencha as informações básicas do produto) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 728.5041732283464171 Td
+(• Adicione os insumos necessários com suas quantidades) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 700.15771653543311 Td
+(• O sistema calculará automaticamente o custo total) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 671.8112598425196893 Td
+(• Salve a ficha para uso posterior) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 615.1183464566928478 Td
+(5.3 Importação de Fichas) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 586.7718897637794271 Td
+(Você pode importar fichas técnicas em lote através de arquivo Excel, seguindo o template) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 566.9293700787401349 Td
+(fornecido pelo sistema.) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 510.2364566929133503 Td
+(6. CONFIGURAÇÃO DE MARKUP) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 453.5435433070865656 Td
+(6.1 Canais de Venda) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 425.1970866141731449 Td
+(Configure diferentes canais de venda com suas respectivas taxas:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 396.850629921259781 Td
+(• Venda Direta: Sem taxas adicionais) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 368.5041732283464171 Td
+(• iFood: Inclui taxa de marketplace e antecipação) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 340.1577165354329964 Td
+(• Balcão: Para vendas no balcão físico) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 311.8112598425195756 Td
+(• Outros: Canais personalizados) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 255.1183464566928478 Td
+(6.2 Ajustes por Categoria) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 226.7718897637794271 Td
+(Cada categoria pode ter configurações específicas de markup, permitindo estratégias de) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 206.9293700787401349 Td
+(preço diferenciadas por tipo de produto.) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 150.2364566929132934 Td
+(7. CÁLCULO DE PREÇOS SUGERIDOS) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 93.5435433070865656 Td
+(7.1 Fórmula Completa) Tj
+ET
+endstream
+endobj
+15 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 16 0 R
+>>
+endobj
+16 0 obj
+<<
+/Length 3027
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 785.1970866141732586 Td
+(O sistema aplica a seguinte lógica para calcular preços sugeridos:) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 756.8506299212598378 Td
+(1. Calcular markup base: 100% / \(100% - soma dos percentuais\)) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 722.8348818897637784 Td
+(2. Aplicar markup ao custo: Preço Base = Custo × Markup) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 688.819133858267719 Td
+(3. Adicionar valores de cupom \(se configurados\)) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 654.8033858267716596 Td
+(4. Para iFood: Aplicar taxa de marketplace e antecipação) Tj
+ET
+BT
+/F5 10 Tf
+11.5 TL
+0.42 0.447 0.502 rg
+85.0393700787401627 620.7876377952754865 Td
+(5. Arredondar conforme regras estabelecidas) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 558.42543307086612 Td
+(7.2 Regras de Arredondamento) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 530.0789763779526993 Td
+(O sistema aplica regras específicas de arredondamento:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 501.7325196850393354 Td
+(• Valores de R$ 0,01 a R$ 0,50: Arredondar para R$ 0,50) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 473.3860629921259147 Td
+(• Valores de R$ 0,51 a R$ 0,99: Arredondar para R$ 0,90) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 445.0396062992125508 Td
+(• Valores exatos: Manter como estão) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 388.3466929133857661 Td
+(8. IMPORTAÇÃO E EXPORTAÇÃO DE DADOS) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 331.6537795275589815 Td
+(8.1 Exportação de Produtos) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 303.3073228346455608 Td
+(Na página de produtos, utilize o botão "Exportar Excel" para gerar um arquivo CSV com:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 274.9608661417322537 Td
+(• Informações básicas dos produtos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 246.614409448818833 Td
+(• Preços de custo e venda) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 218.2679527559054122 Td
+(• Margens de contribuição calculadas) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 189.9214960629919915 Td
+(• Preços sugeridos pelo sistema) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 161.5750393700786844 Td
+(• Status de adequação dos preços) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 104.882125984251843 Td
+(8.2 Importação de Vendas) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 76.5356692913385359 Td
+(O sistema permite importar dados de vendas para análise de performance e ajustes de) Tj
+ET
+endstream
+endobj
+17 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 18 0 R
+>>
+endobj
+18 0 obj
+<<
+/Length 2765
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 785.1970866141732586 Td
+(preços.) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 728.5041732283464171 Td
+(9. RELATÓRIOS E ANÁLISES) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 671.8112598425196893 Td
+(9.1 Painel Geral) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 643.4648031496062686 Td
+(O painel geral oferece uma visão consolidada com:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 615.1183464566928478 Td
+(• Resumo de produtos cadastrados) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 586.7718897637794271 Td
+(• Análise de margens por categoria) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 558.42543307086612 Td
+(• Produtos com preços inadequados) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 530.0789763779526993 Td
+(• Indicadores de performance) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 473.3860629921259147 Td
+(9.2 Análise de Margens) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 445.0396062992125508 Td
+(O sistema calcula e exibe margens de contribuição em valores absolutos e percentuais,) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 425.1970866141731449 Td
+(facilitando a análise de rentabilidade por produto.) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 368.5041732283464171 Td
+(10. SOLUÇÃO DE PROBLEMAS COMUNS) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 311.8112598425195756 Td
+(10.1 Preços Sugeridos Zerados) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 283.4648031496062686 Td
+(Se os preços sugeridos aparecem como zero:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 255.1183464566928478 Td
+(• Verifique se as configurações de markup estão salvas) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 226.7718897637794271 Td
+(• Confirme se a categoria do produto está mapeada corretamente) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 198.4254330708660063 Td
+(• Verifique se os percentuais não somam 100% ou mais) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 170.0789763779526993 Td
+(• Recarregue a página para atualizar os dados) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 113.3860629921258578 Td
+(10.2 Configurações Não Salvam) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 85.0396062992125508 Td
+(Se as configurações não estão sendo salvas:) Tj
+ET
+endstream
+endobj
+19 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 20 0 R
+>>
+endobj
+20 0 obj
+<<
+/Length 2347
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 785.1970866141732586 Td
+(• Verifique sua conexão com a internet) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 756.8506299212598378 Td
+(• Confirme se está logado no sistema) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 728.5041732283464171 Td
+(• Tente salvar novamente após alguns segundos) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 700.15771653543311 Td
+(• Verifique se todos os campos obrigatórios estão preenchidos) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0.118 0.251 0.686 rg
+56.6929133858267775 643.4648031496062686 Td
+(10.3 Dados Não Carregam) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 615.1183464566928478 Td
+(Se os dados não estão carregando:) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 586.7718897637794271 Td
+(• Aguarde alguns segundos para o carregamento) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 558.42543307086612 Td
+(• Recarregue a página \(F5\)) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 530.0789763779526993 Td
+(• Verifique sua conexão com a internet) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0. g
+56.6929133858267775 501.7325196850393354 Td
+(• Limpe o cache do navegador se necessário) Tj
+ET
+BT
+/F2 18 Tf
+20.6999999999999993 TL
+0.145 0.388 0.922 rg
+56.6929133858267775 445.0396062992125508 Td
+(CONCLUSÃO) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 416.69314960629913 Td
+(O ZAPPRICE foi desenvolvido para simplificar e otimizar a gestão de preços em) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 396.850629921259781 Td
+(estabelecimentos de alimentação. Com as configurações adequadas e o uso correto das) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0. g
+56.6929133858267775 377.0081102362204319 Td
+(funcionalidades, você terá controle total sobre seus custos e margens de lucro.) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0.42 0.447 0.502 rg
+56.6929133858267775 320.3151968503935905 Td
+(Para suporte técnico ou dúvidas adicionais, consulte a documentação técnica ou entre em contato) Tj
+ET
+BT
+/F1 11 Tf
+12.6499999999999986 TL
+0.42 0.447 0.502 rg
+56.6929133858267775 300.4726771653542983 Td
+(com a equipe de desenvolvimento.) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R ]
+/Count 9
+>>
+endobj
+21 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+22 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+23 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+24 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+25 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+26 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+27 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+28 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+29 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+30 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+31 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+32 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+33 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+34 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 21 0 R
+/F2 22 0 R
+/F3 23 0 R
+/F4 24 0 R
+/F5 25 0 R
+/F6 26 0 R
+/F7 27 0 R
+/F8 28 0 R
+/F9 29 0 R
+/F10 30 0 R
+/F11 31 0 R
+/F12 32 0 R
+/F13 33 0 R
+/F14 34 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+35 0 obj
+<<
+/Producer (jsPDF 3.0.3)
+/CreationDate (D:20250923084732-03'00')
+>>
+endobj
+36 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 37
+0000000000 65535 f 
+0000027226 00000 n 
+0000029101 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000002576 00000 n 
+0000002713 00000 n 
+0000005932 00000 n 
+0000006069 00000 n 
+0000008959 00000 n 
+0000009097 00000 n 
+0000012317 00000 n 
+0000012456 00000 n 
+0000015505 00000 n 
+0000015644 00000 n 
+0000018511 00000 n 
+0000018650 00000 n 
+0000021730 00000 n 
+0000021869 00000 n 
+0000024687 00000 n 
+0000024826 00000 n 
+0000027336 00000 n 
+0000027462 00000 n 
+0000027593 00000 n 
+0000027727 00000 n 
+0000027865 00000 n 
+0000027989 00000 n 
+0000028118 00000 n 
+0000028250 00000 n 
+0000028386 00000 n 
+0000028514 00000 n 
+0000028641 00000 n 
+0000028770 00000 n 
+0000028903 00000 n 
+0000029005 00000 n 
+0000029354 00000 n 
+0000029440 00000 n 
+trailer
+<<
+/Size 37
+/Root 36 0 R
+/Info 35 0 R
+/ID [ <6E727FA8B0104029496429247ACA5A62> <6E727FA8B0104029496429247ACA5A62> ]
+>>
+startxref
+29544
+%%EOF

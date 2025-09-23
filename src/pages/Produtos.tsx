@@ -28,16 +28,15 @@ import {
   DollarSign,
   TrendingUp,
   AlertTriangle,
-  Upload,
   CheckCircle,
-  XCircle
+  XCircle,
+  Download
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCategorias } from '../hooks/useCategorias'
 import { useProdutos } from '../hooks/useProdutos'
 import { useFichas } from '../hooks/useFichas'
 import { useMarkup } from '../hooks/useMarkup'
-import ImportarPrecos from '@/components/ImportarPrecos'
 
 
 export default function Produtos() {
@@ -249,6 +248,89 @@ export default function Produtos() {
     } else {
       return { status: 'otimo', cor: 'blue', texto: 'Ótimo' }
     }
+  }
+
+  // Função para exportar produtos para Excel
+  const exportarParaExcel = () => {
+    if (filteredProdutos.length === 0) {
+      toast({
+        title: "Aviso",
+        description: "Nenhum produto encontrado para exportar",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Cabeçalhos da planilha
+    const headers = [
+      'Status',
+      'Produto',
+      'Código PDV',
+      'Categoria',
+      'Preço Custo',
+      'Preço VD',
+      'Preço IFood',
+      'MC VD (R$)',
+      'MC VD (%)',
+      'MC IFOOD (R$)',
+      'MC IFOOD (%)',
+      'Preço Sugerido VD',
+      'Preço Sugerido IFood',
+      'Status Preço'
+    ]
+
+    // Dados dos produtos
+    const dados = filteredProdutos.map(produto => {
+      const precoSugeridoVd = calcularPrecoSugerido(produto.preco_custo || 0, produto.categoria || '', 'Venda Direta')
+      const precoSugeridoIfood = calcularPrecoSugerido(produto.preco_custo || 0, produto.categoria || '', 'iFood')
+      const statusVd = calcularStatusPreco(produto.preco_venda || 0, precoSugeridoVd)
+      const statusIfood = calcularStatusPreco(produto.preco_venda_ifood || 0, precoSugeridoIfood)
+      
+      // Calcular margens de contribuição
+      const mcVdReais = (produto.preco_venda || 0) - (produto.preco_custo || 0)
+      const mcVdPercentual = produto.preco_venda > 0 ? (mcVdReais / produto.preco_venda) * 100 : 0
+      const mcIfoodReais = (produto.preco_venda_ifood || 0) - (produto.preco_custo || 0)
+      const mcIfoodPercentual = produto.preco_venda_ifood > 0 ? (mcIfoodReais / produto.preco_venda_ifood) * 100 : 0
+
+      return [
+        produto.status === 'ativo' ? 'Ativo' : 'Inativo',
+        produto.nome || '',
+        produto.codigo_pdv || '',
+        produto.categoria || '',
+        produto.preco_custo ? `R$ ${produto.preco_custo.toFixed(2)}` : '',
+        produto.preco_venda ? `R$ ${produto.preco_venda.toFixed(2)}` : '',
+        produto.preco_venda_ifood ? `R$ ${produto.preco_venda_ifood.toFixed(2)}` : '',
+        `R$ ${mcVdReais.toFixed(2)}`,
+        `${mcVdPercentual.toFixed(2)}%`,
+        `R$ ${mcIfoodReais.toFixed(2)}`,
+        `${mcIfoodPercentual.toFixed(2)}%`,
+        precoSugeridoVd > 0 ? `R$ ${precoSugeridoVd.toFixed(2)}` : 'N/A',
+        precoSugeridoIfood > 0 ? `R$ ${precoSugeridoIfood.toFixed(2)}` : 'N/A',
+        statusVd.texto
+      ]
+    })
+
+    // Criar conteúdo CSV
+    const csvContent = [
+      headers.join(','),
+      ...dados.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    // Criar e baixar arquivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `produtos_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    toast({
+      title: "Sucesso",
+      description: `Arquivo exportado com sucesso! ${filteredProdutos.length} produtos exportados.`,
+    })
   }
 
   const filteredProdutos = produtos.filter(produto => {
@@ -559,18 +641,19 @@ export default function Produtos() {
             </p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="default" onClick={() => {
-                setEditingProduto(null)
-                resetForm()
-              }}>
-                <Plus className="h-4 w-4" />
-                Adicionar Produto
-              </Button>
-            </DialogTrigger>
-            
-            <DialogContent className="max-w-2xl">
+          <div className="flex gap-2">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" onClick={() => {
+                  setEditingProduto(null)
+                  resetForm()
+                }}>
+                  <Plus className="h-4 w-4" />
+                  Adicionar Produto
+                </Button>
+              </DialogTrigger>
+              
+              <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
                   {editingProduto ? "Editar Produto" : "Adicionar Novo Produto"}
@@ -748,18 +831,13 @@ export default function Produtos() {
                 </Button>
               </div>
             </DialogContent>
-          </Dialog>
-          <ImportarPrecos 
-            produtos={produtos} 
-            onImportSuccess={() => {
-              refresh()
-              toast({
-                title: "Sucesso!",
-                description: "Preços importados com sucesso! A lista foi atualizada.",
-                variant: "default"
-              })
-            }} 
-          />
+            </Dialog>
+            
+            <Button variant="outline" onClick={exportarParaExcel}>
+              <Download className="h-4 w-4" />
+              Exportar Excel
+            </Button>
+          </div>
         </div>
 
         <Card>

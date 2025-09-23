@@ -12,7 +12,6 @@ import {
   Upload,
   Lightbulb,
   BarChart3,
-  Utensils,
   Menu,
   Zap,
   Building,
@@ -29,7 +28,6 @@ interface LayoutProps {
 
 const navigationItems = [
   { id: "dashboard", label: "Painel Geral", icon: BarChart3, color: "text-primary" },
-  { id: "cardapio", label: "Cardápio Proposto", icon: Utensils, color: "text-primary" },
   { id: "produtos", label: "Produtos de Venda", icon: Package, color: "text-success" },
   { id: "fichas", label: "Fichas Técnicas", icon: FileText, color: "text-warning" },
   { id: "markup", label: "Config. Markup", icon: Settings, color: "text-muted-foreground" },
@@ -43,7 +41,6 @@ const navigationItems = [
       { id: "bases", label: "Bases / Prod. Intermediário", icon: Package, color: "text-warning" },
       { id: "fornecedor", label: "Fornecedor", icon: Building, color: "text-success" },
       { id: "vendas", label: "Importar Vendas", icon: Upload, color: "text-primary" },
-      { id: "importar-produtos-insumos", label: "Importar Produtos/Insumos", icon: FileText, color: "text-accent" },
     ]
   },
   { id: "sugestoes", label: "Sugestões IA", icon: Lightbulb, color: "text-accent" },
@@ -59,7 +56,6 @@ export function Layout({ children, currentPage = "dashboard" }: LayoutProps) {
   const getCurrentPage = () => {
     const path = location.pathname
     if (path === "/" || path === "/dashboard") return "dashboard"
-    if (path === "/cardapio") return "cardapio"
     if (path === "/produtos") return "produtos"
     if (path === "/fichas") return "fichas"
     if (path === "/markup") return "markup"
@@ -69,7 +65,6 @@ export function Layout({ children, currentPage = "dashboard" }: LayoutProps) {
     if (path === "/bases") return "bases"
     if (path === "/fornecedor") return "fornecedor"
     if (path === "/vendas") return "vendas"
-    if (path === "/importar-produtos-insumos") return "importar-produtos-insumos"
     if (path === "/sugestoes") return "sugestoes"
     return currentPage
   }

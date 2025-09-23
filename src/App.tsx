@@ -4,7 +4,6 @@ import { useAuth } from './contexts/AuthContext'
 import FichasTecnicas from './pages/FichasTecnicas'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import CardapioProposto from './pages/CardapioProposto'
 import Produtos from './pages/Produtos'
 import ConfiguracaoMarkup from './pages/ConfiguracaoMarkup'
 import DespesasFixas from './pages/DespesasFixas'
@@ -13,7 +12,6 @@ import Insumos from './pages/Insumos'
 import Bases from './pages/Bases'
 import Fornecedor from './pages/Fornecedor'
 import ImportarVendas from './pages/ImportarVendas'
-import ImportarProdutosInsumos from './pages/ImportarProdutosInsumos'
 import Sugestoes from './pages/Sugestoes'
 import { AuthProvider } from './contexts/AuthContext'
 
@@ -86,14 +84,6 @@ function App() {
             }
           />
           <Route
-            path="/cardapio"
-            element={
-              <ProtectedRoute>
-                <CardapioProposto />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/produtos"
             element={
               <ProtectedRoute>
@@ -162,14 +152,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <ImportarVendas />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/importar-produtos-insumos"
-            element={
-              <ProtectedRoute>
-                <ImportarProdutosInsumos />
               </ProtectedRoute>
             }
           />

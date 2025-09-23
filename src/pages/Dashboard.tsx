@@ -64,7 +64,7 @@ export default function Dashboard() {
               Painel Geral
             </h1>
             <p className="text-muted-foreground mt-1">
-              Visão completa do seu negócio - Dezembro 2024
+              Visão completa do seu negócio - Versão 1 Set.2025
             </p>
           </div>
         </div>
