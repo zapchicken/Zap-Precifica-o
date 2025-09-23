@@ -63,8 +63,8 @@ const calcularExpressao = (expressao: string): number | null => {
       return null
     }
     
-    // Calcula a expressão usando eval (cuidado com segurança)
-    const resultado = eval(expressaoLimpa)
+    // Calcula a expressão usando Function constructor (mais seguro que eval)
+    const resultado = new Function('return ' + expressaoLimpa)()
     
     // Verifica se o resultado é um número válido
     if (typeof resultado === 'number' && !isNaN(resultado) && isFinite(resultado)) {
