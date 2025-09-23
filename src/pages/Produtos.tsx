@@ -117,7 +117,6 @@ export default function Produtos() {
     }
     
     const categoriaMapeada = mapearCategoria(categoria)
-    
     const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
     if (!configCategoria) {
       return 0
@@ -854,120 +853,111 @@ export default function Produtos() {
               </div>
             ) : (
             <div className="overflow-x-auto">
-              <div className="relative">
-                {/* Cabeçalho fixo da tabela */}
-                <div className="sticky top-0 z-10 bg-background border-b">
-                  <Table>
-                                 <TableHeader>
-                   <TableRow>
-                     <TableHead>Status</TableHead>
-                     <TableHead>Produto</TableHead>
-                     <TableHead>Código PDV</TableHead>
-                     <TableHead>Categoria</TableHead>
-                     <TableHead>Preço Custo</TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">Preço VD</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Preço de Venda Direta</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">Preço IFood</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Preço de Venda no IFood</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">MC VD (R$)</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Margem de Contribuição Venda Direta em Reais</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">MC VD (%)</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Margem de Contribuição Venda Direta em Percentual</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">MC IFOOD (R$)</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Margem de Contribuição IFood em Reais</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">MC IFOOD (%)</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Margem de Contribuição IFood em Percentual</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">Preço Sugerido VD</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Preço Sugerido para Venda Direta</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">Preço Sugerido IFood</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Preço Sugerido para IFood</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>
-                       <TooltipProvider>
-                         <Tooltip>
-                           <TooltipTrigger className="cursor-help">Status Preço</TooltipTrigger>
-                           <TooltipContent>
-                             <p>Status baseado na comparação com preço sugerido</p>
-                             <p>• Ruim: PV menor que 5% do sugerido</p>
-                             <p>• Bom: PV entre -5% a +5% do sugerido</p>
-                             <p>• Ótimo: PV maior que 5% do sugerido</p>
-                           </TooltipContent>
-                         </Tooltip>
-                       </TooltipProvider>
-                     </TableHead>
-                     <TableHead>Ações</TableHead>
-                   </TableRow>
-                 </TableHeader>
-                  </Table>
-                </div>
-                
-                {/* Corpo da tabela com scroll */}
-                <div className="max-h-[600px] overflow-y-auto">
-                  <Table>
-                    <TableBody>
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-background">
+                  <TableRow>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Código PDV</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Preço Custo</TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Preço VD</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Preço de Venda Direta</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Preço IFood</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Preço de Venda no IFood</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">MC VD (R$)</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Margem de Contribuição Venda Direta em Reais</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">MC VD (%)</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Margem de Contribuição Venda Direta em Percentual</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">MC IFOOD (R$)</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Margem de Contribuição IFood em Reais</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">MC IFOOD (%)</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Margem de Contribuição IFood em Percentual</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Preço Sugerido VD</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Preço Sugerido para Venda Direta</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Preço Sugerido IFood</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Preço Sugerido para IFood</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-help">Status Preço</TooltipTrigger>
+                          <TooltipContent>
+                            <p>Status baseado na comparação com preço sugerido</p>
+                            <p>• Ruim: PV menor que 5% do sugerido</p>
+                            <p>• Bom: PV entre -5% a +5% do sugerido</p>
+                            <p>• Ótimo: PV maior que 5% do sugerido</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {filteredProdutos.map((produto) => (
                     <TableRow key={produto.id} className={produto.status !== 'ativo' ? "opacity-60" : ""}>
                       <TableCell>
@@ -1086,10 +1076,8 @@ export default function Produtos() {
                       </TableCell>
                     </TableRow>
                   ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+                </TableBody>
+              </Table>
             </div>
             )}
           </CardContent>

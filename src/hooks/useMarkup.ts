@@ -73,13 +73,10 @@ export function useMarkup() {
 
   // Carregar dados iniciais
   useEffect(() => {
-    // Aguardar um pouco para garantir que o usuário está autenticado
-    const timer = setTimeout(() => {
+    if (user) {
       carregarDados()
-    }, 1000)
-    
-    return () => clearTimeout(timer)
-  }, [])
+    }
+  }, [user])
 
   // Recarregar dados quando o usuário mudar (login/logout)
   useEffect(() => {
