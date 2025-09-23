@@ -108,22 +108,36 @@ export default function Produtos() {
   const calcularMarkupSimples = (categoria: string, canal: string): number => {
     // Verificações de segurança para evitar erros
     if (!categoria || categoria.trim() === '') {
+      console.log('DEBUG: Categoria vazia:', categoria)
       return 0
     }
     
     // Verificar se os dados dos hooks estão carregados
     if (!configCategorias || !canaisVenda || !configGeral) {
+      console.log('DEBUG: Dados não carregados:', {
+        configCategorias: !!configCategorias,
+        canaisVenda: !!canaisVenda,
+        configGeral: !!configGeral,
+        configCategoriasLength: configCategorias?.length,
+        canaisVendaLength: canaisVenda?.length
+      })
       return 0
     }
     
     const categoriaMapeada = mapearCategoria(categoria)
+    console.log('DEBUG: Categoria original:', categoria, 'Mapeada:', categoriaMapeada)
+    console.log('DEBUG: ConfigCategorias disponíveis:', configCategorias.map(c => c.categoria))
+    
     const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
     if (!configCategoria) {
+      console.log('DEBUG: ConfigCategoria não encontrada para:', categoriaMapeada)
       return 0
     }
 
     const canalVenda = canaisVenda.find(c => c.nome === canal)
     if (!canalVenda) {
+      console.log('DEBUG: Canal de venda não encontrado:', canal)
+      console.log('DEBUG: Canais disponíveis:', canaisVenda.map(c => c.nome))
       return 0
     }
 
@@ -138,8 +152,20 @@ export default function Produtos() {
         configCategoria.lucro_desejado +
       configCategoria.reserva_operacional
 
+    console.log('DEBUG: Valores de cálculo:', {
+      impostos_faturamento: configGeral?.impostos_faturamento,
+      investimento_mkt: (configGeral as any)?.investimento_mkt,
+      taxa_cartao: configGeral?.taxa_cartao,
+      despesas_fixas: (configGeral as any)?.despesas_fixas,
+      reserva_operacional: (configGeral as any)?.reserva_operacional,
+      lucro_desejado: configCategoria.lucro_desejado,
+      reserva_operacional_cat: configCategoria.reserva_operacional,
+      percentualTotal
+    })
+
     // Se o percentual total for >= 100%, retornar 0 (impossível calcular)
     if (percentualTotal >= 100) {
+      console.log('DEBUG: Percentual total >= 100%, retornando 0')
       return 0
     }
 
@@ -147,39 +173,40 @@ export default function Produtos() {
     const markup = (100 / (100 - percentualTotal)) - 1
     const markupFinal = markup + 1 // Adicionar 1 para obter o multiplicador final
 
+    console.log('DEBUG: Markup calculado:', { markup, markupFinal })
     return Math.round(markupFinal * 100) / 100
   }
 
   // Função para mapear categoria
   const mapearCategoria = (categoriaProduto: string): string => {
     const mapeamento: { [key: string]: string } = {
-      'ACOMPANHAMENTOS': 'ACOMPANHAMENTOS',
-      'BEBIDAS CERVEJAS E CHOPP': 'BEBIDAS CERVEJAS E CHOPP',
-      'BEBIDAS REFRIGERANTES': 'BEBIDAS REFRIGERANTES',
-      'BEBIDAS SUCOS': 'BEBIDAS SUCOS',
-      'COMBO LANCHES CARNE ANGUS': 'COMBO LANCHES CARNE ANGUS',
-      'COMBO LANCHES FRANGO': 'COMBO LANCHES FRANGO',
-      'FRANGO AMERICANO': 'FRANGO AMERICANO',
-      'JUMBOS (COMBINADOS GRANDES)': 'JUMBOS (COMBINADOS GRANDES)',
-      'LANCHES': 'LANCHES',
-      'MOLHOS': 'MOLHOS',
-      'PROMOÇÕES': 'PROMOÇÕES',
-      'SALADAS': 'SALADAS',
-      'SOBREMESAS': 'SOBREMESAS',
-      'ZAPBOX (COMBINADOS INDIVIDUÁIS)': 'ZAPBOX (COMBINADOS INDIVIDUÁIS)',
-      'Bebida': 'BEBIDAS REFRIGERANTES',
-      'Bebidas': 'BEBIDAS REFRIGERANTES', 
-      'BEBIDAS': 'BEBIDAS REFRIGERANTES',
-      'Hambúrguer': 'LANCHES',
-      'Hamburguer': 'LANCHES',
-      'Combo': 'COMBO LANCHES FRANGO',
-      'Balde': 'FRANGO AMERICANO',
-      'Porção': 'ACOMPANHAMENTOS',
-      'Sobremesa': 'SOBREMESAS',
-      'ALIMENTOS': 'LANCHES'
+      'ACOMPANHAMENTOS': 'acompanhamentos',
+      'BEBIDAS CERVEJAS E CHOPP': 'bebidas_cervejas_e_chopp',
+      'BEBIDAS REFRIGERANTES': 'bebidas_refrigerantes',
+      'BEBIDAS SUCOS': 'bebidas_sucos',
+      'COMBO LANCHES CARNE ANGUS': 'combo_lanches_carne_angus',
+      'COMBO LANCHES FRANGO': 'combo_lanches_frango',
+      'FRANGO AMERICANO': 'frango_americano',
+      'JUMBOS (COMBINADOS GRANDES)': 'jumbos',
+      'LANCHES': 'lanches',
+      'MOLHOS': 'molhos',
+      'PROMOÇÕES': 'promocoes',
+      'SALADAS': 'saladas',
+      'SOBREMESAS': 'sobremesas',
+      'ZAPBOX (COMBINADOS INDIVIDUÁIS)': 'zapbox',
+      'Bebida': 'bebidas_refrigerantes',
+      'Bebidas': 'bebidas_refrigerantes', 
+      'BEBIDAS': 'bebidas_refrigerantes',
+      'Hambúrguer': 'lanches',
+      'Hamburguer': 'lanches',
+      'Combo': 'combo_lanches_frango',
+      'Balde': 'frango_americano',
+      'Porção': 'acompanhamentos',
+      'Sobremesa': 'sobremesas',
+      'ALIMENTOS': 'lanches'
     }
     
-    return mapeamento[categoriaProduto] || 'LANCHES'
+    return mapeamento[categoriaProduto] || 'lanches'
   }
 
   // Função para calcular preço sugerido (movida para antes do filtro)
