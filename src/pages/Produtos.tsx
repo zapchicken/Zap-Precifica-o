@@ -101,43 +101,39 @@ export default function Produtos() {
   // Função para arredondar para .90
   const arredondarPara90 = (preco: number): number => {
     const precoInteiro = Math.floor(preco)
-    return precoInteiro + 0.90
+    const parteDecimal = preco - precoInteiro
+    
+    // Regra: 0.01 a 0.50 → 0.50, 0.51 a 0.99 → 0.90
+    if (parteDecimal >= 0.01 && parteDecimal <= 0.50) {
+      return precoInteiro + 0.50
+    } else if (parteDecimal >= 0.51 && parteDecimal <= 0.99) {
+      return precoInteiro + 0.90
+    } else {
+      // Para valores exatos (0.00) ou outros casos, manter como está
+      return preco
+    }
   }
 
   // Função para calcular markup simples
   const calcularMarkupSimples = (categoria: string, canal: string): number => {
     // Verificações de segurança para evitar erros
     if (!categoria || categoria.trim() === '') {
-      console.log('DEBUG: Categoria vazia:', categoria)
       return 0
     }
     
     // Verificar se os dados dos hooks estão carregados
     if (!configCategorias || !canaisVenda || !configGeral) {
-      console.log('DEBUG: Dados não carregados:', {
-        configCategorias: !!configCategorias,
-        canaisVenda: !!canaisVenda,
-        configGeral: !!configGeral,
-        configCategoriasLength: configCategorias?.length,
-        canaisVendaLength: canaisVenda?.length
-      })
       return 0
     }
     
     const categoriaMapeada = mapearCategoria(categoria)
-    console.log('DEBUG: Categoria original:', categoria, 'Mapeada:', categoriaMapeada)
-    console.log('DEBUG: ConfigCategorias disponíveis:', configCategorias.map(c => c.categoria))
-    
     const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
     if (!configCategoria) {
-      console.log('DEBUG: ConfigCategoria não encontrada para:', categoriaMapeada)
       return 0
     }
 
     const canalVenda = canaisVenda.find(c => c.nome === canal)
     if (!canalVenda) {
-      console.log('DEBUG: Canal de venda não encontrado:', canal)
-      console.log('DEBUG: Canais disponíveis:', canaisVenda.map(c => c.nome))
       return 0
     }
 
@@ -152,20 +148,8 @@ export default function Produtos() {
         configCategoria.lucro_desejado +
       configCategoria.reserva_operacional
 
-    console.log('DEBUG: Valores de cálculo:', {
-      impostos_faturamento: configGeral?.impostos_faturamento,
-      investimento_mkt: (configGeral as any)?.investimento_mkt,
-      taxa_cartao: configGeral?.taxa_cartao,
-      despesas_fixas: (configGeral as any)?.despesas_fixas,
-      reserva_operacional: (configGeral as any)?.reserva_operacional,
-      lucro_desejado: configCategoria.lucro_desejado,
-      reserva_operacional_cat: configCategoria.reserva_operacional,
-      percentualTotal
-    })
-
     // Se o percentual total for >= 100%, retornar 0 (impossível calcular)
     if (percentualTotal >= 100) {
-      console.log('DEBUG: Percentual total >= 100%, retornando 0')
       return 0
     }
 
@@ -173,7 +157,6 @@ export default function Produtos() {
     const markup = (100 / (100 - percentualTotal)) - 1
     const markupFinal = markup + 1 // Adicionar 1 para obter o multiplicador final
 
-    console.log('DEBUG: Markup calculado:', { markup, markupFinal })
     return Math.round(markupFinal * 100) / 100
   }
 
@@ -223,20 +206,12 @@ export default function Produtos() {
     const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
     
     if (configCategoria) {
-      console.log('DEBUG: Valores de cupom para', categoria, ':', {
-        valor_cupom_vd: configCategoria.valor_cupom_vd,
-        valor_cupom_mkt: configCategoria.valor_cupom_mkt,
-        canal
-      })
-      
       if (canal === 'Venda Direta') {
         // Adicionar valor do cupom VD
         precoSugerido += configCategoria.valor_cupom_vd || 0
-        console.log('DEBUG: Adicionando cupom VD:', configCategoria.valor_cupom_vd)
       } else if (canal === 'iFood') {
         // Adicionar valor do cupom MKT
         precoSugerido += configCategoria.valor_cupom_mkt || 0
-        console.log('DEBUG: Adicionando cupom MKT:', configCategoria.valor_cupom_mkt)
       }
     }
 
@@ -902,110 +877,111 @@ export default function Produtos() {
               </div>
             ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="sticky top-0 z-10 bg-background">
-                  <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Código PDV</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Preço Custo</TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Preço VD</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Preço de Venda Direta</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Preço IFood</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Preço de Venda no IFood</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">MC VD (R$)</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Margem de Contribuição Venda Direta em Reais</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">MC VD (%)</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Margem de Contribuição Venda Direta em Percentual</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">MC IFOOD (R$)</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Margem de Contribuição IFood em Reais</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">MC IFOOD (%)</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Margem de Contribuição IFood em Percentual</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Preço Sugerido VD</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Preço Sugerido para Venda Direta</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Preço Sugerido IFood</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Preço Sugerido para IFood</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger className="cursor-help">Status Preço</TooltipTrigger>
-                          <TooltipContent>
-                            <p>Status baseado na comparação com preço sugerido</p>
-                            <p>• Ruim: PV menor que 5% do sugerido</p>
-                            <p>• Bom: PV entre -5% a +5% do sugerido</p>
-                            <p>• Ótimo: PV maior que 5% do sugerido</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
+              <div className="relative max-h-[600px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-background shadow-sm">
+                    <TableRow>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Produto</TableHead>
+                      <TableHead>Código PDV</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Preço Custo</TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">Preço VD</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Preço de Venda Direta</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">Preço IFood</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Preço de Venda no IFood</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">MC VD (R$)</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Margem de Contribuição Venda Direta em Reais</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">MC VD (%)</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Margem de Contribuição Venda Direta em Percentual</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">MC IFOOD (R$)</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Margem de Contribuição IFood em Reais</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">MC IFOOD (%)</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Margem de Contribuição IFood em Percentual</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">Preço Sugerido VD</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Preço Sugerido para Venda Direta</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">Preço Sugerido IFood</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Preço Sugerido para IFood</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="cursor-help">Status Preço</TooltipTrigger>
+                            <TooltipContent>
+                              <p>Status baseado na comparação com preço sugerido</p>
+                              <p>• Ruim: PV menor que 5% do sugerido</p>
+                              <p>• Bom: PV entre -5% a +5% do sugerido</p>
+                              <p>• Ótimo: PV maior que 5% do sugerido</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {filteredProdutos.map((produto) => (
                     <TableRow key={produto.id} className={produto.status !== 'ativo' ? "opacity-60" : ""}>
@@ -1126,7 +1102,8 @@ export default function Produtos() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+                </Table>
+              </div>
             </div>
             )}
           </CardContent>
