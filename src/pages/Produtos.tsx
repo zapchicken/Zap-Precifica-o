@@ -218,6 +218,28 @@ export default function Produtos() {
 
     let precoSugerido = precoCusto * markup
 
+    // Adicionar valores de cupom baseado no canal
+    const categoriaMapeada = mapearCategoria(categoria)
+    const configCategoria = configCategorias.find(c => c.categoria === categoriaMapeada)
+    
+    if (configCategoria) {
+      console.log('DEBUG: Valores de cupom para', categoria, ':', {
+        valor_cupom_vd: configCategoria.valor_cupom_vd,
+        valor_cupom_mkt: configCategoria.valor_cupom_mkt,
+        canal
+      })
+      
+      if (canal === 'Venda Direta') {
+        // Adicionar valor do cupom VD
+        precoSugerido += configCategoria.valor_cupom_vd || 0
+        console.log('DEBUG: Adicionando cupom VD:', configCategoria.valor_cupom_vd)
+      } else if (canal === 'iFood') {
+        // Adicionar valor do cupom MKT
+        precoSugerido += configCategoria.valor_cupom_mkt || 0
+        console.log('DEBUG: Adicionando cupom MKT:', configCategoria.valor_cupom_mkt)
+      }
+    }
+
     // Se for iFood, aplicar a fórmula específica do marketplace
     if (canal === 'iFood') {
       const canalVenda = canaisVenda.find(c => c.nome === 'iFood')

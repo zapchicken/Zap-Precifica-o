@@ -35,6 +35,8 @@ export interface ConfigMarkupCategoria {
   lucro_desejado: number
   reserva_operacional: number
   taxa_cupons: number
+  valor_cupom_vd: number
+  valor_cupom_mkt: number
   created_at?: string
   updated_at?: string
 }
@@ -414,98 +416,126 @@ export function useMarkup() {
             categoria: 'acompanhamentos',
             lucro_desejado: parseFloat(item.lucro_desejado_acompanhamentos) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_acompanhamentos) || 0,
-            taxa_cupons: 0 // Campo não existe na nova estrutura
+            taxa_cupons: 0, // Campo não existe na nova estrutura
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_acompanhamentos) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_acompanhamentos) || 0
           },
           {
             id: 'bebidas_cervejas_e_chopp',
             categoria: 'bebidas_cervejas_e_chopp',
             lucro_desejado: parseFloat(item.lucro_desejado_bebidas_cervejas_e_chopp) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_bebidas_cervejas_e_chopp) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_bebidas_cervejas_e_chopp) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_bebidas_cervejas_e_chopp) || 0
           },
           {
             id: 'bebidas_refrigerantes',
             categoria: 'bebidas_refrigerantes',
             lucro_desejado: parseFloat(item.lucro_desejado_bebidas_refrigerantes) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_bebidas_refrigerantes) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_bebidas_refrigerantes) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_bebidas_refrigerantes) || 0
           },
           {
             id: 'bebidas_sucos',
             categoria: 'bebidas_sucos',
             lucro_desejado: parseFloat(item.lucro_desejado_bebidas_sucos) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_bebidas_sucos) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_bebidas_sucos) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_bebidas_sucos) || 0
           },
           {
             id: 'combo_lanches_carne_angus',
             categoria: 'combo_lanches_carne_angus',
             lucro_desejado: parseFloat(item.lucro_desejado_combo_lanches_carne_angus) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_combo_lanches_carne_angus) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_combo_lanches_carne_angus) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_combo_lanches_carne_angus) || 0
           },
           {
             id: 'combo_lanches_frango',
             categoria: 'combo_lanches_frango',
             lucro_desejado: parseFloat(item.lucro_desejado_combo_lanches_frango) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_combo_lanches_frango) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_combo_lanches_frango) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_combo_lanches_frango) || 0
           },
           {
             id: 'frango_americano',
             categoria: 'frango_americano',
             lucro_desejado: parseFloat(item.lucro_desejado_frango_americano) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_frango_americano) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_frango_americano) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_frango_americano) || 0
           },
           {
             id: 'jumbos',
             categoria: 'jumbos',
             lucro_desejado: parseFloat(item.lucro_desejado_jumbos) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_jumbos) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_jumbos) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_jumbos) || 0
           },
           {
             id: 'lanches',
             categoria: 'lanches',
             lucro_desejado: parseFloat(item.lucro_desejado_lanches) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_lanches) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_lanches) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_lanches) || 0
           },
           {
             id: 'molhos',
             categoria: 'molhos',
             lucro_desejado: parseFloat(item.lucro_desejado_molhos) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_molhos) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_molhos) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_molhos) || 0
           },
           {
             id: 'promocoes',
             categoria: 'promocoes',
             lucro_desejado: parseFloat(item.lucro_desejado_promocoes) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_promocoes) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_promocoes) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_promocoes) || 0
           },
           {
             id: 'saladas',
             categoria: 'saladas',
             lucro_desejado: parseFloat(item.lucro_desejado_saladas) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_saladas) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_saladas) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_saladas) || 0
           },
           {
             id: 'sobremesas',
             categoria: 'sobremesas',
             lucro_desejado: parseFloat(item.lucro_desejado_sobremesas) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_sobremesas) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_sobremesas) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_sobremesas) || 0
           },
           {
             id: 'zapbox',
             categoria: 'zapbox',
             lucro_desejado: parseFloat(item.lucro_desejado_zapbox) || 0,
             reserva_operacional: parseFloat(item.reserva_operacional_zapbox) || 0,
-            taxa_cupons: 0
+            taxa_cupons: 0,
+            valor_cupom_vd: parseFloat(item.valor_cupom_vd_zapbox) || 0,
+            valor_cupom_mkt: parseFloat(item.valor_cupom_mkt_zapbox) || 0
           }
         ]
         
