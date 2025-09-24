@@ -372,18 +372,22 @@ export default function Bases() {
     setEditingBase(base)
     
     // Primeiro, carregar os insumos
-    const insumosCarregados = base.insumos.map(insumo => ({
-      id: insumos.find(i => i.nome === insumo.nome)?.id || 0,
-      nome: insumo.nome,
-      quantidade: insumo.quantidade,
-      unidade: insumo.unidade,
-      custo: insumo.custo
-    }))
+    const insumosCarregados = base.insumos.map(insumo => {
+      const insumoCompleto = insumos.find(i => i.nome === insumo.nome)
+      return {
+        id: insumoCompleto?.id || 0,
+        nome: insumo.nome,
+        quantidade: insumo.quantidade,
+        unidade: insumo.unidade,
+        // Converter custo total para custo unitário para o formulário
+        custo: insumo.quantidade > 0 ? insumo.custo / insumo.quantidade : 0
+      }
+    })
     
     // Calcular o custo total baseado nos insumos carregados
     const custoTotalCalculado = insumosCarregados.reduce((acc, insumo) => {
-      const custoItem = insumo.quantidade * insumo.custo
-      return acc + custoItem
+      // Agora insumo.custo é custo unitário, então multiplicamos pela quantidade
+      return acc + (insumo.quantidade * insumo.custo)
     }, 0)
     
     // Definir formData primeiro
