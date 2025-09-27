@@ -42,7 +42,7 @@ export default function Dashboard() {
         } else {
           const novoProduto = {
             nome: venda.produto_nome,
-            codigo_pdv: venda.codigo_pdv || 'N/A',
+            codigo_pdv: venda.produto_codigo || 'N/A',
             vendas: parseFloat(venda.valor_total) || 0,
             quantidade: parseInt(venda.quantidade) || 0,
             margem: "Calculando..." // Seria calculado com base na ficha técnica
