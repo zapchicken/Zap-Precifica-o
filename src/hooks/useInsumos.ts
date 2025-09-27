@@ -138,6 +138,7 @@ export const useInsumos = () => {
       const insumoAtual = insumos.find(i => i.id === id)
       const precoMudou = updates.preco_por_unidade !== undefined && updates.preco_por_unidade !== insumoAtual?.preco_por_unidade
       const fatorMudou = updates.fator_correcao !== undefined && updates.fator_correcao !== insumoAtual?.fator_correcao
+      const unidadeMudou = updates.unidade_medida !== undefined && updates.unidade_medida !== insumoAtual?.unidade_medida
       
       const { data, error } = await supabase
         .from('insumos')
@@ -158,7 +159,7 @@ export const useInsumos = () => {
 
       setInsumos(prev => prev.map(i => i.id === id ? data : i))
       
-      if ((precoMudou || fatorMudou) && data) {
+      if ((precoMudou || fatorMudou || unidadeMudou) && data) {
         const novoCustoUnitario = data.preco_por_unidade * data.fator_correcao
         await recalcularAutomaticamente(id, novoCustoUnitario)
       }
