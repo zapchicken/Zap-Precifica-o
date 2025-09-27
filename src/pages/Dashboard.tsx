@@ -52,7 +52,7 @@ export default function Dashboard() {
         return acc
       }, [])
       .sort((a: any, b: any) => b.vendas - a.vendas)
-      .slice(0, 3)
+      .slice(0, 5)
 
   return (
     <Layout currentPage="dashboard">
@@ -117,7 +117,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {produtosTop.length > 0 ? (
                 produtosTop.map((produto: any, index: number) => (
                   <div key={index} className="flex flex-col items-center justify-center p-4 bg-secondary/30 rounded-lg text-center">
@@ -129,7 +129,7 @@ export default function Dashboard() {
                   </div>
                 ))
               ) : (
-                <div className="col-span-3 text-center py-8 text-muted-foreground">
+                <div className="col-span-5 text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Nenhuma venda registrada ainda</p>
                   <p className="text-sm">Importe dados de vendas para ver os produtos mais vendidos</p>
