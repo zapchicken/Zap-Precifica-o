@@ -91,7 +91,7 @@ export const useBases = () => {
               insumo_id: item.insumo_id,
               nome: item.insumos.nome,
               quantidade: item.quantidade,
-              unidade: item.unidade,
+              unidade: item.insumos.unidade_medida, // ✅ CORREÇÃO: Usar unidade atual do insumo
               custo: item.custo,
               base_id: item.base_id,
               created_at: item.created_at
