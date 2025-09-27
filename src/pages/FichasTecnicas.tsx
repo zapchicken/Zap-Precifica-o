@@ -962,7 +962,7 @@ export default function FichasTecnicas() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto w-[98vw] md:w-full">
+          <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto w-[95vw] md:w-full">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold">{editingFicha ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'}</DialogTitle>
               <DialogDescription className="text-base">
@@ -970,8 +970,8 @@ export default function FichasTecnicas() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 py-6">
-              <div className="xl:col-span-4 space-y-8">
+            <div className="grid grid-cols-1 xl:grid-cols-10 gap-8 py-6">
+              <div className="xl:col-span-10 space-y-8">
                 <div className="flex items-center justify-end">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span>Duplicar ficha existente:</span>
@@ -995,21 +995,21 @@ export default function FichasTecnicas() {
                   </div>
                 </div>
 
-                <Card className="border rounded-lg p-6">
+                <Card className="border rounded-lg p-6 w-full">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-semibold">Informações Básicas</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                    <div className="space-y-3 lg:col-span-1">
                       <Label className="text-sm font-medium">Código PDV *</Label>
                       <Input
                         placeholder="Código do PDV"
                         value={formData.codigoPdv}
                         onChange={(e) => setFormData(prev => ({ ...prev, codigoPdv: e.target.value }))}
-                        className="h-12 text-base"
+                        className="h-12 text-base w-[60%]"
                       />
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-3 lg:col-span-3">
                       <Label className="text-sm font-medium">Nome do Produto *</Label>
                       <Input
                         placeholder="Nome do produto"
@@ -1018,30 +1018,17 @@ export default function FichasTecnicas() {
                         className="h-12 text-base"
                       />
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-3 lg:col-span-1">
                       <Label className="text-sm font-medium">Data da Ficha *</Label>
                       <Input
                         type="date"
                         value={formData.dataFicha}
                         onChange={(e) => setFormData(prev => ({ ...prev, dataFicha: e.target.value }))}
-                        className="h-12 text-base"
+                        className="h-12 text-base w-[60%]"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Categoria</Label>
-                      <Select value={formData.categoria} onValueChange={(value) => setFormData(prev => ({ ...prev, categoria: value }))}>
-                        <SelectTrigger className="h-12 text-base">
-                          <SelectValue placeholder="Selecionar" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categorias.map(cat => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Custo Unitário (R$) - Calculado Automaticamente</Label>
+                      <Label className="text-sm font-medium">Custo Unitário Total (R$)</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -1049,11 +1036,7 @@ export default function FichasTecnicas() {
                         value={formData.custoUnitario}
                         readOnly
                         className="h-12 text-base bg-gray-50 cursor-not-allowed"
-                        title="Custo calculado automaticamente: Produtos Prontos + Insumos + Embalagens"
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Soma automática: Produtos Prontos + Insumos + Embalagens
-                      </p>
                     </div>
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Tempo de Preparo (min)</Label>
@@ -1074,6 +1057,19 @@ export default function FichasTecnicas() {
                         onChange={(e) => setFormData(prev => ({ ...prev, rendimento: e.target.value }))}
                         className="h-12 text-base"
                       />
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Categoria</Label>
+                      <Select value={formData.categoria} onValueChange={(value) => setFormData(prev => ({ ...prev, categoria: value }))}>
+                        <SelectTrigger className="h-12 text-base">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categorias.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-3 xl:col-span-3">
                       <Label className="text-sm font-medium">Descrição do Produto</Label>
@@ -1145,26 +1141,27 @@ export default function FichasTecnicas() {
                     </Button>
                   </div>
                       <div className="space-y-3">
-                    <div className="grid grid-cols-6 gap-4 text-sm font-medium text-muted-foreground border-b pb-3">
+                    <div className="grid grid-cols-7 gap-2 text-sm font-medium text-muted-foreground border-b pb-3">
                       <div>Código</div>
-                      <div>Nome do Produto</div>
+                      <div className="col-span-2">Nome do Produto</div>
                       <div>Qtd.</div>
                       <div>Und.</div>
                       <div>Custo (R$)</div>
                       <div>Ações</div>
                     </div>
                     {formData.produtosProntos.map((produto, index) => (
-                      <div key={index} className="grid grid-cols-6 gap-4 p-4 border rounded-lg bg-gray-50/50">
+                      <div key={index} className="grid grid-cols-7 gap-2 p-4 border rounded-lg bg-gray-50/50">
                         <Input 
                           placeholder="Código automático" 
                           value={fichas.find(f => f.id === produto.fichaId)?.codigo || ''} 
                           readOnly 
                           className="bg-gray-100 h-10" 
                         />
-                        <ProdutoProntoCombobox
-                          items={fichas}
-                          selectedLabel={fichas.find(f => f.id === produto.fichaId)?.nome || ''}
-                          onSelect={async (ficha) => {
+                        <div className="col-span-2">
+                          <ProdutoProntoCombobox
+                            items={fichas}
+                            selectedLabel={fichas.find(f => f.id === produto.fichaId)?.nome || ''}
+                            onSelect={async (ficha) => {
                             
                             const newProdutos = [...formData.produtosProntos]
                             const quantidade = parseFloat(newProdutos[index].quantidade) || 1
@@ -1197,6 +1194,7 @@ export default function FichasTecnicas() {
                             }
                           }}
                         />
+                        </div>
                         <Input
                           type="number"
                           step="0.01"
@@ -1217,23 +1215,25 @@ export default function FichasTecnicas() {
                             }
                             setFormData(prev => ({ ...prev, produtosProntos: newProdutos }))
                           }}
-                          className="h-10"
+                          className="h-10 w-[80%]"
                         />
-                        <Input value="un" readOnly className="bg-gray-100 h-10" />
+                        <Input value="un" readOnly className="bg-gray-100 h-10 w-[80%]" />
                         <Input
                           value={produto.custoTotal || '0.00'}
                           readOnly
-                          className="bg-gray-100 h-10"
+                          className="bg-gray-100 h-10 w-[80%]"
                           title="Custo apenas dos insumos do produto, menos o custo da embalagem de delivery"
                         />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeProdutoPronto(index)}
-                          className="h-10 w-10 p-0"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeProdutoPronto(index)}
+                            className="h-10 w-10 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                     </div>
                   ))}
                   </div>
@@ -1248,16 +1248,17 @@ export default function FichasTecnicas() {
                     </Button>
                   </div>
                       <div className="space-y-3">
-                    <div className="grid grid-cols-2 md:grid-cols-7 gap-3 text-sm font-medium text-muted-foreground border-b pb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-9 gap-3 text-sm font-medium text-muted-foreground border-b pb-3">
                       <div className="hidden md:block">Tipo</div>
                       <div className="hidden md:block">Código</div>
-                      <div className="col-span-2">Nome</div>
+                      <div className="col-span-3">Nome</div>
                       <div className="hidden md:block">Qtd.</div>
                       <div className="hidden md:block">Unidade</div>
                       <div className="hidden md:block">Custo (R$)</div>
+                      <div className="hidden md:block">Ações</div>
                     </div>
                     {formData.insumos.map((insumo, index) => (
-                      <div key={index} className="grid grid-cols-2 md:grid-cols-7 gap-3 p-4 border rounded-lg bg-gray-50/50">
+                      <div key={index} className="grid grid-cols-2 md:grid-cols-9 gap-3 p-4 border rounded-lg bg-gray-50/50">
                         <div className="hidden md:block">
                         <Select
                           value={insumo.tipo || 'insumo'}
@@ -1292,7 +1293,7 @@ export default function FichasTecnicas() {
                           className="bg-gray-100 h-10"
                         />
                       </div>
-                        <div className="col-span-2">
+                        <div className="col-span-3">
                         {insumo.tipo === 'base' ? (
                           <Select
                             value={insumo.nome}
@@ -1363,8 +1364,8 @@ export default function FichasTecnicas() {
                         <div className="hidden md:block">
                         <Input
                           type="number"
-                          step="0.01"
-                          placeholder="0.00"
+                          step="0.001"
+                          placeholder="0.000"
                           value={insumo.quantidade}
                           onChange={(e) => {
                             const newInsumos = [...formData.insumos]
@@ -1396,7 +1397,7 @@ export default function FichasTecnicas() {
                           className="bg-gray-100 h-10"
                         />
                       </div>
-                        <div className="flex items-center justify-between md:justify-center">
+                        <div className="hidden md:block">
                           <div className="md:hidden space-y-1">
                             <div className="text-xs text-muted-foreground">Qtd: {insumo.quantidade} {insumo.unidade}</div>
                             <div className="text-xs text-muted-foreground">Custo: R$ {insumo.custoTotal || '0.00'}</div>
@@ -1424,61 +1425,63 @@ export default function FichasTecnicas() {
                     </Button>
                   </div>
                       <div className="space-y-3">
-                    <div className="grid grid-cols-6 gap-4 text-sm font-medium text-muted-foreground border-b pb-3">
+                    <div className="grid grid-cols-7 gap-2 text-sm font-medium text-muted-foreground border-b pb-3">
                       <div>Código</div>
-                      <div>Nome da Embalagem</div>
+                      <div className="col-span-2">Nome da Embalagem</div>
                       <div>Qtd.</div>
                       <div>Unidade</div>
                       <div>Custo (R$)</div>
                       <div>Ações</div>
                     </div>
                     {formData.insumosEmbalagemDelivery.map((embalagem, index) => (
-                      <div key={index} className="grid grid-cols-6 gap-4 p-4 border rounded-lg bg-gray-50/50">
+                      <div key={index} className="grid grid-cols-7 gap-2 p-4 border rounded-lg bg-gray-50/50">
                         <Input
                           placeholder="Código automático"
                           value={embalagem.codigo}
                           readOnly
                           className="bg-gray-100 h-10"
                         />
-                        <Select 
-                          value={embalagem.nome} 
-                          onValueChange={(value) => {
-                            const newEmbalagens = [...formData.insumosEmbalagemDelivery]
-                            const selectedInsumo = insumos.find(i => i.nome === value)
-                            if (selectedInsumo) {
-                              // ✅ Calcular custo unitário: preço × fator de correção
-                              const custoUnitario = (selectedInsumo.preco_por_unidade * selectedInsumo.fator_correcao).toFixed(2)
-                              newEmbalagens[index] = {
-                                ...newEmbalagens[index],
-                                nome: value,
-                                codigo: selectedInsumo.codigo_insumo || '',
-                                unidade: selectedInsumo.unidade_medida || '',
-                                custo: custoUnitario
+                        <div className="col-span-2">
+                          <Select 
+                            value={embalagem.nome} 
+                            onValueChange={(value) => {
+                              const newEmbalagens = [...formData.insumosEmbalagemDelivery]
+                              const selectedInsumo = insumos.find(i => i.nome === value)
+                              if (selectedInsumo) {
+                                // ✅ Calcular custo unitário: preço × fator de correção
+                                const custoUnitario = (selectedInsumo.preco_por_unidade * selectedInsumo.fator_correcao).toFixed(2)
+                                newEmbalagens[index] = {
+                                  ...newEmbalagens[index],
+                                  nome: value,
+                                  codigo: selectedInsumo.codigo_insumo || '',
+                                  unidade: selectedInsumo.unidade_medida || '',
+                                  custo: custoUnitario
+                                }
+                                setFormData(prev => ({ ...prev, insumosEmbalagemDelivery: newEmbalagens }))
                               }
-                              setFormData(prev => ({ ...prev, insumosEmbalagemDelivery: newEmbalagens }))
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Selecione a embalagem" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-60">
-                            {insumos
-                              .filter(i => i.categoria === 'EMBALAGENS' && i.ativo)
-                              .map((insumo) => (
-                                <SelectItem key={insumo.id} value={insumo.nome || ''}>
-                                  {insumo.nome}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                            }}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue placeholder="Selecione a embalagem" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60">
+                              {insumos
+                                .filter(i => i.categoria === 'EMBALAGENS' && i.ativo)
+                                .map((insumo) => (
+                                  <SelectItem key={insumo.id} value={insumo.nome || ''}>
+                                    {insumo.nome}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                         {insumos.filter(i => i.categoria === 'EMBALAGENS' && i.ativo).length === 0 && (
                           <p className="text-sm text-muted-foreground mt-1">Nenhuma embalagem cadastrada</p>
                         )}
                         <Input
                           type="number"
-                          step="0.01"
-                          placeholder="0.00"
+                          step="0.001"
+                          placeholder="0.000"
                           value={embalagem.quantidade}
                           onChange={(e) => {
                             const newEmbalagens = [...formData.insumosEmbalagemDelivery]
@@ -1493,26 +1496,28 @@ export default function FichasTecnicas() {
                             }
                             setFormData(prev => ({ ...prev, insumosEmbalagemDelivery: newEmbalagens }))
                           }}
-                          className="h-10"
+                          className="h-10 w-[80%]"
                         />
                         <Input
                           value={embalagem.unidade}
                           readOnly
-                          className="bg-gray-100 h-10"
+                          className="bg-gray-100 h-10 w-[80%]"
                         />
                         <Input
                           value={embalagem.custoTotal || '0.00'}
                           readOnly
-                          className="bg-gray-100 h-10"
+                          className="bg-gray-100 h-10 w-[80%]"
                         />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeEmbalagemDelivery(index)}
-                          className="h-10 w-10 p-0"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeEmbalagemDelivery(index)}
+                            className="h-10 w-10 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                     </div>
                   ))}
                   </div>
