@@ -1612,7 +1612,7 @@ export default function FichasTecnicas() {
                               </div>
                               <div className="col-span-2 text-center">
                                 <span className="text-base text-muted-foreground">
-                                  {produto.quantidade} {produto.unidade}
+                                  {parseFloat(produto.quantidade).toFixed(3)} {produto.unidade}
                                 </span>
                               </div>
                               <div className="col-span-2 text-right">
@@ -1641,7 +1641,7 @@ export default function FichasTecnicas() {
                               </div>
                               <div className="col-span-2 text-center">
                                 <span className="text-base text-muted-foreground">
-                                  {insumo.quantidade} {insumo.unidade}
+                                  {parseFloat(insumo.quantidade).toFixed(3)} {insumo.unidade}
                                 </span>
                               </div>
                               <div className="col-span-2 text-right">
@@ -1670,7 +1670,7 @@ export default function FichasTecnicas() {
                               </div>
                               <div className="col-span-2 text-center">
                                 <span className="text-base text-muted-foreground">
-                                  {base.quantidade} {base.unidade}
+                                  {parseFloat(base.quantidade).toFixed(3)} {base.unidade}
                                 </span>
                               </div>
                               <div className="col-span-2 text-right">
@@ -1699,7 +1699,7 @@ export default function FichasTecnicas() {
                               </div>
                               <div className="col-span-2 text-center">
                                 <span className="text-base text-muted-foreground">
-                                  {emb.quantidade} {emb.unidade}
+                                  {parseFloat(emb.quantidade).toFixed(3)} {emb.unidade}
                                 </span>
                               </div>
                               <div className="col-span-2 text-right">
