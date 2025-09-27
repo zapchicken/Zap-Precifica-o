@@ -39,6 +39,10 @@ export default function Dashboard() {
         if (existing) {
           existing.vendas += parseFloat(venda.valor_total) || 0
           existing.quantidade += parseInt(venda.quantidade) || 0
+          // Atualizar código PDV se não estiver definido ou se for diferente
+          if (!existing.codigo_pdv || existing.codigo_pdv === 'N/A') {
+            existing.codigo_pdv = venda.produto_codigo || 'N/A'
+          }
         } else {
           const novoProduto = {
             nome: venda.produto_nome,
