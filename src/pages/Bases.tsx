@@ -368,6 +368,11 @@ export default function Bases() {
     }
   }
 
+  const handleView = (base: BaseComInsumos) => {
+    setViewingBase(base)
+    setIsViewDialogOpen(true)
+  }
+
   const handleEdit = (base: BaseComInsumos) => {
     setEditingBase(base)
     
@@ -673,7 +678,7 @@ export default function Bases() {
                       id="quantidade_total"
                       type="number"
                       step="0.001"
-                      value={formData.quantidade_total}
+                      value={formData.quantidade_total.toFixed(3)}
                       onChange={e =>
                         setFormData(prev => ({ ...prev, quantidade_total: parseFloat(e.target.value) || 0 }))
                       }
@@ -695,7 +700,7 @@ export default function Bases() {
                       id="custoTotalBatelada"
                       type="number"
                       step="0.01"
-                      value={formData.custo_total_batelada}
+                      value={formData.custo_total_batelada.toFixed(2)}
                       readOnly
                       className="bg-gray-50 cursor-not-allowed"
                       placeholder="Calculado automaticamente"
@@ -766,7 +771,7 @@ export default function Bases() {
                               <Input
                                 type="number"
                                 step="0.001"
-                                value={insumo.quantidade}
+                                value={insumo.quantidade.toFixed(3)}
                                 onChange={e => handleInsumoChange(index, 'quantidade', parseFloat(e.target.value))}
                                 placeholder="0.250"
                               />
@@ -782,7 +787,7 @@ export default function Bases() {
                               <Input
                                 type="number"
                                 step="0.01"
-                                value={insumo.custo}
+                                value={insumo.custo.toFixed(2)}
                                 onChange={e => handleInsumoChange(index, 'custo', parseFloat(e.target.value))}
                                 placeholder="3.50"
                               />
@@ -960,7 +965,7 @@ export default function Bases() {
                       <TableCell>R$ {base.custo_total_batelada?.toFixed(2) || '0.00'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(base)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleView(base)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleEdit(base)}>
@@ -996,7 +1001,7 @@ export default function Bases() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleEdit(base)}>
+                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleView(base)}>
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleEdit(base)}>
@@ -1115,6 +1120,115 @@ export default function Bases() {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    {/* Modal de Visualização */}
+    <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-full">
+        <DialogHeader>
+          <DialogTitle>Detalhes da Base/Produto Intermediário</DialogTitle>
+          <DialogDescription>
+            Visualização completa da base e seus insumos
+          </DialogDescription>
+        </DialogHeader>
+
+        {viewingBase && (
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Código</Label>
+                <p className="text-base">{viewingBase.codigo}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
+                <p className="text-base font-medium">{viewingBase.nome}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Tipo de Produto</Label>
+                <p className="text-base">
+                  <Badge
+                    variant={viewingBase.tipo_produto === 'peso' ? 'default' : 'secondary'}
+                    className={viewingBase.tipo_produto === 'peso' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
+                  >
+                    {viewingBase.tipo_produto === 'peso' ? 'Por Peso' : 'Por Unidade'}
+                  </Badge>
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Quantidade Produzida</Label>
+                <p className="text-base">{viewingBase.quantidade_total.toFixed(3)} {viewingBase.unidade_produto}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Rendimento</Label>
+                <p className="text-base">{viewingBase.rendimento || 'Não informado'}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Custo Total da Batelada</Label>
+                <p className="text-base font-bold text-green-600">
+                  R$ {viewingBase.custo_total_batelada?.toFixed(2) || '0,00'}
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Custo por Unidade</Label>
+                <p className="text-base font-bold text-blue-600">
+                  R$ {viewingBase.quantidade_total > 0 
+                    ? (viewingBase.custo_total_batelada / viewingBase.quantidade_total).toFixed(2)
+                    : '0,00'} por {viewingBase.unidade_produto}
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">Tempo de Preparo</Label>
+                <p className="text-base">{viewingBase.tempo_preparo} min</p>
+              </div>
+            </div>
+
+            {/* Card com insumos */}
+            <Card className="border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-4">Insumos Utilizados</h3>
+              
+              {viewingBase.insumos && viewingBase.insumos.length > 0 ? (
+                <div className="space-y-1">
+                  {viewingBase.insumos.map((insumo, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-4 py-2 px-3 bg-green-50 rounded border-l-4 border-green-200 items-center">
+                      <div className="col-span-8">
+                        <span className="font-medium text-base">{insumo.nome}</span>
+                      </div>
+                      <div className="col-span-2 text-center">
+                        <span className="text-base text-muted-foreground">
+                          {insumo.quantidade.toFixed(3)} {insumo.unidade}
+                        </span>
+                      </div>
+                      <div className="col-span-2 text-right">
+                        <span className="font-medium text-green-600 text-base">
+                          R$ {insumo.custo.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Nenhum insumo cadastrado</p>
+              )}
+            </Card>
+
+            {/* Modo de Preparo */}
+            {viewingBase.modo_preparo && (
+              <Card className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4">Modo de Preparo</h3>
+                <p className="text-base whitespace-pre-wrap">{viewingBase.modo_preparo}</p>
+              </Card>
+            )}
+
+            {/* Observações */}
+            {viewingBase.observacoes && (
+              <Card className="border rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-4">Observações</h3>
+                <p className="text-base whitespace-pre-wrap">{viewingBase.observacoes}</p>
+              </Card>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
     </>
   )
 }

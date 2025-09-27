@@ -293,10 +293,16 @@ export const useRecalculoAutomatico = () => {
 
       if (insumosError) throw insumosError
 
-      // Calcular custo total das bases
+      // Calcular custo total das bases (com dados da base para cálculo dinâmico)
       const { data: bases, error: basesError } = await supabase
         .from('fichas_bases')
-        .select('custo_total')
+        .select(`
+          quantidade,
+          bases!inner(
+            custo_total_batelada,
+            quantidade_total
+          )
+        `)
         .eq('ficha_id', fichaId)
 
       if (basesError) throw basesError
@@ -319,7 +325,16 @@ export const useRecalculoAutomatico = () => {
 
       // Somar todos os custos
       const custoTotalInsumos = insumos?.reduce((acc, item) => acc + (item.custo_total || 0), 0) || 0
-      const custoTotalBases = bases?.reduce((acc, item) => acc + (item.custo_total || 0), 0) || 0
+      
+      // ✅ CORREÇÃO: Calcular custo total das bases dinamicamente
+      const custoTotalBases = bases?.reduce((acc, item) => {
+        const base = Array.isArray(item.bases) ? item.bases[0] : item.bases
+        const custoUnitario = base?.quantidade_total > 0 
+          ? (base.custo_total_batelada / base.quantidade_total)
+          : 0
+        return acc + (item.quantidade * custoUnitario)
+      }, 0) || 0
+      
       const custoTotalProdutos = produtos?.reduce((acc, item) => acc + (item.custo_total || 0), 0) || 0
       const custoTotalEmbalagens = embalagens?.reduce((acc, item) => acc + (item.custo_total || 0), 0) || 0
 

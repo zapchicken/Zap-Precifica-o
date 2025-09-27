@@ -211,7 +211,7 @@ export const useFichas = () => {
         console.error('🔍 Erro completo:', produtosError)
       }
 
-      // Carregar bases (ingredientes prontos) com JOIN para pegar o nome
+      // Carregar bases (ingredientes prontos) com JOIN para pegar o nome e dados da base
       // ✅ REMOVIDO filtro manual com user_id - RLS já garante segurança
       const { data: bases, error: basesError } = await supabase
         .from('fichas_bases')
@@ -219,7 +219,9 @@ export const useFichas = () => {
           *,
           bases!inner(
             nome,
-            codigo
+            codigo,
+            custo_total_batelada,
+            quantidade_total
           )
         `)
         .eq('ficha_id', fichaId)
@@ -250,7 +252,18 @@ export const useFichas = () => {
         ...ficha,
         insumos: insumos || [],
         produtosProntos: produtosProntos || [],  // ✅ NOVO
-        bases: bases || [],                      // ✅ Para bases
+        bases: (bases || []).map(base => {
+          // ✅ CORREÇÃO: Calcular custo unitário dinamicamente
+          const custoUnitario = base.bases?.quantidade_total > 0 
+            ? (base.bases.custo_total_batelada / base.bases.quantidade_total)
+            : 0
+          return {
+            ...base,
+            custo_unitario: custoUnitario,
+            // ✅ CORREÇÃO: Recalcular custo total com o custo unitário correto
+            custo_total: base.quantidade * custoUnitario
+          }
+        }),                      // ✅ Para bases
         embalagem: embalagens || []
       } as FichaDetalhada
 
@@ -260,6 +273,14 @@ export const useFichas = () => {
         console.log('🔍 Produtos Prontos na ficha detalhada:', fichaDetalhada.produtosProntos)
         console.log('🔍 Bases na ficha detalhada:', fichaDetalhada.bases)
         console.log('🔍 Embalagem na ficha detalhada:', fichaDetalhada.embalagem)
+      }
+
+      // ✅ CORREÇÃO: Recalcular custo total da ficha para garantir consistência
+      try {
+        await recalcularCustoTotalFicha(fichaId)
+        console.log('✅ Custo total recalculado para ficha:', fichaId)
+      } catch (error) {
+        console.warn('⚠️ Erro ao recalcular custo total da ficha:', error)
       }
 
       return fichaDetalhada
