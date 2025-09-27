@@ -16,7 +16,6 @@ export const useRecalculoAutomatico = () => {
     }
 
     try {
-      console.log('🔄 Iniciando recálculo automático de fichas para insumo:', insumoId, 'Novo custo:', novoCustoUnitario)
       
       // 1. Encontrar todas as fichas que usam este insumo
       const { data: fichasAfetadas, error: buscaError } = await supabase
@@ -38,14 +37,9 @@ export const useRecalculoAutomatico = () => {
         return
       }
 
-      console.log('🔍 Fichas afetadas encontradas:', fichasAfetadas?.length || 0)
-
       if (!fichasAfetadas || fichasAfetadas.length === 0) {
-        console.log('✅ Nenhuma ficha afetada pelo insumo:', insumoId)
         return
       }
-
-      console.log('🔍 Fichas afetadas encontradas:', fichasAfetadas.length)
 
       // 2. Atualizar custos nas tabelas relacionadas
       for (const fichaInsumo of fichasAfetadas) {
@@ -66,7 +60,6 @@ export const useRecalculoAutomatico = () => {
           continue
         }
 
-        console.log('✅ Ficha insumo atualizada:', fichaInsumo.ficha_id)
       }
 
       // 3. Recalcular custo total de cada ficha afetada
@@ -74,7 +67,6 @@ export const useRecalculoAutomatico = () => {
         await recalcularCustoTotalFicha(fichaInsumo.ficha_id)
       }
 
-      console.log('✅ Recálculo automático de fichas concluído para', fichasAfetadas.length, 'fichas')
       
       return fichasAfetadas.length
     } catch (error) {
@@ -91,7 +83,6 @@ export const useRecalculoAutomatico = () => {
     }
 
     try {
-      console.log('🔄 Iniciando recálculo automático de bases para insumo:', insumoId, 'Novo custo:', novoCustoUnitario)
       
       // 1. Encontrar todas as bases que usam este insumo
       const { data: basesAfetadas, error: buscaError } = await supabase
@@ -113,14 +104,9 @@ export const useRecalculoAutomatico = () => {
         return
       }
 
-      console.log('🔍 Bases afetadas encontradas:', basesAfetadas?.length || 0)
-
       if (!basesAfetadas || basesAfetadas.length === 0) {
-        console.log('✅ Nenhuma base afetada pelo insumo:', insumoId)
         return
       }
-
-      console.log('🔍 Bases afetadas encontradas:', basesAfetadas.length)
 
       // 2. Atualizar custos nas tabelas relacionadas
       for (const baseInsumo of basesAfetadas) {
@@ -140,7 +126,6 @@ export const useRecalculoAutomatico = () => {
           continue
         }
 
-        console.log('✅ Base insumo atualizada:', baseInsumo.base_id)
       }
 
       // 3. Recalcular custo total de cada base afetada
@@ -148,7 +133,6 @@ export const useRecalculoAutomatico = () => {
         await recalcularCustoTotalBase(baseInsumo.base_id)
       }
 
-      console.log('✅ Recálculo automático de bases concluído para', basesAfetadas.length, 'bases')
       
       return basesAfetadas.length
     } catch (error) {
@@ -165,7 +149,6 @@ export const useRecalculoAutomatico = () => {
     }
 
     try {
-      console.log('🔄 Iniciando recálculo automático de fichas para base:', baseId, 'Novo custo:', novoCustoUnitario)
       
       // 1. Encontrar todas as fichas que usam esta base
       const { data: fichasAfetadas, error: buscaError } = await supabase
@@ -188,11 +171,8 @@ export const useRecalculoAutomatico = () => {
       }
 
       if (!fichasAfetadas || fichasAfetadas.length === 0) {
-        console.log('✅ Nenhuma ficha afetada pela base:', baseId)
         return
       }
-
-      console.log('🔍 Fichas afetadas pela base encontradas:', fichasAfetadas.length)
 
       // 2. Atualizar custos nas tabelas relacionadas
       for (const fichaBase of fichasAfetadas) {
@@ -213,7 +193,6 @@ export const useRecalculoAutomatico = () => {
           continue
         }
 
-        console.log('✅ Ficha base atualizada:', fichaBase.ficha_id)
       }
 
       // 3. Recalcular custo total de cada ficha afetada
@@ -221,7 +200,6 @@ export const useRecalculoAutomatico = () => {
         await recalcularCustoTotalFicha(fichaBase.ficha_id)
       }
 
-      console.log('✅ Recálculo automático de fichas com base concluído para', fichasAfetadas.length, 'fichas')
       
       return fichasAfetadas.length
     } catch (error) {
@@ -238,7 +216,6 @@ export const useRecalculoAutomatico = () => {
     }
 
     try {
-      console.log('🔄 Iniciando recálculo automático de fichas com bases que usam insumo:', insumoId, 'Novo custo:', novoCustoUnitario)
       
       // 1. Encontrar todas as bases que usam este insumo
       const { data: basesAfetadas, error: basesError } = await supabase
@@ -259,10 +236,7 @@ export const useRecalculoAutomatico = () => {
         return 0
       }
 
-      console.log('🔍 Bases afetadas encontradas:', basesAfetadas?.length || 0, basesAfetadas)
-
       if (!basesAfetadas || basesAfetadas.length === 0) {
-        console.log('✅ Nenhuma base afetada pelo insumo:', insumoId)
         return 0
       }
 
@@ -273,7 +247,6 @@ export const useRecalculoAutomatico = () => {
         totalFichasAfetadas += fichasAfetadas
       }
 
-      console.log('✅ Recálculo automático de fichas com bases concluído para', totalFichasAfetadas, 'fichas')
       
       return totalFichasAfetadas
     } catch (error) {

@@ -227,9 +227,6 @@ export const useFichas = () => {
         .eq('ficha_id', fichaId)
 
       if (import.meta.env.DEV) {
-        console.log('🔍 Resultado bases:', { bases, basesError })
-        console.log('🔍 Bases detalhadas:', bases)
-        console.log('🔍 Quantidade de bases:', bases?.length || 0)
       }
 
       if (basesError) {
@@ -268,17 +265,11 @@ export const useFichas = () => {
       } as FichaDetalhada
 
       if (import.meta.env.DEV) {
-        console.log('🔍 Ficha detalhada montada:', fichaDetalhada)
-        console.log('🔍 Insumos na ficha detalhada:', fichaDetalhada.insumos)
-        console.log('🔍 Produtos Prontos na ficha detalhada:', fichaDetalhada.produtosProntos)
-        console.log('🔍 Bases na ficha detalhada:', fichaDetalhada.bases)
-        console.log('🔍 Embalagem na ficha detalhada:', fichaDetalhada.embalagem)
       }
 
       // ✅ CORREÇÃO: Recalcular custo total da ficha para garantir consistência
       try {
         await recalcularCustoTotalFicha(fichaId)
-        console.log('✅ Custo total recalculado para ficha:', fichaId)
       } catch (error) {
         console.warn('⚠️ Erro ao recalcular custo total da ficha:', error)
       }
@@ -309,8 +300,6 @@ export const useFichas = () => {
       
       // ✅ DEBUG: Log do campo foto antes de salvar (apenas em desenvolvimento)
       if (import.meta.env.DEV) {
-        console.log('🔍 Campo foto sendo salvo:', fichaLimpa.foto)
-        console.log('🔍 Tipo do campo foto:', typeof fichaLimpa.foto)
       }
       
       // ✅ CORREÇÃO: Validar foto (URL do Storage ou base64)
@@ -401,7 +390,6 @@ export const useFichas = () => {
     
         // ✅ Processar dados relacionados nas tabelas corretas
         if (insumos?.length) {
-          console.log('🔍 Salvando insumos e bases:', insumos)
           
           // Separar insumos e bases
           const insumosReais = insumos.filter(item => item.tipo !== 'base')
@@ -428,7 +416,6 @@ export const useFichas = () => {
                 
                 if (insumoExistente) {
                   insumoId = insumoExistente.id
-                  console.log('✅ Insumo encontrado:', insumo.nome, 'ID:', insumoId)
                 } else {
                   // Criar novo insumo na tabela insumos
                   const { data: novoInsumo, error: createError } = await supabase
@@ -449,7 +436,6 @@ export const useFichas = () => {
                   }
                   
                   insumoId = novoInsumo[0].id
-                  console.log('✅ Novo insumo criado:', insumo.nome, 'ID:', insumoId)
                 }
               }
               
@@ -471,7 +457,6 @@ export const useFichas = () => {
                 throw insumoError
               }
               
-              console.log('✅ Insumo salvo na ficha:', insumo.nome)
             } catch (error) {
               console.error('❌ Erro ao processar insumo:', insumo.nome, error)
               throw error
@@ -522,12 +507,10 @@ export const useFichas = () => {
             }
           }
           
-          console.log('✅ Todos os insumos e bases salvos com sucesso')
         }
         
         
                  if (produtosProntos?.length) {
-           console.log('🔍 Salvando produtos prontos:', produtosProntos)
            
            // Salvar produtos prontos na tabela fichas_produtosprontos
            const produtosParaSalvar = produtosProntos.map(produto => ({
@@ -549,11 +532,9 @@ export const useFichas = () => {
              throw produtosError
            }
            
-           console.log('✅ Produtos prontos salvos com sucesso')
          }
         
         if (insumosEmbalagemDelivery?.length) {
-          console.log('🔍 Salvando embalagens delivery:', insumosEmbalagemDelivery)
           
                      // Salvar embalagens delivery na tabela insumos_embalagem_delivery
            const embalagensParaSalvar = insumosEmbalagemDelivery.map(embalagem => ({
@@ -575,7 +556,6 @@ export const useFichas = () => {
             throw embalagensError
           }
           
-          console.log('✅ Embalagens delivery salvas com sucesso')
         }
       }
       
@@ -586,7 +566,6 @@ export const useFichas = () => {
       if (data && data.length > 0) {
         const fichaCriada = data[0]
         await sincronizarComProdutos(fichaCriada)
-        console.log('✅ Produto sincronizado automaticamente com o catálogo')
       }
     } catch (err: any) {
       setError(err.message)

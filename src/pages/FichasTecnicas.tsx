@@ -1190,7 +1190,6 @@ export default function FichasTecnicas() {
                               setFormData(prev => ({ ...prev, produtosProntos: newProdutos }))
                               
                             } catch (error) {
-                              console.error('❌ Erro ao calcular custo:', error)
                             }
                           }}
                         />
