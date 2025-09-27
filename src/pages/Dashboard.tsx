@@ -42,6 +42,7 @@ export default function Dashboard() {
         } else {
           const novoProduto = {
             nome: venda.produto_nome,
+            codigo_pdv: venda.codigo_pdv || 'N/A',
             vendas: parseFloat(venda.valor_total) || 0,
             quantidade: parseInt(venda.quantidade) || 0,
             margem: "Calculando..." // Seria calculado com base na ficha técnica
@@ -122,7 +123,9 @@ export default function Dashboard() {
                 produtosTop.map((produto: any, index: number) => (
                   <div key={index} className="flex flex-col items-center justify-center p-4 bg-secondary/30 rounded-lg text-center">
                     <p className="font-medium text-lg">{produto.nome}</p>
-                    <p className="text-sm text-muted-foreground mb-2">Qtd: {produto.quantidade}</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Qtd: {produto.quantidade} | PDV: {produto.codigo_pdv}
+                    </p>
                     <p className="font-bold text-primary text-xl">
                       R$ {produto.vendas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </p>
