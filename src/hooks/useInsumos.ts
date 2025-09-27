@@ -161,6 +161,7 @@ export const useInsumos = () => {
       
       if ((precoMudou || fatorMudou || unidadeMudou) && data) {
         const novoCustoUnitario = data.preco_por_unidade * data.fator_correcao
+        console.log('🔄 Disparando recálculo automático para insumo:', data.nome, 'ID:', id, 'Novo custo:', novoCustoUnitario)
         await recalcularAutomaticamente(id, novoCustoUnitario)
       }
       
