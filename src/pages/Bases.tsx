@@ -324,11 +324,15 @@ export default function Bases() {
   useEffect(() => {
     if (formData.tipo_produto === 'peso') {
       const quantidadeCalculada = calcularQuantidadeProduzida()
+      console.log('🔍 useEffect - Quantidade calculada:', quantidadeCalculada)
       if (quantidadeCalculada > 0) {
+        console.log('🔍 useEffect - Atualizando quantidade_total para:', quantidadeCalculada)
         setFormData(prev => ({
           ...prev,
           quantidade_total: quantidadeCalculada
         }))
+      } else {
+        console.log('🔍 useEffect - Quantidade calculada é 0, não atualizando')
       }
     }
   }, [insumosSelecionados, formData.tipo_produto, insumos])
@@ -351,6 +355,14 @@ export default function Bases() {
       !formData.modo_preparo
     ) {
       console.log('❌ Campos obrigatórios não preenchidos')
+      console.log('❌ Detalhes dos campos:', {
+        nome: formData.nome,
+        codigo: formData.codigo,
+        tipo_produto: formData.tipo_produto,
+        quantidade_total: formData.quantidade_total,
+        unidade_produto: formData.unidade_produto,
+        modo_preparo: formData.modo_preparo
+      })
       toast({
         title: 'Erro',
         description: 'Por favor, preencha todos os campos obrigatórios.',
