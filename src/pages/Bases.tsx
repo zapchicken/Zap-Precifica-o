@@ -267,9 +267,17 @@ export default function Bases() {
         const baseCompleta = bases.find(b => b.id === baseId)
         console.log('🔍 Base encontrada:', baseCompleta)
         
-        if (baseCompleta && unidadesPorPeso.includes(baseCompleta.unidade_produto.toLowerCase())) {
-          console.log('🔍 Base com unidade de peso, adicionando:', insumo.quantidade)
-          return total + insumo.quantidade
+        if (baseCompleta) {
+          // Se a base tem tipo 'peso', usar a quantidade diretamente
+          if (baseCompleta.tipo_produto === 'peso' && unidadesPorPeso.includes(baseCompleta.unidade_produto.toLowerCase())) {
+            console.log('🔍 Base com tipo peso e unidade de peso, adicionando:', insumo.quantidade)
+            return total + insumo.quantidade
+          }
+          // Se a base tem tipo 'unidade', não adicionar (não é peso)
+          else if (baseCompleta.tipo_produto === 'unidade') {
+            console.log('🔍 Base com tipo unidade, não adicionando (não é peso)')
+            return total
+          }
         }
       } else {
         // É um insumo normal
