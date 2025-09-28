@@ -67,9 +67,10 @@ export const useBases = () => {
       if (basesError) throw basesError
 
       if (basesData && basesData.length > 0) {
-        // Para cada base, carregar os insumos
+        // Para cada base, carregar os insumos e bases
         const basesComInsumos = await Promise.all(
           basesData.map(async (base) => {
+            // Carregar insumos normais
             const { data: insumosData } = await supabase
               .from('bases_insumos')
               .select(`
@@ -86,20 +87,53 @@ export const useBases = () => {
               `)
               .eq('base_id', base.id)
 
+            // Carregar bases como insumos
+            const { data: basesData } = await supabase
+              .from('bases_bases')
+              .select(`
+                id,
+                base_insumo_id,
+                quantidade,
+                unidade,
+                custo_unitario,
+                bases!inner (
+                  nome,
+                  codigo,
+                  unidade_produto
+                )
+              `)
+              .eq('base_id', base.id)
+
             const insumos = insumosData?.map((item: any) => ({
               id: item.id,
               insumo_id: item.insumo_id,
               nome: item.insumos.nome,
               quantidade: item.quantidade,
-              unidade: item.insumos.unidade_medida, // ✅ CORREÇÃO: Usar unidade atual do insumo
+              unidade: item.insumos.unidade_medida,
               custo: item.custo,
               base_id: item.base_id,
-              created_at: item.created_at
+              created_at: item.created_at,
+              tipo: 'insumo'
             })) || []
+
+            const bases = basesData?.map((item: any) => ({
+              id: item.id,
+              base_insumo_id: item.base_insumo_id,
+              nome: item.bases.nome,
+              quantidade: item.quantidade,
+              unidade: item.bases.unidade_produto,
+              custo: item.custo_unitario,
+              base_id: item.base_id,
+              created_at: item.created_at,
+              tipo: 'base'
+            })) || []
+
+            // Combinar insumos e bases
+            const todosInsumos = [...insumos, ...bases]
 
             return {
               ...base,
-              insumos
+              insumos: todosInsumos
             }
           })
         )
