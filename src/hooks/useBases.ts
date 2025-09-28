@@ -189,6 +189,8 @@ export const useBases = () => {
 
           // Salvar bases como insumos
           if (basesReais.length > 0) {
+            console.log('🔍 Salvando bases como insumos:', basesReais)
+            
             const basesDataWithUserId = basesReais.map((base: any) => ({
               base_id: baseId,
               base_insumo_id: base.base_id,
@@ -198,11 +200,18 @@ export const useBases = () => {
               user_id: user.id
             }))
 
+            console.log('📊 Dados das bases para inserir:', basesDataWithUserId)
+
             const { error: basesError } = await supabase
               .from('bases_bases')
               .insert(basesDataWithUserId)
 
-            if (basesError) throw basesError
+            if (basesError) {
+              console.error('❌ Erro ao salvar bases como insumos:', basesError)
+              throw basesError
+            }
+            
+            console.log('✅ Bases salvas como insumos com sucesso')
           }
         }
 
@@ -253,30 +262,69 @@ export const useBases = () => {
 
       if (error) throw error
 
-      // Atualizar insumos
+      // Atualizar insumos e bases
       if (insumosData !== undefined) {
-        // Deletar insumos antigos
+        // Deletar insumos e bases antigas
         await supabase
           .from('bases_insumos')
           .delete()
           .eq('base_id', id)
 
+        await supabase
+          .from('bases_bases')
+          .delete()
+          .eq('base_id', id)
+
         // Inserir novos
         if (insumosData.length > 0) {
-          const insumosDataWithUserId = insumosData.map((insumo: any) => ({
-            base_id: id,
-            insumo_id: insumo.insumo_id,
-            quantidade: insumo.quantidade,
-            custo: insumo.custo_unitario, // ✅ CORRIGIDO: custo_unitario já é o custo total
-            unidade: insumo.unidade,
-            user_id: user.id
-          }))
+          // Separar insumos e bases
+          const insumosReais = insumosData.filter((item: any) => item.tipo === 'insumo')
+          const basesReais = insumosData.filter((item: any) => item.tipo === 'base')
 
-          const { error: insumosError } = await supabase
-            .from('bases_insumos')
-            .insert(insumosDataWithUserId)
+          // Salvar insumos normais
+          if (insumosReais.length > 0) {
+            const insumosDataWithUserId = insumosReais.map((insumo: any) => ({
+              base_id: id,
+              insumo_id: insumo.insumo_id,
+              quantidade: insumo.quantidade,
+              custo: insumo.custo_unitario,
+              unidade: insumo.unidade,
+              user_id: user.id
+            }))
 
-          if (insumosError) throw insumosError
+            const { error: insumosError } = await supabase
+              .from('bases_insumos')
+              .insert(insumosDataWithUserId)
+
+            if (insumosError) throw insumosError
+          }
+
+          // Salvar bases como insumos
+          if (basesReais.length > 0) {
+            console.log('🔍 Atualizando bases como insumos:', basesReais)
+            
+            const basesDataWithUserId = basesReais.map((base: any) => ({
+              base_id: id,
+              base_insumo_id: base.base_id,
+              quantidade: base.quantidade,
+              custo_unitario: base.custo_unitario,
+              unidade: base.unidade,
+              user_id: user.id
+            }))
+
+            console.log('📊 Dados das bases para inserir:', basesDataWithUserId)
+
+            const { error: basesError } = await supabase
+              .from('bases_bases')
+              .insert(basesDataWithUserId)
+
+            if (basesError) {
+              console.error('❌ Erro ao salvar bases como insumos:', basesError)
+              throw basesError
+            }
+            
+            console.log('✅ Bases salvas como insumos com sucesso')
+          }
         }
       }
 
