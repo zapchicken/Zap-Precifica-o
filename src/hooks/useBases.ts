@@ -125,6 +125,8 @@ export const useBases = () => {
 
   // Criar nova base
   const createBase = async (baseData: any, insumosData: any[] = []) => {
+    console.log('🚀 createBase chamada com:', { baseData, insumosData })
+    
     if (!user?.id) {
       throw new Error('Usuário não autenticado')
     }
@@ -165,9 +167,14 @@ export const useBases = () => {
 
         // Salvar insumos e bases
         if (insumosData && insumosData.length > 0) {
+          console.log('🔍 InsumosData recebidos:', insumosData)
+          
           // Separar insumos e bases
           const insumosReais = insumosData.filter((item: any) => item.tipo === 'insumo')
           const basesReais = insumosData.filter((item: any) => item.tipo === 'base')
+          
+          console.log('🔍 Insumos reais:', insumosReais)
+          console.log('🔍 Bases reais:', basesReais)
 
           // Salvar insumos normais
           if (insumosReais.length > 0) {

@@ -305,7 +305,12 @@ export default function Bases() {
 
 
   const handleSave = async () => {
+    console.log('🚀 handleSave iniciado')
+    console.log('🔍 FormData:', formData)
+    console.log('🔍 Insumos selecionados:', insumosSelecionados)
+    
     const custoTotalCalculado = calcularCustoTotal()
+    console.log('🔍 Custo total calculado:', custoTotalCalculado)
 
     if (
       !formData.nome ||
@@ -315,6 +320,7 @@ export default function Bases() {
       !formData.unidade_produto ||
       !formData.modo_preparo
     ) {
+      console.log('❌ Campos obrigatórios não preenchidos')
       toast({
         title: 'Erro',
         description: 'Por favor, preencha todos os campos obrigatórios.',
@@ -323,6 +329,7 @@ export default function Bases() {
       return
     }
 
+    console.log('✅ Validação passou, iniciando salvamento...')
 
     try {
       const baseData: Omit<BaseInsert, 'insumos'> = {
@@ -371,12 +378,16 @@ export default function Bases() {
       })
       
       console.log('📊 Dados finais dos insumos preparados:', insumosData)
+      console.log('🔍 Editando base?', !!editingBase)
+      console.log('🔍 Dados da base:', baseData)
 
       
       if (editingBase) {
+        console.log('🔍 Chamando updateBase...')
         await updateBase(editingBase.id, baseData, insumosData)
         toast({ title: 'Sucesso', description: 'Base atualizada com sucesso!' })
       } else {
+        console.log('🔍 Chamando createBase...')
         await createBase(baseData, insumosData)
         toast({ title: 'Sucesso', description: 'Base criada com sucesso!' })
       }
