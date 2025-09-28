@@ -190,28 +190,40 @@ export const useBases = () => {
           // Salvar bases como insumos
           if (basesReais.length > 0) {
             console.log('🔍 Salvando bases como insumos:', basesReais)
+            console.log('🔍 Base ID principal:', baseId)
+            console.log('🔍 User ID:', user.id)
             
-            const basesDataWithUserId = basesReais.map((base: any) => ({
-              base_id: baseId,
-              base_insumo_id: base.base_id,
-              quantidade: base.quantidade,
-              custo_unitario: base.custo_unitario,
-              unidade: base.unidade,
-              user_id: user.id
-            }))
+            const basesDataWithUserId = basesReais.map((base: any) => {
+              console.log('🔍 Processando base:', base)
+              return {
+                base_id: baseId,
+                base_insumo_id: base.base_id,
+                quantidade: base.quantidade,
+                custo_unitario: base.custo_unitario,
+                unidade: base.unidade,
+                user_id: user.id
+              }
+            })
 
             console.log('📊 Dados das bases para inserir:', basesDataWithUserId)
 
-            const { error: basesError } = await supabase
+            const { data: insertData, error: basesError } = await supabase
               .from('bases_bases')
               .insert(basesDataWithUserId)
+              .select()
 
             if (basesError) {
               console.error('❌ Erro ao salvar bases como insumos:', basesError)
+              console.error('❌ Detalhes do erro:', {
+                message: basesError.message,
+                details: basesError.details,
+                hint: basesError.hint,
+                code: basesError.code
+              })
               throw basesError
             }
             
-            console.log('✅ Bases salvas como insumos com sucesso')
+            console.log('✅ Bases salvas como insumos com sucesso:', insertData)
           }
         }
 

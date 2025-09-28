@@ -340,17 +340,23 @@ export default function Bases() {
       }
       
       const insumosData = insumosSelecionados.map(insumo => {
+        console.log('🔍 Processando insumo selecionado:', insumo)
+        
         // Verificar se é uma base
         if (String(insumo.id).startsWith('base-')) {
           const baseId = String(insumo.id).replace('base-', '')
           const baseCompleta = bases.find(b => b.id === baseId)
-          return {
+          console.log('🔍 Base encontrada:', baseCompleta)
+          
+          const result = {
             base_id: baseId, // Usar base_id para bases
             quantidade: insumo.quantidade,
             unidade: baseCompleta?.unidade_produto || '',
             custo_unitario: insumo.custo,
             tipo: 'base'
           }
+          console.log('🔍 Dados da base preparados:', result)
+          return result
         } else {
           // É um insumo normal
           const insumoCompleto = insumos.find(i => i.id === insumo.id)
@@ -363,6 +369,8 @@ export default function Bases() {
           }
         }
       })
+      
+      console.log('📊 Dados finais dos insumos preparados:', insumosData)
 
       
       if (editingBase) {
