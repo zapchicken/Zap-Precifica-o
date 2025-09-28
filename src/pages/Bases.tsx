@@ -116,6 +116,7 @@ export default function Bases() {
     quantidade: number
     unidade: string
     custo: number
+    tipo?: 'insumo' | 'base'
   }>>([])  
 
   const [editingBase, setEditingBase] = useState<BaseComInsumos | null>(null)
@@ -339,12 +340,27 @@ export default function Bases() {
       }
       
       const insumosData = insumosSelecionados.map(insumo => {
-        const insumoCompleto = insumos.find(i => i.id === insumo.id)
-        return {
-          insumo_id: insumo.id,
-          quantidade: insumo.quantidade,
-          unidade: insumoCompleto?.unidade_medida || '',
-          custo_unitario: insumo.custo
+        // Verificar se é uma base
+        if (String(insumo.id).startsWith('base-')) {
+          const baseId = String(insumo.id).replace('base-', '')
+          const baseCompleta = bases.find(b => b.id === baseId)
+          return {
+            base_id: baseId, // Usar base_id para bases
+            quantidade: insumo.quantidade,
+            unidade: baseCompleta?.unidade_produto || '',
+            custo_unitario: insumo.custo,
+            tipo: 'base'
+          }
+        } else {
+          // É um insumo normal
+          const insumoCompleto = insumos.find(i => i.id === insumo.id)
+          return {
+            insumo_id: insumo.id,
+            quantidade: insumo.quantidade,
+            unidade: insumoCompleto?.unidade_medida || '',
+            custo_unitario: insumo.custo,
+            tipo: 'insumo'
+          }
         }
       })
 
@@ -481,17 +497,40 @@ export default function Bases() {
   const handleInsumoChange = (index: number, field: string, value: any) => {
     const updated = [...insumosSelecionados]
     if (field === 'insumo_id') {
-      const insumo = insumos.find(i => i.id === value)
-      if (insumo) {
-        // Usar apenas o preço por unidade, sem fator de correção
-        const custoCalculado = insumo.preco_por_unidade
-        
-        updated[index] = {
-          ...updated[index],
-          id: insumo.id,
-          nome: insumo.nome,
-          custo: custoCalculado,
-          unidade: insumo.unidade_medida
+      // Verificar se é uma base (começa com "base-")
+      if (value.startsWith('base-')) {
+        const baseId = value.replace('base-', '')
+        const base = bases.find(b => b.id === baseId)
+        if (base) {
+          // Calcular custo por unidade da base
+          const custoPorUnidade = base.quantidade_total > 0 
+            ? base.custo_total_batelada / base.quantidade_total 
+            : 0
+          
+          updated[index] = {
+            ...updated[index],
+            id: value, // Manter o ID com prefixo "base-"
+            nome: base.nome,
+            custo: custoPorUnidade,
+            unidade: base.unidade_produto,
+            tipo: 'base' // Marcar como base
+          }
+        }
+      } else {
+        // É um insumo normal
+        const insumo = insumos.find(i => i.id === value)
+        if (insumo) {
+          // Usar apenas o preço por unidade, sem fator de correção
+          const custoCalculado = insumo.preco_por_unidade
+          
+          updated[index] = {
+            ...updated[index],
+            id: insumo.id,
+            nome: insumo.nome,
+            custo: custoCalculado,
+            unidade: insumo.unidade_medida,
+            tipo: 'insumo' // Marcar como insumo
+          }
         }
       }
     } else {
@@ -759,12 +798,21 @@ export default function Bases() {
                                 }}
                                 className="w-full border border-input rounded-md p-2 bg-background"
                               >
-                                <option value="">Selecione um insumo</option>
-                                {insumos.map(i => (
-                                  <option key={i.id} value={i.id}>
-                                    {i.nome} ({i.codigo_insumo})
-                                  </option>
-                                ))}
+                                <option value="">Selecione um insumo ou base</option>
+                                <optgroup label="Insumos">
+                                  {insumos.map(i => (
+                                    <option key={i.id} value={i.id}>
+                                      {i.nome} ({i.codigo_insumo})
+                                    </option>
+                                  ))}
+                                </optgroup>
+                                <optgroup label="Bases">
+                                  {bases.filter(b => b.ativo).map(b => (
+                                    <option key={`base-${b.id}`} value={`base-${b.id}`}>
+                                      {b.nome} ({b.codigo}) - Base
+                                    </option>
+                                  ))}
+                                </optgroup>
                               </select>
                             </TableCell>
                             <TableCell>
