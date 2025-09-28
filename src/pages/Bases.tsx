@@ -256,14 +256,36 @@ export default function Bases() {
   // Função para calcular quantidade produzida baseada nos insumos por peso
   const calcularQuantidadeProduzida = () => {
     const unidadesPorPeso = ['kg', 'litro', 'grama', 'ml', 'l', 'g']
+    console.log('🔍 Calculando quantidade produzida para insumos:', insumosSelecionados)
     
-    return insumosSelecionados.reduce((total, insumo) => {
-      const insumoCompleto = insumos.find(i => i.id === insumo.id)
-      if (insumoCompleto && unidadesPorPeso.includes(insumoCompleto.unidade_medida.toLowerCase())) {
-        return total + insumo.quantidade
+    const total = insumosSelecionados.reduce((total, insumo) => {
+      console.log('🔍 Processando insumo:', insumo)
+      
+      // Verificar se é uma base
+      if (String(insumo.id).startsWith('base-')) {
+        const baseId = String(insumo.id).replace('base-', '')
+        const baseCompleta = bases.find(b => b.id === baseId)
+        console.log('🔍 Base encontrada:', baseCompleta)
+        
+        if (baseCompleta && unidadesPorPeso.includes(baseCompleta.unidade_produto.toLowerCase())) {
+          console.log('🔍 Base com unidade de peso, adicionando:', insumo.quantidade)
+          return total + insumo.quantidade
+        }
+      } else {
+        // É um insumo normal
+        const insumoCompleto = insumos.find(i => i.id === insumo.id)
+        console.log('🔍 Insumo encontrado:', insumoCompleto)
+        
+        if (insumoCompleto && unidadesPorPeso.includes(insumoCompleto.unidade_medida.toLowerCase())) {
+          console.log('🔍 Insumo com unidade de peso, adicionando:', insumo.quantidade)
+          return total + insumo.quantidade
+        }
       }
       return total
     }, 0)
+    
+    console.log('🔍 Quantidade total calculada:', total)
+    return total
   }
 
 
