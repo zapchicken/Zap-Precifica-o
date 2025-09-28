@@ -346,11 +346,21 @@ export default function Bases() {
     const custoTotalCalculado = calcularCustoTotal()
     console.log('🔍 Custo total calculado:', custoTotalCalculado)
 
+    // Verificar se quantidade_total é válida (maior que 0)
+    if (formData.quantidade_total <= 0) {
+      console.log('❌ Quantidade total deve ser maior que 0')
+      toast({
+        title: 'Erro',
+        description: 'Por favor, preencha a quantidade produzida (deve ser maior que 0).',
+        variant: 'destructive'
+      })
+      return
+    }
+
     if (
       !formData.nome ||
       !formData.codigo ||
       !formData.tipo_produto ||
-      !formData.quantidade_total ||
       !formData.unidade_produto ||
       !formData.modo_preparo
     ) {
@@ -783,7 +793,7 @@ export default function Bases() {
                         setFormData(prev => ({ ...prev, quantidade_total: parseFloat(e.target.value) || 0 }))
                       }
                       placeholder={formData.tipo_produto === 'peso' ? '5.000' : '70.000'}
-                      disabled={formData.tipo_produto === 'peso'}
+                      disabled={false} // Sempre habilitado para permitir edição manual
                     />
                     <p className="text-xs text-muted-foreground">
                       {formData.tipo_produto === 'peso' 
