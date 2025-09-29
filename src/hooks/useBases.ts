@@ -88,7 +88,7 @@ export const useBases = () => {
               .eq('base_id', base.id)
 
             // Carregar bases como insumos
-            const { data: basesData } = await supabase
+            const { data: basesData, error: basesError } = await supabase
               .from('bases_bases')
               .select(`
                 id,
@@ -96,13 +96,17 @@ export const useBases = () => {
                 quantidade,
                 unidade,
                 custo_unitario,
-                bases!inner (
+                base_insumo:bases!bases_bases_base_insumo_id_fkey (
                   nome,
                   codigo,
                   unidade_produto
                 )
               `)
               .eq('base_id', base.id)
+
+            if (basesError) {
+              console.error('❌ Erro ao carregar bases como insumos:', basesError)
+            }
 
             const insumos = insumosData?.map((item: any) => ({
               id: item.id,
@@ -119,9 +123,9 @@ export const useBases = () => {
             const bases = basesData?.map((item: any) => ({
               id: item.id,
               base_insumo_id: item.base_insumo_id,
-              nome: item.bases.nome,
+              nome: item.base_insumo?.nome || 'Base não encontrada',
               quantidade: item.quantidade,
-              unidade: item.bases.unidade_produto,
+              unidade: item.base_insumo?.unidade_produto || item.unidade,
               custo: item.custo_unitario,
               base_id: item.base_id,
               created_at: item.created_at,

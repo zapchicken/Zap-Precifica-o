@@ -76,12 +76,15 @@ interface BaseComInsumos {
   tempo_preparo: number
   ativo: boolean
   data_ficha: string
+  foto?: string
   insumos: Array<{
+    id?: string
     nome: string
     codigo?: string
     quantidade: number
     unidade: string
     custo: number
+    tipo?: 'insumo' | 'base'
   }>
 }
 
@@ -256,43 +259,35 @@ export default function Bases() {
   // Função para calcular quantidade produzida baseada nos insumos por peso
   const calcularQuantidadeProduzida = () => {
     const unidadesPorPeso = ['kg', 'litro', 'grama', 'ml', 'l', 'g']
-    console.log('🔍 Calculando quantidade produzida para insumos:', insumosSelecionados)
     
     const total = insumosSelecionados.reduce((total, insumo) => {
-      console.log('🔍 Processando insumo:', insumo)
       
       // Verificar se é uma base
       if (String(insumo.id).startsWith('base-')) {
         const baseId = String(insumo.id).replace('base-', '')
         const baseCompleta = bases.find(b => b.id === baseId)
-        console.log('🔍 Base encontrada:', baseCompleta)
         
         if (baseCompleta) {
           // Se a base tem tipo 'peso', usar a quantidade diretamente
           if (baseCompleta.tipo_produto === 'peso' && unidadesPorPeso.includes(baseCompleta.unidade_produto.toLowerCase())) {
-            console.log('🔍 Base com tipo peso e unidade de peso, adicionando:', insumo.quantidade)
             return total + insumo.quantidade
           }
           // Se a base tem tipo 'unidade', não adicionar (não é peso)
           else if (baseCompleta.tipo_produto === 'unidade') {
-            console.log('🔍 Base com tipo unidade, não adicionando (não é peso)')
             return total
           }
         }
       } else {
         // É um insumo normal
         const insumoCompleto = insumos.find(i => i.id === insumo.id)
-        console.log('🔍 Insumo encontrado:', insumoCompleto)
         
         if (insumoCompleto && unidadesPorPeso.includes(insumoCompleto.unidade_medida.toLowerCase())) {
-          console.log('🔍 Insumo com unidade de peso, adicionando:', insumo.quantidade)
           return total + insumo.quantidade
         }
       }
       return total
     }, 0)
     
-    console.log('🔍 Quantidade total calculada:', total)
     return total
   }
 
@@ -324,27 +319,19 @@ export default function Bases() {
   useEffect(() => {
     if (formData.tipo_produto === 'peso') {
       const quantidadeCalculada = calcularQuantidadeProduzida()
-      console.log('🔍 useEffect - Quantidade calculada:', quantidadeCalculada)
       if (quantidadeCalculada > 0) {
-        console.log('🔍 useEffect - Atualizando quantidade_total para:', quantidadeCalculada)
         setFormData(prev => ({
           ...prev,
           quantidade_total: quantidadeCalculada
         }))
       } else {
-        console.log('🔍 useEffect - Quantidade calculada é 0, não atualizando')
       }
     }
   }, [insumosSelecionados, formData.tipo_produto, insumos])
 
 
   const handleSave = async () => {
-    console.log('🚀 handleSave iniciado')
-    console.log('🔍 FormData:', formData)
-    console.log('🔍 Insumos selecionados:', insumosSelecionados)
-    
     const custoTotalCalculado = calcularCustoTotal()
-    console.log('🔍 Custo total calculado:', custoTotalCalculado)
 
     if (
       !formData.nome ||
@@ -354,15 +341,6 @@ export default function Bases() {
       !formData.unidade_produto ||
       !formData.modo_preparo
     ) {
-      console.log('❌ Campos obrigatórios não preenchidos')
-      console.log('❌ Detalhes dos campos:', {
-        nome: formData.nome,
-        codigo: formData.codigo,
-        tipo_produto: formData.tipo_produto,
-        quantidade_total: formData.quantidade_total,
-        unidade_produto: formData.unidade_produto,
-        modo_preparo: formData.modo_preparo
-      })
       toast({
         title: 'Erro',
         description: 'Por favor, preencha todos os campos obrigatórios.',
@@ -371,7 +349,6 @@ export default function Bases() {
       return
     }
 
-    console.log('✅ Validação passou, iniciando salvamento...')
 
     try {
       const baseData: Omit<BaseInsert, 'insumos'> = {
@@ -389,13 +366,11 @@ export default function Bases() {
       }
       
       const insumosData = insumosSelecionados.map(insumo => {
-        console.log('🔍 Processando insumo selecionado:', insumo)
         
         // Verificar se é uma base
         if (String(insumo.id).startsWith('base-')) {
           const baseId = String(insumo.id).replace('base-', '')
           const baseCompleta = bases.find(b => b.id === baseId)
-          console.log('🔍 Base encontrada:', baseCompleta)
           
           const result = {
             base_id: baseId, // Usar base_id para bases
@@ -404,7 +379,6 @@ export default function Bases() {
             custo_unitario: insumo.custo,
             tipo: 'base'
           }
-          console.log('🔍 Dados da base preparados:', result)
           return result
         } else {
           // É um insumo normal
@@ -419,17 +393,12 @@ export default function Bases() {
         }
       })
       
-      console.log('📊 Dados finais dos insumos preparados:', insumosData)
-      console.log('🔍 Editando base?', !!editingBase)
-      console.log('🔍 Dados da base:', baseData)
 
       
       if (editingBase) {
-        console.log('🔍 Chamando updateBase...')
         await updateBase(editingBase.id, baseData, insumosData)
         toast({ title: 'Sucesso', description: 'Base atualizada com sucesso!' })
       } else {
-        console.log('🔍 Chamando createBase...')
         await createBase(baseData, insumosData)
         toast({ title: 'Sucesso', description: 'Base criada com sucesso!' })
       }
@@ -455,14 +424,39 @@ export default function Bases() {
     
     // Primeiro, carregar os insumos
     const insumosCarregados = base.insumos.map(insumo => {
-      const insumoCompleto = insumos.find(i => i.nome === insumo.nome)
-      return {
-        id: insumoCompleto?.id || 0,
-        nome: insumo.nome,
-        quantidade: insumo.quantidade,
-        unidade: insumo.unidade,
-        // Converter custo total para custo unitário para o formulário
-        custo: insumo.quantidade > 0 ? insumo.custo / insumo.quantidade : 0
+      // Verificar se é uma base ou insumo
+      if (insumo.tipo === 'base') {
+        // É uma base, buscar na lista de bases
+        const baseEncontrada = bases.find(b => b.nome === insumo.nome)
+        
+        return {
+          id: baseEncontrada ? `base-${baseEncontrada.id}` : insumo.id || 0,
+          nome: insumo.nome,
+          quantidade: insumo.quantidade,
+          unidade: insumo.unidade,
+          // Converter custo total para custo unitário para o formulário
+          custo: insumo.quantidade > 0 ? insumo.custo / insumo.quantidade : 0,
+          tipo: 'base' as 'base' | 'insumo'
+        }
+      } else {
+        // É um insumo normal, buscar na lista de insumos
+        const insumoCompleto = insumos.find(i => i.nome === insumo.nome)
+        
+        // Se não encontrou pelo nome, tentar pelo ID se disponível
+        let insumoEncontrado = insumoCompleto
+        if (!insumoEncontrado && insumo.id) {
+          insumoEncontrado = insumos.find(i => i.id === insumo.id)
+        }
+        
+        return {
+          id: insumoEncontrado?.id || insumo.id || 0,
+          nome: insumo.nome,
+          quantidade: insumo.quantidade,
+          unidade: insumo.unidade,
+          // Converter custo total para custo unitário para o formulário
+          custo: insumo.quantidade > 0 ? insumo.custo / insumo.quantidade : 0,
+          tipo: 'insumo' as 'base' | 'insumo'
+        }
       }
     })
     
@@ -485,7 +479,7 @@ export default function Bases() {
       tempo_preparo: base.tempo_preparo,
       ativo: base.ativo,
       custo_total_batelada: custoTotalCalculado, // Usar o custo calculado, não o salvo
-      foto: ''
+      foto: base.foto || ''
     })
     
     // Definir insumos depois para evitar conflito com useEffect
@@ -1253,14 +1247,14 @@ export default function Bases() {
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Tipo de Produto</Label>
-                <p className="text-base">
+                <div className="text-base">
                   <Badge
                     variant={viewingBase.tipo_produto === 'peso' ? 'default' : 'secondary'}
                     className={viewingBase.tipo_produto === 'peso' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
                   >
                     {viewingBase.tipo_produto === 'peso' ? 'Por Peso' : 'Por Unidade'}
                   </Badge>
-                </p>
+                </div>
               </div>
               <div>
                 <Label className="text-sm font-medium text-muted-foreground">Quantidade Produzida</Label>
