@@ -575,8 +575,8 @@ export default function Bases() {
         // É um insumo normal
         const insumo = insumos.find(i => i.id === value)
         if (insumo) {
-          // Usar apenas o preço por unidade, sem fator de correção
-          const custoCalculado = insumo.preco_por_unidade
+          // Aplicar fator de correção ao preço por unidade
+          const custoCalculado = insumo.preco_por_unidade * insumo.fator_correcao
           
           updated[index] = {
             ...updated[index],
