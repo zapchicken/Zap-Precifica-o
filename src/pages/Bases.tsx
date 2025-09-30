@@ -462,7 +462,7 @@ export default function Bases() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {base.quantidade_total} {base.unidade_produto}
+                        {base.quantidade_total.toFixed(3)} {base.unidade_produto}
                       </TableCell>
                       <TableCell>
                         R$ {base.custo_total_batelada.toFixed(2)}
@@ -583,7 +583,7 @@ export default function Bases() {
                     id="quantidade_total"
                     type="number"
                     step="0.001"
-                    value={calcularQuantidadeTotal()}
+                    value={calcularQuantidadeTotal().toFixed(3)}
                     disabled
                     placeholder="Calculado automaticamente"
                     className="bg-muted"
@@ -658,7 +658,7 @@ export default function Bases() {
                     id="custo_batelada"
                     type="number"
                     step="0.01"
-                    value={calcularCustoTotal()}
+                    value={calcularCustoTotal().toFixed(2)}
                     disabled
                     placeholder="Calculado automaticamente"
                     className="bg-muted"
@@ -730,10 +730,9 @@ export default function Bases() {
                 {insumos.length > 0 && (
                   <div className="border rounded-lg overflow-hidden">
                     {/* Cabeçalho da Tabela */}
-                    <div className="grid grid-cols-7 gap-4 p-3 bg-muted border-b">
-                      <div className="text-sm font-medium">Tipo</div>
+                    <div className="grid grid-cols-6 gap-4 p-3 bg-muted border-b">
                       <div className="text-sm font-medium">Código</div>
-                      <div className="text-sm font-medium">Nome</div>
+                      <div className="text-sm font-medium col-span-2">Nome</div>
                       <div className="text-sm font-medium">Qtd.</div>
                       <div className="text-sm font-medium">Unidade</div>
                       <div className="text-sm font-medium">Custo (R$)</div>
@@ -743,18 +742,7 @@ export default function Bases() {
 
                     {/* Insumos Selecionados */}
                     {insumosSelecionados.map((insumo, index) => (
-                      <div key={`insumo-${index}`} className="grid grid-cols-7 gap-4 p-3 border-b">
-                        <div>
-                          <Input
-                            value={insumo.tipo}
-                            onChange={(e) => {
-                              const novosInsumos = [...insumosSelecionados]
-                              novosInsumos[index].tipo = e.target.value as 'insumo'
-                              setInsumosSelecionados(novosInsumos)
-                            }}
-                            className="text-sm"
-                          />
-                        </div>
+                      <div key={`insumo-${index}`} className="grid grid-cols-6 gap-4 p-3 border-b">
                         <div>
                           <Input
                             value={insumo.insumo_id ? insumos.find(i => i.id.toString() === insumo.insumo_id)?.codigo_insumo || '---' : ''}
@@ -766,7 +754,7 @@ export default function Bases() {
                             disabled
                           />
                         </div>
-                        <div>
+                        <div className="col-span-2">
                           <InsumoCombobox
                             items={insumos.map(item => ({
                               ...item,
@@ -923,7 +911,7 @@ export default function Bases() {
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Quantidade</Label>
-                    <p className="text-sm">{viewingBase.quantidade_total} {viewingBase.unidade_produto}</p>
+                    <p className="text-sm">{viewingBase.quantidade_total.toFixed(3)} {viewingBase.unidade_produto}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Custo Total</Label>
