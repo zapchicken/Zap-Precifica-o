@@ -82,6 +82,7 @@ interface BaseComInsumos {
   foto?: string
   insumos: Array<{
     id?: string
+    insumo_id: string
     nome: string
     codigo?: string
     quantidade: number
@@ -219,7 +220,7 @@ export default function Bases() {
     
     // Carregar insumos selecionados
     const insumosCarregados = base.insumos.map(insumo => ({
-      insumo_id: insumo.id || '',
+      insumo_id: insumo.insumo_id || '',
       nome: insumo.nome,
       quantidade: insumo.quantidade,
       unidade: insumo.unidade,
@@ -934,12 +935,19 @@ export default function Bases() {
                   <div>
                     <Label className="text-sm font-medium">Insumos</Label>
                     <div className="space-y-2 mt-2">
-                      {viewingBase.insumos.map((insumo, index) => (
-                        <div key={index} className="flex justify-between items-center p-2 border rounded">
-                          <span>{insumo.nome}</span>
-                          <span>{insumo.quantidade} {insumo.unidade} × R$ {insumo.custo.toFixed(2)}</span>
-                        </div>
-                      ))}
+                      {viewingBase.insumos.map((insumo, index) => {
+                        const insumoCompleto = insumos.find(i => i.id === insumo.insumo_id)
+                        const codigo = insumoCompleto?.codigo_insumo || '---'
+                        return (
+                          <div key={index} className="flex justify-between items-center p-2 border rounded">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{insumo.nome}</span>
+                              <span className="text-xs text-muted-foreground">Código: {codigo}</span>
+                            </div>
+                            <span className="font-medium">{insumo.quantidade.toFixed(3)} {insumo.unidade} × R$ {insumo.custo.toFixed(2)}</span>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
