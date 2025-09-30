@@ -41,6 +41,8 @@ import { DiagnosticoSupabase } from '../components/DiagnosticoSupabase'
 import { DiagnosticoSimples } from '../components/DiagnosticoSimples'
 import { TesteSimples } from '../components/TesteSimples'
 import { DebugInfo } from '../components/DebugInfo'
+import { TesteHooks } from '../components/TesteHooks'
+import { EstadoProdutos } from '../components/EstadoProdutos'
 
 
 export default function Produtos() {
@@ -661,6 +663,8 @@ export default function Produtos() {
           <div className="space-y-4">
             <DebugInfo />
             <TesteSimples />
+            <EstadoProdutos />
+            <TesteHooks />
             <DiagnosticoSimples />
             <DiagnosticoSupabase />
           </div>
