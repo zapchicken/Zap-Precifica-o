@@ -153,9 +153,17 @@ export default function Bases() {
     setEditingBase(null)
   }
 
+  // Gerar código automático
+  const gerarCodigoAutomatico = () => {
+    const timestamp = Date.now().toString().slice(-6) // Últimos 6 dígitos do timestamp
+    const codigo = `BAS${timestamp}`
+    setFormData(prev => ({ ...prev, codigo }))
+  }
+
   // Abrir diálogo para criar nova base
   const handleCreateNew = () => {
     resetForm()
+    gerarCodigoAutomatico() // Gerar código automaticamente
     setIsDialogOpen(true)
   }
 
@@ -414,12 +422,22 @@ export default function Bases() {
                 </div>
                 <div>
                   <Label htmlFor="codigo">Código *</Label>
-                  <Input
-                    id="codigo"
-                    value={formData.codigo}
-                    onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value }))}
-                    placeholder="Código da base"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="codigo"
+                      value={formData.codigo}
+                      onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value }))}
+                      placeholder="Código da base"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={gerarCodigoAutomatico}
+                      className="whitespace-nowrap"
+                    >
+                      Gerar
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -486,6 +504,42 @@ export default function Bases() {
                 </div>
               </div>
 
+              {/* Custos */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="custo_unitario">Custo Unitário (R$)</Label>
+                  <Input
+                    id="custo_unitario"
+                    type="number"
+                    step="0.01"
+                    value={formData.quantidade_total > 0 ? (formData.custo_total_batelada / formData.quantidade_total).toFixed(2) : '0.00'}
+                    onChange={(e) => {
+                      const custoUnitario = parseFloat(e.target.value) || 0
+                      const custoBatelada = custoUnitario * formData.quantidade_total
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        custo_total_batelada: custoBatelada 
+                      }))
+                    }}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="custo_batelada">Custo da Batelada (R$)</Label>
+                  <Input
+                    id="custo_batelada"
+                    type="number"
+                    step="0.01"
+                    value={formData.custo_total_batelada}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      custo_total_batelada: parseFloat(e.target.value) || 0 
+                    }))}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
               <div>
                 <Label htmlFor="modo_preparo">Modo de Preparo</Label>
                 <Textarea
@@ -510,7 +564,31 @@ export default function Bases() {
 
               {/* Insumos Selecionados */}
               <div>
-                <Label>Insumos Selecionados</Label>
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Insumos Selecionados</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Aqui você pode abrir um modal para selecionar insumos
+                      // Por enquanto, vou adicionar um insumo de exemplo
+                      const novoInsumo = {
+                        insumo_id: Date.now(),
+                        nome: 'Insumo Exemplo',
+                        quantidade: 1,
+                        unidade: 'kg',
+                        custo: 10.00,
+                        tipo: 'insumo' as const
+                      }
+                      handleAddInsumo(novoInsumo)
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Adicionar Insumo
+                  </Button>
+                </div>
                 <div className="space-y-2 mt-2">
                   {insumosSelecionados.map((insumo, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
