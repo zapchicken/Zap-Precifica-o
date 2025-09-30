@@ -123,7 +123,7 @@ export const useInsumos = () => {
           .select('id, codigo_insumo')
           .eq('codigo_insumo', updates.codigo_insumo)
           .eq('user_id', user.id)
-          .neq('id', id) // Excluir o próprio insumo da verificação
+          .not('id', 'eq', id) // Excluir o próprio insumo da verificação
           .single()
 
         if (checkError && checkError.code !== 'PGRST116') {

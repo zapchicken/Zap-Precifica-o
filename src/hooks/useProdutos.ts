@@ -102,7 +102,7 @@ export const useProdutos = () => {
           .select('id, codigo_pdv')
           .eq('codigo_pdv', updates.codigo_pdv)
           .eq('user_id', user.id)
-          .neq('id', id) // Excluir o próprio produto da verificação
+          .not('id', 'eq', id) // Excluir o próprio produto da verificação
           .single()
 
         if (checkError && checkError.code !== 'PGRST116') {

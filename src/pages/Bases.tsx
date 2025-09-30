@@ -84,12 +84,12 @@ interface BaseComInsumos {
     quantidade: number
     unidade: string
     custo: number
-    tipo?: 'insumo' | 'base'
+    tipo?: 'insumo'
   }>
 }
 
 export default function Bases() {
-  const { bases, loading, createBase, updateBase, deleteBase, desativarBase, reativarBase, verificarDependenciasBase, gerarProximoCodigo } = useBases()
+  const { bases, loading, createBase, updateBase, deleteBase } = useBases()
   const { insumos } = useInsumos()
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -98,107 +98,42 @@ export default function Bases() {
   const { toast } = useToast()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const [formData, setFormData] = useState({
+  // Estados do formulário
+  const [formData, setFormData] = useState<BaseInsert>({
     nome: '',
     codigo: '',
-    tipo_produto: 'peso' as 'peso' | 'unidade',
+    tipo_produto: 'peso',
     quantidade_total: 0,
     unidade_produto: 'kg',
     rendimento: '',
+    custo_total_batelada: 0,
     modo_preparo: '',
     observacoes: '',
     tempo_preparo: 0,
     ativo: true,
-    custo_total_batelada: 0,
-    foto: ''
+    insumos: []
   })
 
   const [insumosSelecionados, setInsumosSelecionados] = useState<Array<{
-    id: string | number
+    insumo_id: number
     nome: string
     quantidade: number
     unidade: string
     custo: number
-    tipo?: 'insumo' | 'base'
-  }>>([])  
+    tipo: 'insumo'
+  }>>([])
 
   const [editingBase, setEditingBase] = useState<BaseComInsumos | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [baseParaExcluir, setBaseParaExcluir] = useState<BaseComInsumos | null>(null)
-  const [dependenciasBase, setDependenciasBase] = useState<{temDependencias: boolean, fichas: string[], insumos: string[]} | null>(null)
+  const [deleteBaseId, setDeleteBaseId] = useState<string | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  // Função de upload de imagem
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files && files[0]) {
-      const file = files[0]
-      
-      if (file.type.startsWith('image/')) {
-        try {
-          // Mostrar loading
-          toast({
-            title: "Upload em andamento...",
-            description: `Enviando ${file.name}...`,
-          })
+  // Filtrar bases
+  const filteredBases = bases.filter(base =>
+    base.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    base.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
-          // Fazer upload para Supabase Storage
-          const result = await uploadAndCompressImage(file, 'bases')
-          
-          if (result.success && result.url) {
-            // Adicionar URL da imagem ao formData
-            setFormData(prev => ({ 
-              ...prev, 
-              foto: result.url! 
-            }))
-            
-            toast({
-              title: "Sucesso!",
-              description: `Imagem ${file.name} enviada com sucesso!`,
-            })
-          } else {
-            toast({
-              title: "Erro no upload",
-              description: result.error || "Erro desconhecido",
-              variant: "destructive"
-            })
-          }
-        } catch (error: any) {
-          toast({
-            title: "Erro no upload",
-            description: `Erro ao enviar ${file.name}: ${error.message}`,
-            variant: "destructive"
-          })
-        }
-      } else {
-        toast({
-          title: "Arquivo inválido",
-          description: `${file.name} não é uma imagem válida`,
-          variant: "destructive"
-        })
-      }
-      
-      // Limpar input
-      event.target.value = ''
-    }
-  }
-
-  // Função para remover foto
-  const removePhoto = async () => {
-    if (formData.foto && formData.foto.startsWith('http')) {
-      try {
-        const result = await deleteImageFromStorage(formData.foto)
-        if (!result.success) {
-          // Erro ao remover imagem do Storage
-        }
-      } catch (error) {
-        // Erro ao remover imagem do Storage
-      }
-    }
-    
-    setFormData(prev => ({ ...prev, foto: '' }))
-  }
-
-  // Funções do formulário
+  // Resetar formulário
   const resetForm = () => {
     setFormData({
       nome: '',
@@ -207,266 +142,26 @@ export default function Bases() {
       quantidade_total: 0,
       unidade_produto: 'kg',
       rendimento: '',
+      custo_total_batelada: 0,
       modo_preparo: '',
       observacoes: '',
       tempo_preparo: 0,
       ativo: true,
-      custo_total_batelada: 0,
-      foto: ''
+      insumos: []
     })
     setInsumosSelecionados([])
     setEditingBase(null)
   }
 
-  const formatarCodigo = (value: string): string => {
-    const numeros = value.replace(/\D/g, '').slice(0, 3)
-    return numeros ? `BAS${numeros}` : ''
+  // Abrir diálogo para criar nova base
+  const handleCreateNew = () => {
+    resetForm()
+    setIsDialogOpen(true)
   }
 
-  const gerarCodigoAutomatico = () => {
-    try {
-      const novoCodigo = gerarProximoCodigo()
-      setFormData(prev => ({ ...prev, codigo: novoCodigo }))
-      toast({
-        title: 'Código gerado',
-        description: `Código ${novoCodigo} foi gerado automaticamente.`
-      })
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível gerar o código automaticamente.',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const calcularCustoTotal = () => {
-    const custoTotal = insumosSelecionados.reduce((acc, insumo) => {
-      const custoItem = insumo.quantidade * insumo.custo
-      return acc + custoItem
-    }, 0)
-    return custoTotal
-  }
-
-  const calcularCustoPorUnidade = () => {
-    const custoTotal = calcularCustoTotal()
-    if (formData.quantidade_total > 0) {
-      return custoTotal / formData.quantidade_total
-    }
-    return 0
-  }
-
-  // Função para calcular quantidade produzida baseada nos insumos por peso
-  const calcularQuantidadeProduzida = () => {
-    const unidadesPorPeso = ['kg', 'litro', 'grama', 'ml', 'l', 'g']
-    
-    const total = insumosSelecionados.reduce((total, insumo) => {
-      
-      // Verificar se é uma base
-      if (String(insumo.id).startsWith('base-')) {
-        const baseId = String(insumo.id).replace('base-', '')
-        const baseCompleta = bases.find(b => b.id === baseId)
-        
-        if (baseCompleta) {
-          // Se a base tem tipo 'peso', usar a quantidade diretamente
-          if (baseCompleta.tipo_produto === 'peso' && unidadesPorPeso.includes(baseCompleta.unidade_produto.toLowerCase())) {
-            return total + insumo.quantidade
-          }
-          // Se a base tem tipo 'unidade', não adicionar (não é peso)
-          else if (baseCompleta.tipo_produto === 'unidade') {
-            return total
-          }
-        }
-      } else {
-        // É um insumo normal
-        const insumoCompleto = insumos.find(i => i.id === insumo.id)
-        
-        if (insumoCompleto && unidadesPorPeso.includes(insumoCompleto.unidade_medida.toLowerCase())) {
-          return total + insumo.quantidade
-        }
-      }
-      return total
-    }, 0)
-    
-    return total
-  }
-
-
-  // Atualizar automaticamente o custo total da batelada baseado nos insumos
-  useEffect(() => {
-    if (insumosSelecionados.length > 0 && !editingBase) {
-      // Só atualiza automaticamente se não estiver editando uma base existente
-      const custoCalculado = calcularCustoTotal()
-      setFormData(prev => ({
-        ...prev,
-        custo_total_batelada: custoCalculado
-      }))
-    }
-  }, [insumosSelecionados, editingBase])
-
-  // Recalcular custo quando estiver editando e os insumos mudarem
-  useEffect(() => {
-    if (editingBase && insumosSelecionados.length > 0) {
-      const custoCalculado = calcularCustoTotal()
-      setFormData(prev => ({
-        ...prev,
-        custo_total_batelada: custoCalculado
-      }))
-    }
-  }, [insumosSelecionados, editingBase])
-
-  // Atualizar automaticamente a quantidade produzida quando for tipo 'peso'
-  useEffect(() => {
-    if (formData.tipo_produto === 'peso') {
-      const quantidadeCalculada = calcularQuantidadeProduzida()
-      if (quantidadeCalculada > 0) {
-        setFormData(prev => ({
-          ...prev,
-          quantidade_total: quantidadeCalculada
-        }))
-      } else {
-      }
-    }
-  }, [insumosSelecionados, formData.tipo_produto, insumos])
-
-
-  const handleSave = async () => {
-    const custoTotalCalculado = calcularCustoTotal()
-
-    if (
-      !formData.nome ||
-      !formData.codigo ||
-      !formData.tipo_produto ||
-      !formData.quantidade_total ||
-      !formData.unidade_produto ||
-      !formData.modo_preparo
-    ) {
-      toast({
-        title: 'Erro',
-        description: 'Por favor, preencha todos os campos obrigatórios.',
-        variant: 'destructive'
-      })
-      return
-    }
-
-
-    try {
-      const baseData: Omit<BaseInsert, 'insumos'> = {
-        nome: formData.nome,
-        codigo: formData.codigo,
-        tipo_produto: formData.tipo_produto,
-        quantidade_total: formData.quantidade_total,
-        unidade_produto: formData.unidade_produto,
-        rendimento: formData.rendimento,
-        custo_total_batelada: custoTotalCalculado,
-        modo_preparo: formData.modo_preparo,
-        observacoes: formData.observacoes,
-        tempo_preparo: formData.tempo_preparo || 0,
-        ativo: formData.ativo
-      }
-      
-      const insumosData = insumosSelecionados.map(insumo => {
-        
-        // Verificar se é uma base
-        if (String(insumo.id).startsWith('base-')) {
-          const baseId = String(insumo.id).replace('base-', '')
-          const baseCompleta = bases.find(b => b.id === baseId)
-          
-          const result = {
-            base_id: baseId, // Usar base_id para bases
-            quantidade: insumo.quantidade,
-            unidade: baseCompleta?.unidade_produto || '',
-            custo_unitario: insumo.custo,
-            tipo: 'base'
-          }
-          return result
-        } else {
-          // É um insumo normal
-          const insumoCompleto = insumos.find(i => i.id === insumo.id)
-          return {
-            insumo_id: insumo.id,
-            quantidade: insumo.quantidade,
-            unidade: insumoCompleto?.unidade_medida || '',
-            custo_unitario: insumo.custo,
-            tipo: 'insumo'
-          }
-        }
-      })
-      
-
-      
-      if (editingBase) {
-        await updateBase(editingBase.id, baseData, insumosData)
-        toast({ title: 'Sucesso', description: 'Base atualizada com sucesso!' })
-      } else {
-        await createBase(baseData, insumosData)
-        toast({ title: 'Sucesso', description: 'Base criada com sucesso!' })
-      }
-      
-      resetForm()
-      setIsDialogOpen(false)
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao salvar base. Tente novamente.',
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const handleView = (base: BaseComInsumos) => {
-    setViewingBase(base)
-    setIsViewDialogOpen(true)
-  }
-
+  // Abrir diálogo para editar base
   const handleEdit = (base: BaseComInsumos) => {
     setEditingBase(base)
-    
-    // Primeiro, carregar os insumos
-    const insumosCarregados = base.insumos.map(insumo => {
-      // Verificar se é uma base ou insumo
-      if (insumo.tipo === 'base') {
-        // É uma base, buscar na lista de bases
-        const baseEncontrada = bases.find(b => b.nome === insumo.nome)
-        
-        return {
-          id: baseEncontrada ? `base-${baseEncontrada.id}` : insumo.id || 0,
-          nome: insumo.nome,
-          quantidade: insumo.quantidade,
-          unidade: insumo.unidade,
-          // Converter custo total para custo unitário para o formulário
-          custo: insumo.quantidade > 0 ? insumo.custo / insumo.quantidade : 0,
-          tipo: 'base' as 'base' | 'insumo'
-        }
-      } else {
-        // É um insumo normal, buscar na lista de insumos
-        const insumoCompleto = insumos.find(i => i.nome === insumo.nome)
-        
-        // Se não encontrou pelo nome, tentar pelo ID se disponível
-        let insumoEncontrado = insumoCompleto
-        if (!insumoEncontrado && insumo.id) {
-          insumoEncontrado = insumos.find(i => i.id === insumo.id)
-        }
-        
-        return {
-          id: insumoEncontrado?.id || insumo.id || 0,
-          nome: insumo.nome,
-          quantidade: insumo.quantidade,
-          unidade: insumo.unidade,
-          // Converter custo total para custo unitário para o formulário
-          custo: insumo.quantidade > 0 ? insumo.custo / insumo.quantidade : 0,
-          tipo: 'insumo' as 'base' | 'insumo'
-        }
-      }
-    })
-    
-    // Calcular o custo total baseado nos insumos carregados
-    const custoTotalCalculado = insumosCarregados.reduce((acc, insumo) => {
-      // Agora insumo.custo é custo unitário, então multiplicamos pela quantidade
-      return acc + (insumo.quantidade * insumo.custo)
-    }, 0)
-    
-    // Definir formData primeiro
     setFormData({
       nome: base.nome,
       codigo: base.codigo,
@@ -474,607 +169,213 @@ export default function Bases() {
       quantidade_total: base.quantidade_total,
       unidade_produto: base.unidade_produto,
       rendimento: base.rendimento,
+      custo_total_batelada: base.custo_total_batelada,
       modo_preparo: base.modo_preparo,
       observacoes: base.observacoes || '',
       tempo_preparo: base.tempo_preparo,
       ativo: base.ativo,
-      custo_total_batelada: custoTotalCalculado, // Usar o custo calculado, não o salvo
-      foto: base.foto || ''
+      insumos: []
     })
     
-    // Definir insumos depois para evitar conflito com useEffect
-    setInsumosSelecionados(insumosCarregados)
+    // Carregar insumos selecionados
+    const insumosCarregados = base.insumos.map(insumo => ({
+      insumo_id: parseInt(insumo.id || '0'),
+      nome: insumo.nome,
+      quantidade: insumo.quantidade,
+      unidade: insumo.unidade,
+      custo: insumo.custo,
+      tipo: 'insumo' as const
+    }))
     
+    setInsumosSelecionados(insumosCarregados)
     setIsDialogOpen(true)
   }
 
-  const handleDelete = async (baseId: string) => {
-    try {
-      const dependencias = await verificarDependenciasBase(baseId)
-      setDependenciasBase(dependencias)
-      setBaseParaExcluir(bases.find(b => b.id === baseId) || null)
-      setIsDeleteModalOpen(true)
-    } catch (error) {
-      // Erro ao verificar dependências
-    }
-  }
-
-  const confirmarExclusao = async () => {
-    if (!baseParaExcluir) return
+  // Adicionar insumo
+  const handleAddInsumo = (insumo: any) => {
+    const custoCalculado = insumo.quantidade * insumo.custo * (insumo.fator_correcao || 1)
     
-    try {
-      // Se há dependências, não permitir exclusão física
-      if (dependenciasBase?.temDependencias) {
-        toast({
-          title: "Erro",
-          description: "Não é possível excluir uma base que possui dependências. Use a opção 'Desativar'.",
-          variant: "destructive"
-        })
-        return
-      }
-      
-      await deleteBase(baseParaExcluir.id)
-      setIsDeleteModalOpen(false)
-      setBaseParaExcluir(null)
-      setDependenciasBase(null)
-    } catch (error) {
-      // Erro ao excluir base
-    }
-  }
-
-  const confirmarDesativacao = async () => {
-    if (!baseParaExcluir) return
-    
-    try {
-      await desativarBase(baseParaExcluir.id)
-      setIsDeleteModalOpen(false)
-      setBaseParaExcluir(null)
-      setDependenciasBase(null)
-    } catch (error) {
-      // Erro ao desativar base
-    }
-  }
-
-  const handleAddInsumo = () => {
-    setInsumosSelecionados(prev => [...prev, { 
-      id: '',
-      nome: '', 
-      quantidade: 1, 
-      unidade: '',
-      custo: 0 
+    setInsumosSelecionados(prev => [...prev, {
+      insumo_id: insumo.id,
+      nome: insumo.nome,
+      quantidade: insumo.quantidade,
+      unidade: insumo.unidade,
+      custo: custoCalculado,
+      tipo: 'insumo'
     }])
   }
 
+  // Remover insumo
   const handleRemoveInsumo = (index: number) => {
     setInsumosSelecionados(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handleInsumoChange = (index: number, field: string, value: any) => {
-    const updated = [...insumosSelecionados]
-    if (field === 'insumo_id') {
-      // Verificar se é uma base (começa com "base-")
-      if (value.startsWith('base-')) {
-        const baseId = value.replace('base-', '')
-        const base = bases.find(b => b.id === baseId)
-        if (base) {
-          // Calcular custo por unidade da base
-          const custoPorUnidade = base.quantidade_total > 0 
-            ? base.custo_total_batelada / base.quantidade_total 
-            : 0
-          
-          updated[index] = {
-            ...updated[index],
-            id: value, // Manter o ID com prefixo "base-"
-            nome: base.nome,
-            custo: custoPorUnidade,
-            unidade: base.unidade_produto,
-            tipo: 'base' // Marcar como base
-          }
-        }
-      } else {
-        // É um insumo normal
-        const insumo = insumos.find(i => i.id === value)
-        if (insumo) {
-          // Aplicar fator de correção ao preço por unidade
-          const custoCalculado = insumo.preco_por_unidade * insumo.fator_correcao
-          
-          updated[index] = {
-            ...updated[index],
-            id: insumo.id,
-            nome: insumo.nome,
-            custo: custoCalculado,
-            unidade: insumo.unidade_medida,
-            tipo: 'insumo' // Marcar como insumo
-          }
-        }
-      }
-    } else {
-      updated[index] = { ...updated[index], [field]: value }
-    }
-    setInsumosSelecionados(updated)
+  // Calcular custo total
+  const calcularCustoTotal = () => {
+    return insumosSelecionados.reduce((total, insumo) => total + (insumo.quantidade * insumo.custo), 0)
   }
 
-  const filteredBases = bases.filter(base => {
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      base.nome.toLowerCase().includes(searchLower) ||
-      base.codigo.toLowerCase().includes(searchLower) ||
-      base.tipo_produto.toLowerCase().includes(searchLower) ||
-      base.unidade_produto.toLowerCase().includes(searchLower) ||
-      (base.rendimento && base.rendimento.toLowerCase().includes(searchLower)) ||
-      (base.observacoes && base.observacoes.toLowerCase().includes(searchLower))
-    )
-  })
+  // Salvar base
+  const handleSave = async () => {
+    try {
+      const insumosData = insumosSelecionados.map(insumo => ({
+        insumo_id: insumo.insumo_id,
+        quantidade: insumo.quantidade,
+        unidade: insumo.unidade,
+        custo: insumo.custo
+      }))
 
-  // Renderização
+      const baseData = {
+        nome: formData.nome,
+        codigo: formData.codigo,
+        tipo_produto: formData.tipo_produto,
+        quantidade_total: formData.quantidade_total,
+        unidade_produto: formData.unidade_produto,
+        rendimento: formData.rendimento,
+        custo_total_batelada: calcularCustoTotal(),
+        modo_preparo: formData.modo_preparo,
+        observacoes: formData.observacoes || null,
+        tempo_preparo: formData.tempo_preparo,
+        ativo: formData.ativo,
+        foto: null,
+        data_ficha: new Date().toISOString().split('T')[0]
+      }
+
+      if (editingBase) {
+        await updateBase(editingBase.id, baseData, insumosData)
+      } else {
+        await createBase(baseData, insumosData)
+      }
+
+      resetForm()
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Erro ao salvar base:', error)
+    }
+  }
+
+  // Deletar base
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteBase(id)
+      setIsDeleteDialogOpen(false)
+      setDeleteBaseId(null)
+    } catch (error) {
+      console.error('Erro ao deletar base:', error)
+    }
+  }
+
+  // Visualizar base
+  const handleView = (base: BaseComInsumos) => {
+    setViewingBase(base)
+    setIsViewDialogOpen(true)
+  }
+
   return (
-    <>
-      <Layout>
-      <div className="container mx-auto p-6 space-y-6 max-w-7xl relative z-10">
+    <Layout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Bases/Produtos Intermediários</h1>
-            <p className="text-muted-foreground">Gerencie suas receitas de bases e produtos intermediários</p>
+            <h1 className="text-3xl font-bold">Bases</h1>
+            <p className="text-muted-foreground">
+              Gerencie suas bases e produtos intermediários
+            </p>
           </div>
-          
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-full shadow-lg"
-          >
-            📋 Filtrar
-          </button>
-          
-          {/* Campo de Busca */}
-          <div
-            className={`${
-              isMenuOpen ? 'block' : 'hidden'
-            } md:block absolute top-16 left-4 right-4 bg-white p-4 rounded-lg shadow-xl z-40 md:static md:shadow-none`}
-          >
-            <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar por nome, código, tipo, unidade, rendimento ou observações..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-80"
-              />
-              {searchTerm && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    📊 {filteredBases.length} de {bases.length} bases encontradas
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSearchTerm('')}
-                    className="h-6 w-6 p-0"
-                  >
-                    ✕
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
-                <DialogTrigger asChild>
-                  <Button onClick={resetForm}>
-                    <Plus className="mr-2 h-4 w-4" /> Nova Base/Produto Intermediário
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto z-50 fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <DialogHeader className="bg-orange-500 text-white p-4 -m-6 mb-6 rounded-t-lg">
-                    <DialogTitle className="flex items-center gap-2">
-                      <Package2 className="h-5 w-5" /> Nova Base / Produto Intermediário
-                    </DialogTitle>
-                    <DialogDescription className="text-orange-100">
-                      Cadastre bases (por kg ou litro) ou subprodutos (por unidade) para usar nas receitas dos pratos
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-6">
-                {/* Informações Básicas */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="codigo">Código do Produto</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="codigo"
-                        value={formData.codigo}
-                        onChange={(e) => {
-                          const codigoFormatado = formatarCodigo(e.target.value)
-                          setFormData(prev => ({ ...prev, codigo: codigoFormatado }))
-                        }}
-                        placeholder="Ex: BAS003"
-                        maxLength={6}
-                        className="flex-1"
-                      />
-                      <Button type="button" variant="outline" size="sm" onClick={gerarCodigoAutomatico}>
-                        Auto
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Códigos são gerados automaticamente no formato BASXXX (001-999)</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome do Produto Intermediário *</Label>
-                    <Input
-                      id="nome"
-                      value={formData.nome}
-                      onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                      placeholder="Ex: Licor de Frango Empanado"
-                    />
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold">Status</Label>
-                  <RadioGroup
-                    value={formData.ativo ? 'ativo' : 'inativo'}
-                    onValueChange={value => {
-                      setFormData(prev => ({ ...prev, ativo: value === 'ativo' }))
-                    }}
-                    className="flex gap-6"
-                  >
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="ativo" id="ativo" />
-                      <Label htmlFor="ativo" className="font-medium text-green-600">
-                        Ativo
-                      </Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="inativo" id="inativo" />
-                      <Label htmlFor="inativo" className="font-medium text-red-600">
-                        Inativo
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                  <p className="text-xs text-muted-foreground">Bases inativas não aparecerão nas listas de seleção</p>
-                </div>
-
-                {/* Tipo de Produto */}
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Tipo de Produto *</Label>
-                  <RadioGroup
-                    value={formData.tipo_produto}
-                    onValueChange={(value: 'peso' | 'unidade') => {
-                      setFormData(prev => ({
-                        ...prev,
-                        tipo_produto: value,
-                        unidade_produto: value === 'peso' ? 'kg' : 'unidades'
-                      }))
-                    }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                  >
-                    <div className="flex items-center space-x-2 p-3 border rounded-md">
-                      <RadioGroupItem value="peso" id="peso" />
-                      <Label htmlFor="peso" className="font-medium">
-                        Por Peso (kg/litro)
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-3 border rounded-md">
-                      <RadioGroupItem value="unidade" id="unidade" />
-                      <Label htmlFor="unidade" className="font-medium">
-                        Por Unidade
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Quantidade e Custo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantidade_total">
-                      Quantidade Produzida ({formData.unidade_produto})
-                    </Label>
-                    <Input
-                      id="quantidade_total"
-                      type="number"
-                      step="0.001"
-                      value={formData.quantidade_total.toFixed(3)}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, quantidade_total: parseFloat(e.target.value) || 0 }))
-                      }
-                      placeholder={formData.tipo_produto === 'peso' ? '5.000' : '70.000'}
-                      disabled={formData.tipo_produto === 'peso'}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {formData.tipo_produto === 'peso' 
-                        ? 'Calculado automaticamente pela soma dos insumos por peso (kg/litro)'
-                        : 'Informe a quantidade que será produzida com esta receita'
-                      }
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="custoTotalBatelada">
-                      Custo Total da Batelada (R$) - Calculado Automaticamente
-                    </Label>
-                    <Input
-                      id="custoTotalBatelada"
-                      type="number"
-                      step="0.01"
-                      value={formData.custo_total_batelada.toFixed(2)}
-                      readOnly
-                      className="bg-gray-50 cursor-not-allowed"
-                      placeholder="Calculado automaticamente"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Este valor é calculado automaticamente baseado nos insumos selecionados
-                    </p>
-                  </div>
-                </div>
-
-                {/* Custo Calculado */}
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calculator className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-800">Custo Calculado</span>
-                  </div>
-                  <p className="text-lg font-bold text-blue-900">
-                    {formData.tipo_produto === 'peso'
-                      ? `R$ ${calcularCustoPorUnidade().toFixed(2)} por ${formData.unidade_produto || 'kg'}`
-                      : `R$ ${calcularCustoPorUnidade().toFixed(2)} por unidade`}
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    Baseado no custo total dos insumos: R$ {calcularCustoTotal().toFixed(2)}
-                  </p>
-                </div>
-
-                {/* Insumos Usados */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-base font-semibold">Insumos Usados na Produção</Label>
-                    <Button type="button" variant="outline" size="sm" onClick={handleAddInsumo}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Adicionar Insumo
-                    </Button>
-                  </div>
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Insumo</TableHead>
-                          <TableHead>Quantidade</TableHead>
-                          <TableHead>Unidade</TableHead>
-                          <TableHead>Custo do Insumo</TableHead>
-                          <TableHead></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {insumosSelecionados.map((insumo, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <select
-                                value={insumo.id}
-                                onChange={e => {
-                                  const value = e.target.value
-                                  handleInsumoChange(index, 'insumo_id', value)
-                                }}
-                                className="w-full border border-input rounded-md p-2 bg-background"
-                              >
-                                <option value="">Selecione um insumo ou base</option>
-                                <optgroup label="Insumos">
-                                  {insumos.map(i => (
-                                    <option key={i.id} value={i.id}>
-                                      {i.nome} ({i.codigo_insumo})
-                                    </option>
-                                  ))}
-                                </optgroup>
-                                <optgroup label="Bases">
-                                  {bases.filter(b => b.ativo).map(b => (
-                                    <option key={`base-${b.id}`} value={`base-${b.id}`}>
-                                      {b.nome} ({b.codigo}) - Base
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              </select>
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                step="0.001"
-                                value={insumo.quantidade.toFixed(3)}
-                                onChange={e => handleInsumoChange(index, 'quantidade', parseFloat(e.target.value))}
-                                placeholder="0.250"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                value={insumos.find(i => i.id === insumo.id)?.unidade_medida || ''}
-                                disabled
-                                placeholder="kg"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={insumo.custo.toFixed(2)}
-                                onChange={e => handleInsumoChange(index, 'custo', parseFloat(e.target.value))}
-                                placeholder="3.50"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveInsumo(index)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-
-                {/* Modo de Preparo */}
-                <div className="space-y-2">
-                  <Label>Modo de Preparo *</Label>
-                  <Textarea
-                    value={formData.modo_preparo}
-                    onChange={e => setFormData(prev => ({ ...prev, modo_preparo: e.target.value }))}
-                    placeholder="Descreva o passo a passo..."
-                    rows={4}
-                  />
-                </div>
-
-                {/* Foto */}
-                <div className="space-y-2">
-                        <Label>
-                    <ImageIcon className="inline h-4 w-4 mr-2" />
-                    Foto da Base/Produto
-                  </Label>
-                        
-                        {formData.foto ? (
-                          <div className="space-y-2">
-                            <div className="relative">
-                              <img 
-                                src={formData.foto} 
-                                alt="Foto da base" 
-                                className="w-full h-32 object-cover rounded-lg border"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="absolute top-2 right-2"
-                                onClick={removePhoto}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <p className="text-xs text-green-600">
-                              ✅ Imagem carregada com sucesso
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleFileUpload}
-                              className="hidden"
-                              id="photo-upload-base"
-                            />
-                            <label htmlFor="photo-upload-base" className="cursor-pointer">
-                              <div className="flex flex-col items-center gap-2">
-                                <Camera className="h-8 w-8 text-gray-400" />
-                                <p className="text-sm text-gray-500">Clique para adicionar foto</p>
-                                <p className="text-xs text-gray-400">Ou arraste uma imagem</p>
-                              </div>
-                            </label>
-                          </div>
-                        )}
-                        
-                  <p className="text-xs text-muted-foreground">
-                          💡 Upload direto para o Supabase Storage - máximo 5MB
-                  </p>
-                </div>
-
-                {/* Observações */}
-                <div className="space-y-2">
-                  <Label>Observações</Label>
-                  <Textarea
-                    value={formData.observacoes}
-                    onChange={e => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
-                    placeholder="Informações adicionais..."
-                    rows={2}
-                  />
-                </div>
-
-                {/* Botões */}
-                <div className="flex justify-end gap-3 pt-6 border-t">
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleSave}>
-                      {editingBase ? 'Atualizar' : 'Salvar'} Base/Produto
-                    </Button>
-                  </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              </div>
-            </div>
-            </div>
-          </div>
-
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 gap-4 md:gap-6 mb-6 mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total de Bases</CardTitle>
-              <Package2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl md:text-2xl font-bold">{bases.length}</div>
-              <p className="text-xs text-muted-foreground">Bases e produtos intermediários cadastrados</p>
-            </CardContent>
-          </Card>
+          <Button onClick={handleCreateNew} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Base
+          </Button>
         </div>
 
+        {/* Filtros */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Buscar bases..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Tabela de Bases */}
-        <Card className="mt-6">
+        {/* Lista de Bases */}
+        <Card>
           <CardHeader>
-            <CardTitle>Bases/Produtos Intermediários Cadastrados</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Package2 className="h-5 w-5" />
+              Bases ({filteredBases.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Desktop Table */}
-            <div className="hidden lg:block rounded-md border overflow-x-auto">
+            {loading ? (
+              <div className="text-center py-8">Carregando...</div>
+            ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[80px]">Foto</TableHead>
                     <TableHead>Código</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Rendimento</TableHead>
-                    <TableHead>Custo por Unidade</TableHead>
+                    <TableHead>Quantidade</TableHead>
                     <TableHead>Custo Total</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredBases.map(base => (
+                  {filteredBases.map((base) => (
                     <TableRow key={base.id}>
-                      <TableCell>
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <ImageIcon className="h-6 w-6 text-gray-400" />
-                        </div>
-                      </TableCell>
                       <TableCell className="font-medium">{base.codigo}</TableCell>
                       <TableCell>{base.nome}</TableCell>
                       <TableCell>
-                        <Badge
-                          variant={base.tipo_produto === 'peso' ? 'default' : 'secondary'}
-                          className={base.tipo_produto === 'peso' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
-                        >
-                          {base.tipo_produto === 'peso' ? 'Por Peso' : 'Por Unidade'}
+                        <Badge variant={base.tipo_produto === 'peso' ? 'default' : 'secondary'}>
+                          {base.tipo_produto === 'peso' ? 'Peso' : 'Unidade'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{base.rendimento}</TableCell>
                       <TableCell>
-                        R${' '}
-                        {base.quantidade_total && base.custo_total_batelada
-                          ? (base.custo_total_batelada / base.quantidade_total).toFixed(2)
-                          : '0.00'}
+                        {base.quantidade_total} {base.unidade_produto}
                       </TableCell>
-                      <TableCell>R$ {base.custo_total_batelada?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleView(base)}>
+                      <TableCell>
+                        R$ {base.custo_total_batelada.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={base.ativo ? 'default' : 'destructive'}>
+                          {base.ativo ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleView(base)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(base)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(base)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(base.id)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setDeleteBaseId(base.id)
+                              setIsDeleteDialogOpen(true)
+                            }}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -1083,255 +384,247 @@ export default function Bases() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden space-y-3">
-              {filteredBases.map(base => (
-                <Card key={base.id} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-lg whitespace-normal">{base.nome}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline">{base.codigo}</Badge>
-                          <Badge
-                            variant={base.tipo_produto === 'peso' ? 'default' : 'secondary'}
-                            className={base.tipo_produto === 'peso' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
-                          >
-                            {base.tipo_produto === 'peso' ? 'Por Peso' : 'Por Unidade'}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleView(base)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleEdit(base)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="min-h-[48px] min-w-[48px]" onClick={() => handleDelete(base.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-4 text-xs">
-                      <div className="flex-1 min-w-0">
-                        <span className="text-muted-foreground block">Rend.</span>
-                        <p className="font-medium">{base.rendimento || 'N/A'}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-muted-foreground block">Custo por Und.</span>
-                        <p className="font-medium">
-                          R$ {base.quantidade_total && base.custo_total_batelada
-                            ? (base.custo_total_batelada / base.quantidade_total).toFixed(2)
-                            : '0.00'}
-                        </p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-muted-foreground block">Custo Total</span>
-                        <p className="font-medium">R$ {base.custo_total_batelada?.toFixed(2) || '0.00'}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-muted-foreground block">Foto</span>
-                        <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
-                          <ImageIcon className="h-3 w-3 text-gray-400" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            )}
           </CardContent>
         </Card>
-      </div>
-    </Layout>
 
-    {/* Modal de Confirmação de Exclusão */}
-    <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-      <AlertDialogContent className="z-50">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-          <AlertDialogDescription>
-            {baseParaExcluir && (
-              <div className="space-y-4">
-                <p>
-                  Você está prestes a excluir a base <strong>"{baseParaExcluir.nome}"</strong>.
-                </p>
-                
-                {dependenciasBase?.temDependencias && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="font-medium text-yellow-800 mb-2">
-                      ⚠️ Esta base está sendo usada em:
-                    </p>
-                    {dependenciasBase.fichas.length > 0 && (
-                      <div className="mb-2">
-                        <p className="text-sm font-medium text-yellow-700">Fichas técnicas:</p>
-                        <ul className="text-sm text-yellow-600 ml-4">
-                          {dependenciasBase.fichas.map((ficha, index) => (
-                            <li key={index}>• {ficha}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {dependenciasBase.insumos.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-yellow-700">Insumos associados:</p>
-                        <ul className="text-sm text-yellow-600 ml-4">
-                          {dependenciasBase.insumos.map((insumo, index) => (
-                            <li key={index}>• {insumo}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                <p className="text-sm text-gray-600">
-                  {dependenciasBase?.temDependencias 
-                    ? "Escolha uma das opções abaixo:"
-                    : "Esta ação não pode ser desfeita."
-                  }
-                </p>
-              </div>
-            )}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          {dependenciasBase?.temDependencias ? (
-            <>
-              <Button variant="outline" onClick={confirmarDesativacao}>
-                Desativar Base
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={confirmarExclusao}
-                disabled={true}
-                title="Não é possível excluir uma base com dependências"
-              >
-                Excluir Permanentemente
-              </Button>
-            </>
-          ) : (
-            <AlertDialogAction onClick={confirmarExclusao} className="bg-red-600 hover:bg-red-700">
-              Excluir
-            </AlertDialogAction>
-          )}
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        {/* Dialog para Criar/Editar Base */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingBase ? 'Editar Base' : 'Nova Base'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingBase ? 'Edite as informações da base' : 'Crie uma nova base'}
+              </DialogDescription>
+            </DialogHeader>
 
-    {/* Modal de Visualização */}
-    <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-full">
-        <DialogHeader>
-          <DialogTitle>Detalhes da Base/Produto Intermediário</DialogTitle>
-          <DialogDescription>
-            Visualização completa da base e seus insumos
-          </DialogDescription>
-        </DialogHeader>
-
-        {viewingBase && (
-          <div className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Código</Label>
-                <p className="text-base">{viewingBase.codigo}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Nome</Label>
-                <p className="text-base font-medium">{viewingBase.nome}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Tipo de Produto</Label>
-                <div className="text-base">
-                  <Badge
-                    variant={viewingBase.tipo_produto === 'peso' ? 'default' : 'secondary'}
-                    className={viewingBase.tipo_produto === 'peso' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}
-                  >
-                    {viewingBase.tipo_produto === 'peso' ? 'Por Peso' : 'Por Unidade'}
-                  </Badge>
+            <div className="space-y-6">
+              {/* Informações Básicas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="nome">Nome *</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                    placeholder="Nome da base"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="codigo">Código *</Label>
+                  <Input
+                    id="codigo"
+                    value={formData.codigo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value }))}
+                    placeholder="Código da base"
+                  />
                 </div>
               </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Quantidade Produzida</Label>
-                <p className="text-base">{viewingBase.quantidade_total.toFixed(3)} {viewingBase.unidade_produto}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Rendimento</Label>
-                <p className="text-base">{viewingBase.rendimento || 'Não informado'}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Custo Total da Batelada</Label>
-                <p className="text-base font-bold text-green-600">
-                  R$ {viewingBase.custo_total_batelada?.toFixed(2) || '0,00'}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Custo por Unidade</Label>
-                <p className="text-base font-bold text-blue-600">
-                  R$ {viewingBase.quantidade_total > 0 
-                    ? (viewingBase.custo_total_batelada / viewingBase.quantidade_total).toFixed(2)
-                    : '0,00'} por {viewingBase.unidade_produto}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Tempo de Preparo</Label>
-                <p className="text-base">{viewingBase.tempo_preparo} min</p>
-              </div>
-            </div>
 
-            {/* Card com insumos */}
-            <Card className="border rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-4">Insumos Utilizados</h3>
-              
-              {viewingBase.insumos && viewingBase.insumos.length > 0 ? (
-                <div className="space-y-1">
-                  {viewingBase.insumos.map((insumo, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-4 py-2 px-3 bg-green-50 rounded border-l-4 border-green-200 items-center">
-                      <div className="col-span-8">
-                        <span className="font-medium text-base">{insumo.nome}</span>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="tipo_produto">Tipo de Produto *</Label>
+                  <RadioGroup
+                    value={formData.tipo_produto}
+                    onValueChange={(value: 'peso' | 'unidade') => 
+                      setFormData(prev => ({ ...prev, tipo_produto: value }))
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="peso" id="peso" />
+                      <Label htmlFor="peso">Peso</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="unidade" id="unidade" />
+                      <Label htmlFor="unidade">Unidade</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div>
+                  <Label htmlFor="quantidade_total">Quantidade Total *</Label>
+                  <Input
+                    id="quantidade_total"
+                    type="number"
+                    step="0.01"
+                    value={formData.quantidade_total}
+                    onChange={(e) => setFormData(prev => ({ ...prev, quantidade_total: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="unidade_produto">Unidade *</Label>
+                  <Input
+                    id="unidade_produto"
+                    value={formData.unidade_produto}
+                    onChange={(e) => setFormData(prev => ({ ...prev, unidade_produto: e.target.value }))}
+                    placeholder="kg, unidade, etc."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="rendimento">Rendimento</Label>
+                  <Input
+                    id="rendimento"
+                    value={formData.rendimento}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rendimento: e.target.value }))}
+                    placeholder="Ex: 10 porções"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="tempo_preparo">Tempo de Preparo (min)</Label>
+                  <Input
+                    id="tempo_preparo"
+                    type="number"
+                    value={formData.tempo_preparo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tempo_preparo: parseInt(e.target.value) || 0 }))}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="modo_preparo">Modo de Preparo</Label>
+                <Textarea
+                  id="modo_preparo"
+                  value={formData.modo_preparo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, modo_preparo: e.target.value }))}
+                  placeholder="Descreva o modo de preparo..."
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="observacoes">Observações</Label>
+                <Textarea
+                  id="observacoes"
+                  value={formData.observacoes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+                  placeholder="Observações adicionais..."
+                  rows={2}
+                />
+              </div>
+
+              {/* Insumos Selecionados */}
+              <div>
+                <Label>Insumos Selecionados</Label>
+                <div className="space-y-2 mt-2">
+                  {insumosSelecionados.map((insumo, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="font-medium">{insumo.nome}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {insumo.quantidade} {insumo.unidade} × R$ {insumo.custo.toFixed(2)} = R$ {(insumo.quantidade * insumo.custo).toFixed(2)}
+                        </div>
                       </div>
-                      <div className="col-span-2 text-center">
-                        <span className="text-base text-muted-foreground">
-                          {insumo.quantidade.toFixed(3)} {insumo.unidade}
-                        </span>
-                      </div>
-                      <div className="col-span-2 text-right">
-                        <span className="font-medium text-green-600 text-base">
-                          R$ {insumo.custo.toFixed(2)}
-                        </span>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveInsumo(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-muted-foreground">Nenhum insumo cadastrado</p>
-              )}
-            </Card>
+                
+                {insumosSelecionados.length > 0 && (
+                  <div className="mt-4 p-3 bg-muted rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Custo Total:</span>
+                      <span className="text-lg font-bold">R$ {calcularCustoTotal().toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            {/* Modo de Preparo */}
-            {viewingBase.modo_preparo && (
-              <Card className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-4">Modo de Preparo</h3>
-                <p className="text-base whitespace-pre-wrap">{viewingBase.modo_preparo}</p>
-              </Card>
-            )}
+              {/* Botões */}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSave}>
+                  {editingBase ? 'Atualizar' : 'Criar'} Base
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-            {/* Observações */}
-            {viewingBase.observacoes && (
-              <Card className="border rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-4">Observações</h3>
-                <p className="text-base whitespace-pre-wrap">{viewingBase.observacoes}</p>
-              </Card>
+        {/* Dialog para Visualizar Base */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Detalhes da Base</DialogTitle>
+            </DialogHeader>
+
+            {viewingBase && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Nome</Label>
+                    <p className="text-sm">{viewingBase.nome}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Código</Label>
+                    <p className="text-sm">{viewingBase.codigo}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Tipo</Label>
+                    <p className="text-sm">{viewingBase.tipo_produto === 'peso' ? 'Peso' : 'Unidade'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Quantidade</Label>
+                    <p className="text-sm">{viewingBase.quantidade_total} {viewingBase.unidade_produto}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Custo Total</Label>
+                    <p className="text-sm">R$ {viewingBase.custo_total_batelada.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {viewingBase.insumos.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium">Insumos</Label>
+                    <div className="space-y-2 mt-2">
+                      {viewingBase.insumos.map((insumo, index) => (
+                        <div key={index} className="flex justify-between items-center p-2 border rounded">
+                          <span>{insumo.nome}</span>
+                          <span>{insumo.quantidade} {insumo.unidade} × R$ {insumo.custo.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-    </>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Confirmação de Exclusão */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta base? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={() => deleteBaseId && handleDelete(deleteBaseId)}>
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </Layout>
   )
 }

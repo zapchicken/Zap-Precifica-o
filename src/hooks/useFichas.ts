@@ -641,7 +641,7 @@ export const useFichas = () => {
           .select('id, codigo')
           .eq('codigo', updatesFiltrados.codigo)
           .eq('user_id', user.id)
-          .neq('id', id) // Excluir a própria ficha da verificação
+          .not('id', 'eq', id) // Excluir a própria ficha da verificação
           .single()
 
         if (checkError && checkError.code !== 'PGRST116') {

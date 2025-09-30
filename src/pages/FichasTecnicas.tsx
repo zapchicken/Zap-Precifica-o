@@ -30,6 +30,7 @@ interface Ficha {
   tempo_preparo: number | null
   rendimento: number | null
   custo_total_producao: number | null
+  custo_por_unidade: number | null
   modo_preparo: string | null
   foto: string | null
   data_ficha: string
@@ -88,6 +89,7 @@ export default function FichasTecnicas() {
     tempoPreparo: '',
     rendimento: '',
     custoUnitario: '',
+    custoTotalProducao: '',
     dataFicha: '',
     modoPreparo: '',
     fotos: [] as string[],
@@ -127,12 +129,15 @@ export default function FichasTecnicas() {
 
   useEffect(() => {
     const custoTotal = calcularCustoTotal()
+    const rendimento = parseFloat(formData.rendimento) || 1
+    const custoUnitario = rendimento > 0 ? custoTotal / rendimento : custoTotal
     
     setFormData(prev => ({
       ...prev,
-      custoUnitario: custoTotal.toFixed(2)
+      custoUnitario: custoUnitario.toFixed(2),
+      custoTotalProducao: custoTotal.toFixed(2)
     }))
-  }, [formData.produtosProntos, formData.insumos, formData.insumosEmbalagemDelivery])
+  }, [formData.produtosProntos, formData.insumos, formData.insumosEmbalagemDelivery, formData.rendimento])
 
   const resetForm = () => {
     setFormData({
@@ -143,6 +148,7 @@ export default function FichasTecnicas() {
       tempoPreparo: '',
       rendimento: '',
       custoUnitario: '',
+      custoTotalProducao: '',
       dataFicha: '',
       modoPreparo: '',
       fotos: [],
@@ -172,7 +178,8 @@ export default function FichasTecnicas() {
         categoria: formData.categoria,
         tempo_preparo: parseInt(formData.tempoPreparo) || 0,
         rendimento: parseFloat(formData.rendimento) || 1,
-        custo_total_producao: parseFloat(formData.custoUnitario) || 0,
+        custo_total_producao: parseFloat(formData.custoTotalProducao) || 0,
+        custo_por_unidade: (parseFloat(formData.custoTotalProducao) || 0) / (parseFloat(formData.rendimento) || 1),
         data_ficha: formData.dataFicha,
         modo_preparo: formData.modoPreparo,
         foto: formData.fotos[0] || null,
@@ -213,7 +220,8 @@ export default function FichasTecnicas() {
         descricao: ficha.descricao || '',
         tempoPreparo: ficha.tempo_preparo?.toString() || '',
         rendimento: ficha.rendimento?.toString() || '',
-        custoUnitario: ficha.custo_total_producao?.toString() || '',
+        custoUnitario: ficha.custo_por_unidade?.toString() || '',
+        custoTotalProducao: ficha.custo_total_producao?.toString() || '',
         dataFicha: ficha.data_ficha,
         modoPreparo: ficha.modo_preparo || '',
         fotos: fichaDetalhada?.foto ? [fichaDetalhada.foto] : [],
@@ -267,7 +275,8 @@ export default function FichasTecnicas() {
         descricao: ficha.descricao || '',
         tempoPreparo: ficha.tempo_preparo?.toString() || '',
         rendimento: ficha.rendimento?.toString() || '',
-        custoUnitario: ficha.custo_total_producao?.toString() || '',
+        custoUnitario: ficha.custo_por_unidade?.toString() || '',
+        custoTotalProducao: ficha.custo_total_producao?.toString() || '',
         dataFicha: ficha.data_ficha,
         modoPreparo: ficha.modo_preparo || '',
         fotos: ficha.foto ? [ficha.foto] : [],
@@ -290,7 +299,8 @@ export default function FichasTecnicas() {
         descricao: ficha.descricao || '',
         tempoPreparo: ficha.tempo_preparo?.toString() || '',
         rendimento: ficha.rendimento?.toString() || '',
-        custoUnitario: ficha.custo_total_producao?.toString() || '',
+        custoUnitario: ficha.custo_por_unidade?.toString() || '',
+        custoTotalProducao: ficha.custo_total_producao?.toString() || '',
         dataFicha: new Date().toISOString().split('T')[0],
         modoPreparo: ficha.modo_preparo || '',
                 fotos: ficha.foto ? [ficha.foto] : [],
@@ -342,7 +352,8 @@ export default function FichasTecnicas() {
         descricao: ficha.descricao || '',
         tempoPreparo: ficha.tempo_preparo?.toString() || '',
         rendimento: ficha.rendimento?.toString() || '',
-        custoUnitario: ficha.custo_total_producao?.toString() || '',
+        custoUnitario: ficha.custo_por_unidade?.toString() || '',
+        custoTotalProducao: ficha.custo_total_producao?.toString() || '',
         dataFicha: new Date().toISOString().split('T')[0],
         modoPreparo: ficha.modo_preparo || '',
         fotos: ficha.foto ? [ficha.foto] : [],
@@ -498,7 +509,8 @@ export default function FichasTecnicas() {
       descricao: fichaOrigem.descricao || '',
       tempoPreparo: fichaOrigem.tempo_preparo?.toString() || '',
       rendimento: fichaOrigem.rendimento?.toString() || '',
-      custoUnitario: fichaOrigem.custo_total_producao?.toString() || '',
+      custoUnitario: fichaOrigem.custo_por_unidade?.toString() || '',
+      custoTotalProducao: fichaOrigem.custo_total_producao?.toString() || '',
       dataFicha: new Date().toISOString().split('T')[0],
       modoPreparo: fichaOrigem.modo_preparo || '',
       fotos: fichaOrigem.foto ? [fichaOrigem.foto] : [],
@@ -797,7 +809,7 @@ export default function FichasTecnicas() {
                         </Badge>
                       </TableCell>
                       <TableCell>{new Date(ficha.data_ficha).toLocaleDateString('pt-BR')}</TableCell>
-                      <TableCell>R$ {ficha.custo_total_producao?.toFixed(2) || '0,00'}</TableCell>
+                      <TableCell>R$ {ficha.custo_por_unidade?.toFixed(2) || '0,00'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="sm" onClick={() => openFichaDetails(ficha)}>
@@ -951,7 +963,7 @@ export default function FichasTecnicas() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">Custo:</span>
-                        <p className="font-medium">R$ {ficha.custo_total_producao?.toFixed(2) || '0,00'}</p>
+                        <p className="font-medium">R$ {ficha.custo_por_unidade?.toFixed(2) || '0,00'}</p>
                       </div>
                     </div>
                   </div>
@@ -1037,6 +1049,20 @@ export default function FichasTecnicas() {
                         readOnly
                         className="h-12 text-base bg-gray-50 cursor-not-allowed"
                       />
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Custo Total de Produção (R$)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0"
+                        value={formData.custoTotalProducao}
+                        readOnly
+                        className="h-12 text-base bg-gray-50 cursor-not-allowed"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Custo total para produzir o rendimento completo
+                      </p>
                     </div>
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">Tempo de Preparo (min)</Label>
