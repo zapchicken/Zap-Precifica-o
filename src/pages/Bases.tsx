@@ -241,10 +241,10 @@ export default function Bases() {
 
   // Adicionar insumo
   const handleAddInsumo = (insumo: any) => {
-    const custoCalculado = insumo.quantidade * insumo.custo * (insumo.fator_correcao || 1)
+    const custoCalculado = insumo.quantidade * insumo.custo
     
     setInsumosSelecionados(prev => [...prev, {
-      insumo_id: insumo.id,
+      insumo_id: insumo.insumo_id,
       nome: insumo.nome,
       quantidade: insumo.quantidade,
       unidade: insumo.unidade,
@@ -330,6 +330,12 @@ export default function Bases() {
     }
 
     handleAddInsumo(insumoParaAdicionar)
+    
+    // Toast de sucesso
+    toast({
+      title: 'Sucesso',
+      description: `Insumo "${insumoEncontrado.nome}" adicionado com sucesso!`
+    })
     
     // Limpar campos
     setNovoInsumo({
