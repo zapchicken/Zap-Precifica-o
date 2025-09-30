@@ -40,6 +40,7 @@ import {
 } from 'lucide-react'
 import { useBases } from '../hooks/useBases'
 import { useInsumos } from '../hooks/useInsumos'
+import { InsumoCombobox } from '../components/InsumoCombobox'
 import { supabase } from '@/lib/supabase'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog'
 import { uploadAndCompressImage, deleteImageFromStorage } from '../lib/imageUpload'
@@ -94,6 +95,7 @@ export default function Bases() {
   const navigate = useNavigate()
   const { bases, loading, createBase, updateBase, deleteBase } = useBases()
   const { insumos } = useInsumos()
+  
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -137,8 +139,6 @@ export default function Bases() {
     unidade: '',
     custo: 0
   })
-  const [insumosSugeridos, setInsumosSugeridos] = useState<any[]>([])
-  const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
 
   // Filtrar bases
   const filteredBases = bases.filter(base =>
@@ -239,128 +239,15 @@ export default function Bases() {
     setIsDialogOpen(true)
   }
 
-  // Adicionar insumo
+  // Adicionar insumo (função não usada mais)
   const handleAddInsumo = (insumo: any) => {
-    console.log('🔍 Debug - handleAddInsumo chamado com:', insumo)
-    const custoCalculado = insumo.quantidade * insumo.custo
-    
-    const novoInsumoSelecionado = {
-      insumo_id: insumo.insumo_id,
-      nome: insumo.nome,
-      quantidade: insumo.quantidade,
-      unidade: insumo.unidade,
-      custo: custoCalculado,
-      tipo: 'insumo' as const
-    }
-    
-    console.log('🔍 Debug - novoInsumoSelecionado:', novoInsumoSelecionado)
-    
-    setInsumosSelecionados(prev => {
-      const novoArray = [...prev, novoInsumoSelecionado]
-      console.log('🔍 Debug - novo array de insumos:', novoArray)
-      return novoArray
-    })
+    // Esta função não é mais usada - insumos são adicionados diretamente na tabela
   }
 
-  // Buscar insumos para autocomplete
-  const buscarInsumos = (termo: string) => {
-    if (termo.length < 1) {
-      setInsumosSugeridos([])
-      setMostrarSugestoes(false)
-      return
-    }
 
-    const sugestoes = insumos.filter(insumo =>
-      insumo.nome.toLowerCase().includes(termo.toLowerCase()) ||
-      (insumo.codigo_insumo && insumo.codigo_insumo.toLowerCase().includes(termo.toLowerCase()))
-    ).slice(0, 10) // Aumentar para 10 sugestões como na foto
-
-    setInsumosSugeridos(sugestoes)
-    setMostrarSugestoes(sugestoes.length > 0)
-  }
-
-  // Selecionar insumo das sugestões
-  const selecionarInsumo = (insumo: any) => {
-    setNovoInsumo(prev => ({
-      ...prev,
-      nome: insumo.nome,
-      codigo: insumo.codigo_insumo || '',
-      unidade: insumo.unidade_medida,
-      custo: insumo.preco_por_unidade * (insumo.fator_correcao || 1)
-    }))
-    setMostrarSugestoes(false)
-    setInsumosSugeridos([])
-  }
-
-  // Adicionar insumo da tabela
+  // Adicionar insumo da tabela (função não usada mais)
   const handleAdicionarInsumoTabela = () => {
-    console.log('🔍 Debug - handleAdicionarInsumoTabela chamado')
-    console.log('🔍 Debug - novoInsumo:', novoInsumo)
-    console.log('🔍 Debug - insumos disponíveis:', insumos.length)
-    
-    // Verificar se há insumos disponíveis
-    if (insumos.length === 0) {
-      toast({
-        title: 'Nenhum insumo cadastrado',
-        description: 'Você será redirecionado para a página de Insumos para cadastrar novos insumos.',
-        variant: 'destructive'
-      })
-      // Navegar para a página de Insumos
-      navigate('/insumos')
-      return
-    }
-
-    if (!novoInsumo.nome || novoInsumo.quantidade <= 0) {
-      toast({
-        title: 'Erro',
-        description: 'Preencha o nome e quantidade do insumo',
-        variant: 'destructive'
-      })
-      return
-    }
-
-    // Buscar insumo pelo nome
-    const insumoEncontrado = insumos.find(i => 
-      i.nome.toLowerCase().includes(novoInsumo.nome.toLowerCase())
-    )
-
-    console.log('🔍 Debug - insumoEncontrado:', insumoEncontrado)
-
-    if (!insumoEncontrado) {
-      toast({
-        title: 'Erro',
-        description: 'Insumo não encontrado',
-        variant: 'destructive'
-      })
-      return
-    }
-
-    const insumoParaAdicionar = {
-      insumo_id: insumoEncontrado.id,
-      nome: insumoEncontrado.nome,
-      quantidade: novoInsumo.quantidade,
-      unidade: novoInsumo.unidade || insumoEncontrado.unidade_medida,
-      custo: insumoEncontrado.preco_por_unidade * (insumoEncontrado.fator_correcao || 1),
-      tipo: 'insumo' as const
-    }
-
-    handleAddInsumo(insumoParaAdicionar)
-    
-    // Toast de sucesso
-    toast({
-      title: 'Sucesso',
-      description: `Insumo "${insumoEncontrado.nome}" adicionado com sucesso!`
-    })
-    
-    // Limpar campos
-    setNovoInsumo({
-      tipo: 'insumo',
-      codigo: '',
-      nome: '',
-      quantidade: 0,
-      unidade: '',
-      custo: 0
-    })
+    // Esta função não é mais usada - o botão agora adiciona linha diretamente
   }
 
   // Remover insumo
@@ -573,12 +460,12 @@ export default function Bases() {
                 <div>
                   <Label htmlFor="codigo">Código *</Label>
                   <div className="flex gap-2">
-                    <Input
-                      id="codigo"
-                      value={formData.codigo}
-                      onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value }))}
-                      placeholder="Código da base"
-                    />
+                  <Input
+                    id="codigo"
+                    value={formData.codigo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value }))}
+                    placeholder="Código da base"
+                  />
                     <Button
                       type="button"
                       variant="outline"
@@ -656,7 +543,7 @@ export default function Bases() {
 
               {/* Custos */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div>
                   <Label htmlFor="custo_unitario">Custo Unitário (R$)</Label>
                   <Input
                     id="custo_unitario"
@@ -709,7 +596,17 @@ export default function Bases() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={handleAdicionarInsumoTabela}
+                      onClick={() => {
+                        // Adicionar nova linha vazia na tabela
+                        setInsumosSelecionados(prev => [...prev, {
+                          insumo_id: 0,
+                          nome: '',
+                          quantidade: 0,
+                          unidade: '',
+                          custo: 0,
+                          tipo: 'insumo' as const
+                        }])
+                      }}
                       className="flex items-center gap-2"
                     >
                       <Plus className="h-4 w-4" />
@@ -758,8 +655,8 @@ export default function Bases() {
                         onChange={(e) => setNovoInsumo(prev => ({ ...prev, tipo: e.target.value }))}
                         placeholder="Insumo"
                         className="text-sm"
-                      />
-                    </div>
+                />
+              </div>
                     <div>
                       <Input
                         value={novoInsumo.codigo}
@@ -773,67 +670,12 @@ export default function Bases() {
                         value={novoInsumo.nome}
                         onChange={(e) => {
                           setNovoInsumo(prev => ({ ...prev, nome: e.target.value }))
-                          buscarInsumos(e.target.value)
-                        }}
-                        onFocus={() => {
-                          // Mostrar sugestões ao focar no campo
-                          if (insumos.length > 0) {
-                            setInsumosSugeridos(insumos.slice(0, 10))
-                            setMostrarSugestoes(true)
-                          }
-                        }}
-                        onBlur={() => {
-                          // Delay para permitir clique nas sugestões
-                          setTimeout(() => setMostrarSugestoes(false), 200)
                         }}
                         placeholder="Buscar insumo"
                         className="text-sm border-orange-500"
                       />
-                      
-                      {/* Dropdown de Sugestões */}
-                      {mostrarSugestoes && insumosSugeridos.length > 0 && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                          {/* Header do dropdown */}
-                          <div className="p-2 border-b bg-gray-50">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Search className="h-4 w-4" />
-                              Buscar insumo
-                            </div>
-                          </div>
-                          
-                          {/* Lista de sugestões */}
-                          <div className="py-1">
-                            {insumosSugeridos.map((insumo, index) => (
-                              <div
-                                key={insumo.id}
-                                className="px-3 py-2 hover:bg-orange-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                onClick={() => selecionarInsumo(insumo)}
-                              >
-                                <div className="flex justify-between items-center">
-                                  <div className="flex-1">
-                                    <div className="font-medium text-sm text-gray-900">{insumo.nome}</div>
-                                    {insumo.codigo_insumo && (
-                                      <div className="text-xs text-gray-500 mt-0.5">
-                                        {insumo.codigo_insumo}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-sm font-medium text-gray-900">
-                                      R$ {insumo.preco_por_unidade.toFixed(2)}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      / {insumo.unidade_medida}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
-                    <div>
+              <div>
                       <Input
                         type="number"
                         step="0.001"
@@ -884,24 +726,105 @@ export default function Bases() {
                   {/* Insumos Selecionados */}
                   {insumosSelecionados.map((insumo, index) => (
                     <div key={index} className="grid grid-cols-7 gap-4 p-3 border-b">
-                      <div className="text-sm">{insumo.tipo}</div>
-                      <div className="text-sm">-</div>
-                      <div className="text-sm font-medium">{insumo.nome}</div>
-                      <div className="text-sm">{insumo.quantidade}</div>
-                      <div className="text-sm">{insumo.unidade}</div>
-                      <div className="text-sm">R$ {insumo.custo.toFixed(2)}</div>
                       <div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRemoveInsumo(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <Input
+                          value={insumo.tipo}
+                          onChange={(e) => {
+                            const novosInsumos = [...insumosSelecionados]
+                            novosInsumos[index].tipo = e.target.value as 'insumo'
+                            setInsumosSelecionados(novosInsumos)
+                          }}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          value=""
+                          onChange={(e) => {
+                            // Campo código não é editável por enquanto
+                          }}
+                          className="text-sm"
+                          placeholder="Código"
+                          disabled
+                        />
+                      </div>
+                      <div>
+                        <InsumoCombobox
+                          items={insumos.map(item => ({
+                            ...item,
+                            fornecedor: item.fornecedor_id,
+                            nome: item.nome_comercial || item.nome || 'Sem nome',
+                            codigo: item.codigo_insumo || '---'
+                          }))}
+                          selectedLabel={insumo.nome}
+                          onSelect={(item) => {
+                            const novosInsumos = [...insumosSelecionados]
+                            // CALCULAR CUSTO UNITÁRIO CORRETO: preço × fator de correção
+                            const custoUnitario = parseFloat(item.preco_por_unidade?.toString() || '0') * parseFloat(item.fator_correcao?.toString() || '1')
+                            
+                            novosInsumos[index] = {
+                              ...novosInsumos[index],
+                              insumo_id: typeof item.id === 'string' ? parseInt(item.id) : item.id,
+                              nome: item.nome || '',
+                              unidade: item.unidade_medida || '',
+                              custo: custoUnitario,
+                              tipo: 'insumo' as const
+                            }
+                            setInsumosSelecionados(novosInsumos)
+                          }}
+                          placeholder="Buscar insumo"
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          step="0.001"
+                          value={insumo.quantidade}
+                          onChange={(e) => {
+                            const novosInsumos = [...insumosSelecionados]
+                            novosInsumos[index].quantidade = parseFloat(e.target.value) || 0
+                            setInsumosSelecionados(novosInsumos)
+                          }}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          value={insumo.unidade}
+                          onChange={(e) => {
+                            const novosInsumos = [...insumosSelecionados]
+                            novosInsumos[index].unidade = e.target.value
+                            setInsumosSelecionados(novosInsumos)
+                          }}
+                          className="text-sm"
+                          placeholder="Unidade"
+                        />
+                      </div>
+                      <div>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={insumo.custo}
+                          onChange={(e) => {
+                            const novosInsumos = [...insumosSelecionados]
+                            novosInsumos[index].custo = parseFloat(e.target.value) || 0
+                            setInsumosSelecionados(novosInsumos)
+                          }}
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveInsumo(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                       </div>
                     </div>
                   ))}
-                  </div>
+                </div>
                 )}
                 
                 {insumosSelecionados.length > 0 && (
