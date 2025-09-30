@@ -37,13 +37,6 @@ import { useCategorias } from '../hooks/useCategorias'
 import { useProdutos } from '../hooks/useProdutos'
 import { useFichas } from '../hooks/useFichas'
 import { useMarkup } from '../hooks/useMarkup'
-import { DiagnosticoSupabase } from '../components/DiagnosticoSupabase'
-import { DiagnosticoSimples } from '../components/DiagnosticoSimples'
-import { TesteSimples } from '../components/TesteSimples'
-import { DebugInfo } from '../components/DebugInfo'
-import { TesteHooks } from '../components/TesteHooks'
-import { EstadoProdutos } from '../components/EstadoProdutos'
-import { VerificarFiltros } from '../components/VerificarFiltros'
 
 
 export default function Produtos() {
@@ -59,7 +52,6 @@ export default function Produtos() {
   const [produtoParaExcluir, setProdutoParaExcluir] = useState<any>(null)
   const [dependenciasProduto, setDependenciasProduto] = useState<any>(null)
   const [sincronizacaoExecutada, setSincronizacaoExecutada] = useState(false)
-  const [showDiagnostico, setShowDiagnostico] = useState(false)
   
   const { categorias, addCategoria } = useCategorias()
   const { produtos, loading, error, createProduto, updateProduto, deleteProduto, desativarProduto, reativarProduto, verificarDependenciasProduto, refresh } = useProdutos()
@@ -648,29 +640,8 @@ export default function Produtos() {
               Gerencie seu catálogo de produtos finais
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDiagnostico(!showDiagnostico)}
-            >
-              🔍 Diagnóstico
-            </Button>
-          </div>
         </div>
 
-        {/* Diagnóstico */}
-        {showDiagnostico && (
-          <div className="space-y-4">
-            <DebugInfo />
-            <TesteSimples />
-            <EstadoProdutos />
-            <VerificarFiltros />
-            <TesteHooks />
-            <DiagnosticoSimples />
-            <DiagnosticoSupabase />
-          </div>
-        )}
 
         <div className="flex gap-2">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
