@@ -260,9 +260,65 @@ export default function Bases() {
 
 
 
+  // Validações obrigatórias
+  const validarFormulario = () => {
+    const erros: string[] = []
+
+    // Validação de campos obrigatórios
+    if (!formData.nome.trim()) {
+      erros.push('Nome é obrigatório')
+    }
+    if (!formData.codigo.trim()) {
+      erros.push('Código é obrigatório')
+    }
+    if (!formData.unidade_produto.trim()) {
+      erros.push('Unidade é obrigatória')
+    }
+    if (formData.rendimento && Number(formData.rendimento) <= 0) {
+      erros.push('Rendimento deve ser maior que zero')
+    }
+
+    // Validação de insumos
+    const insumosValidos = insumosSelecionados.filter(insumo => 
+      insumo.insumo_id && insumo.insumo_id.trim() !== ''
+    )
+    
+    if (insumosValidos.length === 0) {
+      erros.push('Adicione pelo menos um insumo')
+    }
+
+    // Validação de quantidades
+    for (const insumo of insumosValidos) {
+      if (insumo.quantidade <= 0) {
+        erros.push(`Quantidade do insumo "${insumo.nome}" deve ser maior que zero`)
+      }
+      if (insumo.custo < 0) {
+        erros.push(`Custo do insumo "${insumo.nome}" não pode ser negativo`)
+      }
+    }
+
+    return erros
+  }
+
   // Salvar base
   const handleSave = async () => {
     try {
+      console.log('Iniciando salvamento da base...')
+      console.log('FormData:', formData)
+      console.log('Insumos selecionados:', insumosSelecionados)
+      
+      // Validar formulário
+      const erros = validarFormulario()
+      if (erros.length > 0) {
+        console.log('Erros de validação:', erros)
+        toast({
+          title: 'Erro de Validação',
+          description: erros.join(', '),
+          variant: 'destructive'
+        })
+        return
+      }
+
       const insumosData = insumosSelecionados
         .filter(insumo => insumo.insumo_id && insumo.insumo_id.trim() !== '')
         .map(insumo => ({
@@ -271,6 +327,8 @@ export default function Bases() {
           unidade: insumo.unidade,
           custo: Number(insumo.custo)
         }))
+
+      console.log('Insumos filtrados:', insumosData)
 
       const baseData = {
         nome: formData.nome,
@@ -288,16 +346,30 @@ export default function Bases() {
         data_ficha: new Date().toISOString().split('T')[0]
       }
 
+      console.log('Base data:', baseData)
+
       if (editingBase) {
+        console.log('Atualizando base existente...')
         await updateBase(editingBase.id, baseData, insumosData)
       } else {
+        console.log('Criando nova base...')
         await createBase(baseData, insumosData)
       }
 
       resetForm()
       setIsDialogOpen(false)
+      toast({
+        title: 'Sucesso',
+        description: editingBase ? 'Base atualizada com sucesso!' : 'Base criada com sucesso!',
+        variant: 'default'
+      })
     } catch (error) {
       console.error('Erro ao salvar base:', error)
+      toast({
+        title: 'Erro',
+        description: 'Erro ao salvar base. Verifique os dados e tente novamente.',
+        variant: 'destructive'
+      })
     }
   }
 
@@ -457,7 +529,11 @@ export default function Bases() {
                     value={formData.nome}
                     onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                     placeholder="Nome da base"
+                    className={!formData.nome.trim() ? 'border-red-500' : ''}
                   />
+                  {!formData.nome.trim() && (
+                    <p className="text-xs text-red-500 mt-1">Nome é obrigatório</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="codigo">Código *</Label>
@@ -467,6 +543,7 @@ export default function Bases() {
                     value={formData.codigo}
                     onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value }))}
                     placeholder="Código da base"
+                    className={!formData.codigo.trim() ? 'border-red-500' : ''}
                   />
                     <Button
                       type="button"
@@ -504,7 +581,7 @@ export default function Bases() {
                   <Input
                     id="quantidade_total"
                     type="number"
-                    step="0.01"
+                    step="0.001"
                     value={calcularQuantidadeTotal()}
                     disabled
                     placeholder="Calculado automaticamente"
@@ -521,7 +598,11 @@ export default function Bases() {
                     value={formData.unidade_produto}
                     onChange={(e) => setFormData(prev => ({ ...prev, unidade_produto: e.target.value }))}
                     placeholder="kg, unidade, etc."
+                    className={!formData.unidade_produto.trim() ? 'border-red-500' : ''}
                   />
+                  {!formData.unidade_produto.trim() && (
+                    <p className="text-xs text-red-500 mt-1">Unidade é obrigatória</p>
+                  )}
                 </div>
               </div>
 
@@ -530,9 +611,11 @@ export default function Bases() {
                   <Label htmlFor="rendimento">Rendimento</Label>
                   <Input
                     id="rendimento"
+                    type="number"
+                    step="0.001"
                     value={formData.rendimento}
                     onChange={(e) => setFormData(prev => ({ ...prev, rendimento: e.target.value }))}
-                    placeholder="Ex: 10 porções"
+                    placeholder="Ex: 10.000"
                   />
                 </div>
                 <div>
@@ -540,6 +623,7 @@ export default function Bases() {
                   <Input
                     id="tempo_preparo"
                     type="number"
+                    step="1"
                     value={formData.tempo_preparo}
                     onChange={(e) => setFormData(prev => ({ ...prev, tempo_preparo: parseInt(e.target.value) || 0 }))}
                     placeholder="0"
@@ -573,13 +657,14 @@ export default function Bases() {
                     id="custo_batelada"
                     type="number"
                     step="0.01"
-                    value={formData.custo_total_batelada}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      custo_total_batelada: parseFloat(e.target.value) || 0 
-                    }))}
-                    placeholder="0.00"
+                    value={calcularCustoTotal()}
+                    disabled
+                    placeholder="Calculado automaticamente"
+                    className="bg-muted"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Soma automática dos custos dos insumos
+                  </p>
                 </div>
               </div>
 
