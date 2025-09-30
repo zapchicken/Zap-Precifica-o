@@ -740,9 +740,9 @@ export default function Bases() {
                 {insumos.length > 0 && (
                   <div className="border rounded-lg overflow-hidden">
                     {/* Cabeçalho da Tabela */}
-                    <div className="grid grid-cols-6 gap-4 p-3 bg-muted border-b">
+                    <div className="grid grid-cols-[100px_1fr_100px_120px_120px_80px] gap-3 p-3 bg-muted border-b items-center">
                       <div className="text-sm font-medium">Código</div>
-                      <div className="text-sm font-medium col-span-2">Nome</div>
+                      <div className="text-sm font-medium">Nome</div>
                       <div className="text-sm font-medium">Qtd.</div>
                       <div className="text-sm font-medium">Unidade</div>
                       <div className="text-sm font-medium">Custo (R$)</div>
@@ -752,19 +752,19 @@ export default function Bases() {
 
                     {/* Insumos Selecionados */}
                     {insumosSelecionados.map((insumo, index) => (
-                      <div key={`insumo-${index}`} className="grid grid-cols-6 gap-4 p-3 border-b">
+                      <div key={`insumo-${index}`} className="grid grid-cols-[100px_1fr_100px_120px_120px_80px] gap-3 p-3 border-b items-center">
                         <div>
                           <Input
                             value={insumo.insumo_id ? insumos.find(i => i.id.toString() === insumo.insumo_id)?.codigo_insumo || '---' : ''}
                             onChange={(e) => {
                               // Campo código não é editável - preenchido automaticamente
                             }}
-                            className="text-sm"
+                            className="text-sm h-9"
                             placeholder="Código"
                             disabled
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div>
                           <InsumoCombobox
                             items={insumos.map(item => ({
                               ...item,
@@ -801,7 +801,7 @@ export default function Bases() {
                               novosInsumos[index].quantidade = parseFloat(e.target.value) || 0
                               setInsumosSelecionados(novosInsumos)
                             }}
-                            className="text-sm"
+                            className="text-sm h-9"
                             placeholder="0.000"
                             min="0"
                           />
@@ -814,7 +814,7 @@ export default function Bases() {
                               novosInsumos[index].unidade = e.target.value
                               setInsumosSelecionados(novosInsumos)
                             }}
-                            className="text-sm"
+                            className="text-sm h-9"
                             placeholder="Unidade"
                           />
                         </div>
@@ -828,14 +828,15 @@ export default function Bases() {
                               novosInsumos[index].custo = parseFloat(e.target.value) || 0
                               setInsumosSelecionados(novosInsumos)
                             }}
-                            className="text-sm"
+                            className="text-sm h-9"
                           />
                         </div>
-                        <div>
+                        <div className="flex justify-center">
                           <Button
-                            variant="outline"
-                            size="sm"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleRemoveInsumo(index)}
+                            className="h-9 w-9"
                           >
                             <X className="h-4 w-4" />
                           </Button>
