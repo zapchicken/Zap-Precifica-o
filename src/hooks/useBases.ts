@@ -90,11 +90,15 @@ export const useBases = () => {
 
           if (insumosError) throw insumosError
 
+          // Log detalhado para debug
+          console.log(`📦 Base ${base.codigo}: ${insumosData?.length || 0} registros em bases_insumos`)
+          
           const insumos = (insumosData || [])
             .filter((item: any) => {
               // Filtrar insumos que não existem mais (foram deletados)
               if (!item.insumo || !item.insumo.nome) {
                 console.warn(`⚠️ Insumo não encontrado para base ${base.codigo}: insumo_id ${item.insumo_id}`)
+                console.warn(`   Dados do registro:`, item)
                 return false
               }
               return true
@@ -110,6 +114,8 @@ export const useBases = () => {
               created_at: item.created_at,
               tipo: 'insumo' as const
             }))
+          
+          console.log(`✅ Base ${base.codigo}: ${insumos.length} insumos válidos carregados`)
 
           return {
             ...base,
