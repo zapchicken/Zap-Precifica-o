@@ -893,52 +893,75 @@ export default function Bases() {
 
             {viewingBase && (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                {/* Informações Principais */}
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <Label className="text-sm font-medium">Nome</Label>
-                    <p className="text-sm">{viewingBase.nome}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">Código PDV</Label>
+                    <p className="text-base font-semibold">{viewingBase.codigo}</p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium">Código</Label>
-                    <p className="text-sm">{viewingBase.codigo}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Tipo</Label>
-                    <p className="text-sm">{viewingBase.tipo_produto === 'peso' ? 'Peso' : 'Unidade'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Quantidade</Label>
-                    <p className="text-sm">{viewingBase.quantidade_total.toFixed(3)} {viewingBase.unidade_produto}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Custo Total</Label>
-                    <p className="text-sm">R$ {viewingBase.custo_total_batelada.toFixed(2)}</p>
+                    <Label className="text-sm font-medium text-muted-foreground">Nome do Produto</Label>
+                    <p className="text-base font-semibold">{viewingBase.nome}</p>
                   </div>
                 </div>
 
-                {viewingBase.insumos.length > 0 && (
+                <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <Label className="text-sm font-medium">Insumos</Label>
-                    <div className="space-y-2 mt-2">
-                      {viewingBase.insumos.map((insumo, index) => {
-                        const insumoCompleto = insumos.find(i => i.id === insumo.insumo_id)
-                        const codigo = insumoCompleto?.codigo_insumo || '---'
-                        return (
-                          <div key={index} className="flex justify-between items-center p-2 border rounded">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{insumo.nome}</span>
-                              <span className="text-xs text-muted-foreground">Código: {codigo}</span>
+                    <Label className="text-sm font-medium text-muted-foreground">Categoria</Label>
+                    <p className="text-base">{viewingBase.tipo_produto === 'peso' ? 'PESO' : 'UNIDADE'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Data da Ficha</Label>
+                    <p className="text-base">{new Date(viewingBase.data_ficha).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Tempo de Preparo</Label>
+                    <p className="text-base">{viewingBase.tempo_preparo} min</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Rendimento</Label>
+                    <p className="text-base">{viewingBase.rendimento} porções</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Custo Total</Label>
+                  <p className="text-2xl font-bold text-green-600">R$ {viewingBase.custo_total_batelada.toFixed(2)}</p>
+                </div>
+
+                {/* Ingredientes e Materiais */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Ingredientes e Materiais</h3>
+                  
+                  {/* Insumos */}
+                  {viewingBase.insumos.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-100 rounded flex items-center justify-center">
+                          <span className="text-green-600 text-sm">📦</span>
+                        </div>
+                        <Label className="text-base font-medium text-green-600">Insumos</Label>
+                      </div>
+                      <div className="space-y-2 bg-green-50 p-4 rounded-lg">
+                        {viewingBase.insumos.map((insumo, index) => {
+                          const insumoCompleto = insumos.find(i => i.id === insumo.insumo_id)
+                          return (
+                            <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
+                              <span className="text-sm font-medium">{insumo.nome}</span>
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm text-muted-foreground">{insumo.quantidade.toFixed(3)} {insumo.unidade}</span>
+                                <span className="text-sm font-semibold text-green-600">R$ {insumo.custo.toFixed(2)}</span>
+                              </div>
                             </div>
-                            <span className="font-medium">{insumo.quantidade.toFixed(3)} {insumo.unidade} × R$ {insumo.custo.toFixed(2)}</span>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
           </DialogContent>
@@ -966,3 +989,4 @@ export default function Bases() {
     </Layout>
   )
 }
+
