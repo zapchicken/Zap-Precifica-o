@@ -255,7 +255,7 @@ export default function Bases() {
 
   // Buscar insumos para autocomplete
   const buscarInsumos = (termo: string) => {
-    if (termo.length < 2) {
+    if (termo.length < 1) {
       setInsumosSugeridos([])
       setMostrarSugestoes(false)
       return
@@ -264,7 +264,7 @@ export default function Bases() {
     const sugestoes = insumos.filter(insumo =>
       insumo.nome.toLowerCase().includes(termo.toLowerCase()) ||
       (insumo.codigo_insumo && insumo.codigo_insumo.toLowerCase().includes(termo.toLowerCase()))
-    ).slice(0, 5) // Limitar a 5 sugestões
+    ).slice(0, 10) // Aumentar para 10 sugestões como na foto
 
     setInsumosSugeridos(sugestoes)
     setMostrarSugestoes(sugestoes.length > 0)
@@ -777,7 +777,9 @@ export default function Bases() {
                           buscarInsumos(e.target.value)
                         }}
                         onFocus={() => {
-                          if (insumosSugeridos.length > 0) {
+                          // Mostrar sugestões ao focar no campo
+                          if (insumos.length > 0) {
+                            setInsumosSugeridos(insumos.slice(0, 10))
                             setMostrarSugestoes(true)
                           }
                         }}
@@ -791,34 +793,44 @@ export default function Bases() {
                       
                       {/* Dropdown de Sugestões */}
                       {mostrarSugestoes && insumosSugeridos.length > 0 && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                          {insumosSugeridos.map((insumo, index) => (
-                            <div
-                              key={insumo.id}
-                              className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
-                              onClick={() => selecionarInsumo(insumo)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <div className="font-medium text-sm">{insumo.nome}</div>
-                                  {insumo.codigo_insumo && (
-                                    <div className="text-xs text-gray-500">
-                                      Código: {insumo.codigo_insumo}
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                          {/* Header do dropdown */}
+                          <div className="p-2 border-b bg-gray-50">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Search className="h-4 w-4" />
+                              Buscar insumo
+                            </div>
+                          </div>
+                          
+                          {/* Lista de sugestões */}
+                          <div className="py-1">
+                            {insumosSugeridos.map((insumo, index) => (
+                              <div
+                                key={insumo.id}
+                                className="px-3 py-2 hover:bg-orange-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                onClick={() => selecionarInsumo(insumo)}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm text-gray-900">{insumo.nome}</div>
+                                    {insumo.codigo_insumo && (
+                                      <div className="text-xs text-gray-500 mt-0.5">
+                                        {insumo.codigo_insumo}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      R$ {insumo.preco_por_unidade.toFixed(2)}
                                     </div>
-                                  )}
-                                  <div className="text-xs text-gray-500">
-                                    {insumo.categoria} • R$ {insumo.preco_por_unidade.toFixed(2)} / {insumo.unidade_medida}
+                                    <div className="text-xs text-gray-500">
+                                      / {insumo.unidade_medida}
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-sm font-medium">
-                                    R$ {(insumo.preco_por_unidade * (insumo.fator_correcao || 1)).toFixed(2)}
-                                  </div>
-                                  <div className="text-xs text-gray-500">Custo unitário</div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
