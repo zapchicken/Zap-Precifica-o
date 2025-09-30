@@ -669,28 +669,6 @@ export default function Bases() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="modo_preparo">Modo de Preparo</Label>
-                <Textarea
-                  id="modo_preparo"
-                  value={formData.modo_preparo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, modo_preparo: e.target.value }))}
-                  placeholder="Descreva o modo de preparo..."
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="observacoes">Observações</Label>
-                <Textarea
-                  id="observacoes"
-                  value={formData.observacoes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
-                  placeholder="Observações adicionais..."
-                  rows={2}
-                />
-              </div>
-
               {/* Insumos */}
               <div>
                 <div className="flex justify-between items-center mb-4">
@@ -913,6 +891,29 @@ export default function Bases() {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Modo de Preparo e Observações */}
+              <div>
+                <Label htmlFor="modo_preparo">Modo de Preparo</Label>
+                <Textarea
+                  id="modo_preparo"
+                  value={formData.modo_preparo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, modo_preparo: e.target.value }))}
+                  placeholder="Descreva o modo de preparo..."
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="observacoes">Observações</Label>
+                <Textarea
+                  id="observacoes"
+                  value={formData.observacoes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+                  placeholder="Observações adicionais..."
+                  rows={2}
+                />
               </div>
 
               {/* Botões */}
