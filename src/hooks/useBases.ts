@@ -348,13 +348,7 @@ export const useBases = () => {
       // Verificar se a base está sendo usada em fichas técnicas
       const { data: fichasComBase, error: checkError } = await supabase
         .from('fichas_bases')
-        .select(`
-          ficha_id,
-          fichas_tecnicas (
-            nome,
-            codigo_pdv
-          )
-        `)
+        .select('ficha_id')
         .eq('base_id', id)
 
       if (checkError) {
@@ -362,9 +356,14 @@ export const useBases = () => {
       }
 
       if (fichasComBase && fichasComBase.length > 0) {
-        const fichasNomes = fichasComBase
-          .map((fb: any) => fb.fichas_tecnicas?.nome || 'Ficha sem nome')
-          .join(', ')
+        // Buscar nomes das fichas
+        const fichasIds = fichasComBase.map((fb: any) => fb.ficha_id)
+        const { data: fichas } = await supabase
+          .from('fichas_tecnicas')
+          .select('nome, codigo_pdv')
+          .in('id', fichasIds)
+        
+        const fichasNomes = fichas?.map(f => f.nome).join(', ') || 'Fichas técnicas'
         
         toast({
           title: 'Não é possível excluir',
