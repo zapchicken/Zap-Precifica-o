@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -90,6 +91,7 @@ interface BaseComInsumos {
 }
 
 export default function Bases() {
+  const navigate = useNavigate()
   const { bases, loading, createBase, updateBase, deleteBase } = useBases()
   const { insumos } = useInsumos()
   const [searchTerm, setSearchTerm] = useState('')
@@ -283,6 +285,18 @@ export default function Bases() {
 
   // Adicionar insumo da tabela
   const handleAdicionarInsumoTabela = () => {
+    // Verificar se há insumos disponíveis
+    if (insumos.length === 0) {
+      toast({
+        title: 'Nenhum insumo cadastrado',
+        description: 'Você será redirecionado para a página de Insumos para cadastrar novos insumos.',
+        variant: 'destructive'
+      })
+      // Navegar para a página de Insumos
+      navigate('/insumos')
+      return
+    }
+
     if (!novoInsumo.nome || novoInsumo.quantidade <= 0) {
       toast({
         title: 'Erro',
@@ -681,19 +695,51 @@ export default function Bases() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <Label className="text-lg font-semibold">Insumos</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleAdicionarInsumoTabela}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Adicionar Insumo
-                  </Button>
+                  <div className="flex gap-2">
+                    {insumos.length === 0 && (
+                      <Button
+                        type="button"
+                        variant="default"
+                        onClick={() => navigate('/insumos')}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Cadastrar Insumos
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleAdicionarInsumoTabela}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Adicionar Insumo
+                    </Button>
+                  </div>
                 </div>
 
+                {/* Mensagem quando não há insumos */}
+                {insumos.length === 0 && (
+                  <div className="border rounded-lg p-6 text-center bg-muted/30">
+                    <div className="text-muted-foreground mb-4">
+                      <Package2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-lg font-medium">Nenhum insumo cadastrado</p>
+                      <p className="text-sm">Cadastre insumos primeiro para poder adicioná-los às bases</p>
+                    </div>
+                    <Button
+                      onClick={() => navigate('/insumos')}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Ir para Página de Insumos
+                    </Button>
+                  </div>
+                )}
+
                 {/* Tabela de Insumos */}
-                <div className="border rounded-lg overflow-hidden">
+                {insumos.length > 0 && (
+                  <div className="border rounded-lg overflow-hidden">
                   {/* Cabeçalho da Tabela */}
                   <div className="grid grid-cols-7 gap-4 p-3 bg-muted border-b">
                     <div className="text-sm font-medium">Tipo</div>
@@ -844,7 +890,8 @@ export default function Bases() {
                       </div>
                     </div>
                   ))}
-                </div>
+                  </div>
+                )}
                 
                 {insumosSelecionados.length > 0 && (
                   <div className="mt-4 p-3 bg-muted rounded-lg">
