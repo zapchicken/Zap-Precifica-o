@@ -135,6 +135,8 @@ export default function Bases() {
     unidade: '',
     custo: 0
   })
+  const [insumosSugeridos, setInsumosSugeridos] = useState<any[]>([])
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
 
   // Filtrar bases
   const filteredBases = bases.filter(base =>
@@ -247,6 +249,36 @@ export default function Bases() {
       custo: custoCalculado,
       tipo: 'insumo'
     }])
+  }
+
+  // Buscar insumos para autocomplete
+  const buscarInsumos = (termo: string) => {
+    if (termo.length < 2) {
+      setInsumosSugeridos([])
+      setMostrarSugestoes(false)
+      return
+    }
+
+    const sugestoes = insumos.filter(insumo =>
+      insumo.nome.toLowerCase().includes(termo.toLowerCase()) ||
+      (insumo.codigo_insumo && insumo.codigo_insumo.toLowerCase().includes(termo.toLowerCase()))
+    ).slice(0, 5) // Limitar a 5 sugestões
+
+    setInsumosSugeridos(sugestoes)
+    setMostrarSugestoes(sugestoes.length > 0)
+  }
+
+  // Selecionar insumo das sugestões
+  const selecionarInsumo = (insumo: any) => {
+    setNovoInsumo(prev => ({
+      ...prev,
+      nome: insumo.nome,
+      codigo: insumo.codigo_insumo || '',
+      unidade: insumo.unidade_medida,
+      custo: insumo.preco_por_unidade * (insumo.fator_correcao || 1)
+    }))
+    setMostrarSugestoes(false)
+    setInsumosSugeridos([])
   }
 
   // Adicionar insumo da tabela
@@ -691,13 +723,58 @@ export default function Bases() {
                         className="text-sm"
                       />
                     </div>
-                    <div>
+                    <div className="relative">
                       <Input
                         value={novoInsumo.nome}
-                        onChange={(e) => setNovoInsumo(prev => ({ ...prev, nome: e.target.value }))}
+                        onChange={(e) => {
+                          setNovoInsumo(prev => ({ ...prev, nome: e.target.value }))
+                          buscarInsumos(e.target.value)
+                        }}
+                        onFocus={() => {
+                          if (insumosSugeridos.length > 0) {
+                            setMostrarSugestoes(true)
+                          }
+                        }}
+                        onBlur={() => {
+                          // Delay para permitir clique nas sugestões
+                          setTimeout(() => setMostrarSugestoes(false), 200)
+                        }}
                         placeholder="Buscar insumo"
                         className="text-sm border-orange-500"
                       />
+                      
+                      {/* Dropdown de Sugestões */}
+                      {mostrarSugestoes && insumosSugeridos.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {insumosSugeridos.map((insumo, index) => (
+                            <div
+                              key={insumo.id}
+                              className="p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                              onClick={() => selecionarInsumo(insumo)}
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-medium text-sm">{insumo.nome}</div>
+                                  {insumo.codigo_insumo && (
+                                    <div className="text-xs text-gray-500">
+                                      Código: {insumo.codigo_insumo}
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-gray-500">
+                                    {insumo.categoria} • R$ {insumo.preco_por_unidade.toFixed(2)} / {insumo.unidade_medida}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-sm font-medium">
+                                    R$ {(insumo.preco_por_unidade * (insumo.fator_correcao || 1)).toFixed(2)}
+                                  </div>
+                                  <div className="text-xs text-gray-500">Custo unitário</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <Input
