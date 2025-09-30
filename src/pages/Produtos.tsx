@@ -43,6 +43,7 @@ import { TesteSimples } from '../components/TesteSimples'
 import { DebugInfo } from '../components/DebugInfo'
 import { TesteHooks } from '../components/TesteHooks'
 import { EstadoProdutos } from '../components/EstadoProdutos'
+import { VerificarFiltros } from '../components/VerificarFiltros'
 
 
 export default function Produtos() {
@@ -664,6 +665,7 @@ export default function Produtos() {
             <DebugInfo />
             <TesteSimples />
             <EstadoProdutos />
+            <VerificarFiltros />
             <TesteHooks />
             <DiagnosticoSimples />
             <DiagnosticoSupabase />
