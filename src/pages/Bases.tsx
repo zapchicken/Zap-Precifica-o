@@ -131,14 +131,6 @@ export default function Bases() {
     custo: number
     tipo: 'insumo'
   }>>([])
-  const [novoInsumo, setNovoInsumo] = useState({
-    tipo: 'insumo',
-    codigo: '',
-    nome: '',
-    quantidade: 0,
-    unidade: '',
-    custo: 0
-  })
 
   // Filtrar bases
   const filteredBases = bases.filter(base =>
@@ -267,15 +259,18 @@ export default function Bases() {
   }, [insumosSelecionados])
 
 
+
   // Salvar base
   const handleSave = async () => {
     try {
-      const insumosData = insumosSelecionados.map(insumo => ({
-        insumo_id: insumo.insumo_id.toString(),
-        quantidade: Number(insumo.quantidade),
-        unidade: insumo.unidade,
-        custo: Number(insumo.custo)
-      }))
+      const insumosData = insumosSelecionados
+        .filter(insumo => insumo.insumo_id && insumo.insumo_id.trim() !== '')
+        .map(insumo => ({
+          insumo_id: insumo.insumo_id.toString(),
+          quantidade: Number(insumo.quantidade),
+          unidade: insumo.unidade,
+          custo: Number(insumo.custo)
+        }))
 
       const baseData = {
         nome: formData.nome,
@@ -659,85 +654,10 @@ export default function Bases() {
                       <div className="text-sm font-medium">Ações</div>
                     </div>
 
-                    {/* Linha para Adicionar Novo Insumo */}
-                    <div className="grid grid-cols-7 gap-4 p-3 bg-muted/30">
-                      <div>
-                        <Input
-                          value={novoInsumo.tipo}
-                          onChange={(e) => setNovoInsumo(prev => ({ ...prev, tipo: e.target.value }))}
-                          placeholder="Insumo"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          value={novoInsumo.codigo}
-                          onChange={(e) => setNovoInsumo(prev => ({ ...prev, codigo: e.target.value }))}
-                          placeholder="Código auto"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="relative">
-                        <Input
-                          value={novoInsumo.nome}
-                          onChange={(e) => {
-                            setNovoInsumo(prev => ({ ...prev, nome: e.target.value }))
-                          }}
-                          placeholder="Buscar insumo"
-                          className="text-sm border-orange-500"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          step="0.001"
-                          value={novoInsumo.quantidade}
-                          onChange={(e) => setNovoInsumo(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 0 }))}
-                          placeholder="0.000"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          value={novoInsumo.unidade}
-                          onChange={(e) => setNovoInsumo(prev => ({ ...prev, unidade: e.target.value }))}
-                          placeholder="Unidade"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={novoInsumo.custo}
-                          onChange={(e) => setNovoInsumo(prev => ({ ...prev, custo: parseFloat(e.target.value) || 0 }))}
-                          placeholder="0.00"
-                          className="text-sm"
-                        />
-                      </div>
-                      <div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setNovoInsumo({
-                            tipo: 'insumo',
-                            codigo: '',
-                            nome: '',
-                            quantidade: 0,
-                            unidade: '',
-                            custo: 0
-                          })}
-                          className="border-orange-500"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
 
                     {/* Insumos Selecionados */}
                     {insumosSelecionados.map((insumo, index) => (
-                      <div key={index} className="grid grid-cols-7 gap-4 p-3 border-b">
+                      <div key={`insumo-${index}`} className="grid grid-cols-7 gap-4 p-3 border-b">
                         <div>
                           <Input
                             value={insumo.tipo}
@@ -751,9 +671,9 @@ export default function Bases() {
                         </div>
                         <div>
                           <Input
-                            value=""
+                            value={insumo.insumo_id ? insumos.find(i => i.id.toString() === insumo.insumo_id)?.codigo_insumo || '---' : ''}
                             onChange={(e) => {
-                              // Campo código não é editável por enquanto
+                              // Campo código não é editável - preenchido automaticamente
                             }}
                             className="text-sm"
                             placeholder="Código"
@@ -798,6 +718,8 @@ export default function Bases() {
                               setInsumosSelecionados(novosInsumos)
                             }}
                             className="text-sm"
+                            placeholder="0.000"
+                            min="0"
                           />
                         </div>
                         <div>
@@ -944,10 +866,10 @@ export default function Bases() {
 
         {/* Dialog de Confirmação de Exclusão */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent aria-describedby="delete-dialog-description">
             <AlertDialogHeader>
               <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogDescription id="delete-dialog-description">
                 Tem certeza que deseja excluir esta base? Esta ação não pode ser desfeita.
               </AlertDialogDescription>
             </AlertDialogHeader>
