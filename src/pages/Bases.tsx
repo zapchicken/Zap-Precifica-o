@@ -39,6 +39,7 @@ import {
 } from 'lucide-react'
 import { useBases } from '../hooks/useBases'
 import { useInsumos } from '../hooks/useInsumos'
+import { supabase } from '@/lib/supabase'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog'
 import { uploadAndCompressImage, deleteImageFromStorage } from '../lib/imageUpload'
 
@@ -126,6 +127,9 @@ export default function Bases() {
   const [editingBase, setEditingBase] = useState<BaseComInsumos | null>(null)
   const [deleteBaseId, setDeleteBaseId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isInsumoDialogOpen, setIsInsumoDialogOpen] = useState(false)
+  const [insumoSelecionado, setInsumoSelecionado] = useState<any>(null)
+  const [quantidadeInsumo, setQuantidadeInsumo] = useState(1)
 
   // Filtrar bases
   const filteredBases = bases.filter(base =>
@@ -153,11 +157,38 @@ export default function Bases() {
     setEditingBase(null)
   }
 
-  // Gerar código automático
-  const gerarCodigoAutomatico = () => {
-    const timestamp = Date.now().toString().slice(-6) // Últimos 6 dígitos do timestamp
-    const codigo = `BAS${timestamp}`
-    setFormData(prev => ({ ...prev, codigo }))
+  // Gerar código automático sequencial
+  const gerarCodigoAutomatico = async () => {
+    try {
+      // Buscar o último código usado
+      const { data: ultimaBase, error } = await supabase
+        .from('bases')
+        .select('codigo')
+        .like('codigo', 'BAS%')
+        .order('codigo', { ascending: false })
+        .limit(1)
+        .single()
+
+      let proximoNumero = 1
+      
+      if (ultimaBase && !error) {
+        // Extrair número do último código (ex: BAS003 -> 3)
+        const match = ultimaBase.codigo.match(/BAS(\d+)/)
+        if (match) {
+          proximoNumero = parseInt(match[1]) + 1
+        }
+      }
+
+      // Gerar código com 3 dígitos (BAS001, BAS002, etc.)
+      const codigo = `BAS${proximoNumero.toString().padStart(3, '0')}`
+      setFormData(prev => ({ ...prev, codigo }))
+    } catch (err) {
+      console.error('Erro ao gerar código:', err)
+      // Fallback para timestamp se houver erro
+      const timestamp = Date.now().toString().slice(-6)
+      const codigo = `BAS${timestamp}`
+      setFormData(prev => ({ ...prev, codigo }))
+    }
   }
 
   // Abrir diálogo para criar nova base
@@ -211,6 +242,25 @@ export default function Bases() {
       custo: custoCalculado,
       tipo: 'insumo'
     }])
+  }
+
+  // Adicionar insumo selecionado do modal
+  const handleAdicionarInsumoSelecionado = () => {
+    if (!insumoSelecionado) return
+
+    const novoInsumo = {
+      insumo_id: insumoSelecionado.id,
+      nome: insumoSelecionado.nome,
+      quantidade: quantidadeInsumo,
+      unidade: insumoSelecionado.unidade_medida,
+      custo: insumoSelecionado.preco_por_unidade * (insumoSelecionado.fator_correcao || 1),
+      tipo: 'insumo' as const
+    }
+
+    handleAddInsumo(novoInsumo)
+    setIsInsumoDialogOpen(false)
+    setInsumoSelecionado(null)
+    setQuantidadeInsumo(1)
   }
 
   // Remover insumo
@@ -581,17 +631,8 @@ export default function Bases() {
                         return
                       }
                       
-                      // Usar o primeiro insumo disponível como exemplo
-                      const primeiroInsumo = insumos[0]
-                      const novoInsumo = {
-                        insumo_id: primeiroInsumo.id,
-                        nome: primeiroInsumo.nome,
-                        quantidade: 1,
-                        unidade: primeiroInsumo.unidade_medida,
-                        custo: primeiroInsumo.preco_por_unidade,
-                        tipo: 'insumo' as const
-                      }
-                      handleAddInsumo(novoInsumo)
+                      // Abrir modal de seleção de insumos
+                      setIsInsumoDialogOpen(true)
                     }}
                     className="flex items-center gap-2"
                   >
@@ -692,6 +733,101 @@ export default function Bases() {
                 )}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para Seleção de Insumos */}
+        <Dialog open={isInsumoDialogOpen} onOpenChange={setIsInsumoDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Selecionar Insumo</DialogTitle>
+              <DialogDescription>
+                Escolha um insumo para adicionar à base
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Lista de Insumos */}
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {insumos.map((insumo) => (
+                  <div
+                    key={insumo.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                      insumoSelecionado?.id === insumo.id
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:bg-muted'
+                    }`}
+                    onClick={() => setInsumoSelecionado(insumo)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium">{insumo.nome}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {insumo.codigo_insumo && `Código: ${insumo.codigo_insumo}`}
+                          {insumo.codigo_insumo && insumo.categoria && ' • '}
+                          {insumo.categoria}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          R$ {insumo.preco_por_unidade.toFixed(2)} / {insumo.unidade_medida}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          R$ {(insumo.preco_por_unidade * (insumo.fator_correcao || 1)).toFixed(2)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Custo unitário
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quantidade */}
+              {insumoSelecionado && (
+                <div className="space-y-2">
+                  <Label htmlFor="quantidade">Quantidade</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="quantidade"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={quantidadeInsumo}
+                      onChange={(e) => setQuantidadeInsumo(parseFloat(e.target.value) || 1)}
+                      className="w-32"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {insumoSelecionado.unidade_medida}
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Custo total: R$ {(quantidadeInsumo * insumoSelecionado.preco_por_unidade * (insumoSelecionado.fator_correcao || 1)).toFixed(2)}
+                  </div>
+                </div>
+              )}
+
+              {/* Botões */}
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsInsumoDialogOpen(false)
+                    setInsumoSelecionado(null)
+                    setQuantidadeInsumo(1)
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleAdicionarInsumoSelecionado}
+                  disabled={!insumoSelecionado}
+                >
+                  Adicionar
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 
