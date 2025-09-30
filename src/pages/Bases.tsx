@@ -94,7 +94,7 @@ interface BaseComInsumos {
 
 export default function Bases() {
   const navigate = useNavigate()
-  const { bases, loading, createBase, updateBase, deleteBase } = useBases()
+  const { bases, loading, createBase, updateBase, deleteBase, recalcularBasesVazias } = useBases()
   const { insumos } = useInsumos()
   
   const [searchTerm, setSearchTerm] = useState('')
@@ -402,10 +402,20 @@ export default function Bases() {
               Gerencie suas bases e produtos intermediários
             </p>
           </div>
-          <Button onClick={handleCreateNew} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Nova Base
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={recalcularBasesVazias} 
+              variant="outline"
+              className="flex items-center gap-2"
+              title="Zerar bases que têm valores mas não têm insumos"
+            >
+              🧹 Limpar Bases Vazias
+            </Button>
+            <Button onClick={handleCreateNew} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Base
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}

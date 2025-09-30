@@ -299,6 +299,56 @@ export const useBases = () => {
     }
   }
 
+  // Recalcular totais de bases sem insumos
+  const recalcularBasesVazias = async () => {
+    if (!user?.id) return
+
+    try {
+      const basesVazias = bases.filter(base => 
+        base.insumos.length === 0 && 
+        (base.quantidade_total > 0 || base.custo_total_batelada > 0)
+      )
+
+      if (basesVazias.length > 0) {
+        console.log(`🧹 Encontradas ${basesVazias.length} bases com valores mas sem insumos`)
+        
+        for (const base of basesVazias) {
+          await supabase
+            .from('bases')
+            .update({
+              quantidade_total: 0,
+              custo_total_batelada: 0,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', base.id)
+          
+          console.log(`✅ Base ${base.codigo} zerada`)
+        }
+
+        await loadBases()
+        
+        toast({
+          title: 'Limpeza concluída',
+          description: `${basesVazias.length} base(s) sem insumos foram zeradas`,
+          variant: 'default'
+        })
+      } else {
+        toast({
+          title: 'Nenhuma base para limpar',
+          description: 'Todas as bases estão consistentes',
+          variant: 'default'
+        })
+      }
+    } catch (err) {
+      console.error('Erro ao recalcular bases vazias:', err)
+      toast({
+        title: 'Erro',
+        description: 'Erro ao recalcular bases',
+        variant: 'destructive'
+      })
+    }
+  }
+
   // Limpar referências órfãs de insumos (insumos que foram deletados)
   const limparReferenciasOrfas = async (baseId: string) => {
     if (!user?.id) return
@@ -459,6 +509,7 @@ export const useBases = () => {
     createBase,
     updateBase,
     deleteBase,
-    limparReferenciasOrfas
+    limparReferenciasOrfas,
+    recalcularBasesVazias
   }
 }
