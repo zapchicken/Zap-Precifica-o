@@ -374,21 +374,40 @@ export const useBases = () => {
         return
       }
 
-      // Deletar insumos primeiro
+      // Deletar relacionamentos primeiro (ordem importante!)
+      
+      // 1. Deletar fichas_bases (bases usadas em fichas técnicas)
+      const { error: fichasBasesError } = await supabase
+        .from('fichas_bases')
+        .delete()
+        .eq('base_id', id)
+
+      if (fichasBasesError) {
+        console.error('Erro ao deletar fichas_bases:', fichasBasesError)
+        throw fichasBasesError
+      }
+
+      // 2. Deletar bases_insumos (insumos da base)
       const { error: insumosError } = await supabase
         .from('bases_insumos')
         .delete()
         .eq('base_id', id)
 
-      if (insumosError) throw insumosError
+      if (insumosError) {
+        console.error('Erro ao deletar bases_insumos:', insumosError)
+        throw insumosError
+      }
 
-      // Deletar base
+      // 3. Finalmente, deletar a base
       const { error: baseError } = await supabase
         .from('bases')
         .delete()
         .eq('id', id)
 
-      if (baseError) throw baseError
+      if (baseError) {
+        console.error('Erro ao deletar base:', baseError)
+        throw baseError
+      }
 
       // Recarregar bases
       await loadBases()
