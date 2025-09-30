@@ -255,6 +255,17 @@ export default function Bases() {
     return insumosSelecionados.reduce((total, insumo) => total + (insumo.quantidade * insumo.custo), 0)
   }
 
+  // Calcular quantidade total automaticamente
+  const calcularQuantidadeTotal = () => {
+    return insumosSelecionados.reduce((total, insumo) => total + insumo.quantidade, 0)
+  }
+
+  // Atualizar quantidade total automaticamente quando insumos mudarem
+  useEffect(() => {
+    const quantidadeTotal = calcularQuantidadeTotal()
+    setFormData(prev => ({ ...prev, quantidade_total: quantidadeTotal }))
+  }, [insumosSelecionados])
+
 
   // Salvar base
   const handleSave = async () => {
@@ -270,7 +281,7 @@ export default function Bases() {
         nome: formData.nome,
         codigo: formData.codigo,
         tipo_produto: formData.tipo_produto,
-        quantidade_total: formData.quantidade_total,
+        quantidade_total: calcularQuantidadeTotal(),
         unidade_produto: formData.unidade_produto,
         rendimento: formData.rendimento,
         custo_total_batelada: calcularCustoTotal(),
@@ -499,10 +510,14 @@ export default function Bases() {
                     id="quantidade_total"
                     type="number"
                     step="0.01"
-                    value={formData.quantidade_total}
-                    onChange={(e) => setFormData(prev => ({ ...prev, quantidade_total: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0.00"
+                    value={calcularQuantidadeTotal()}
+                    disabled
+                    placeholder="Calculado automaticamente"
+                    className="bg-muted"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Soma automática das quantidades dos insumos
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="unidade_produto">Unidade *</Label>
