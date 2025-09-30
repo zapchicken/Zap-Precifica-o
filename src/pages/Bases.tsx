@@ -241,16 +241,25 @@ export default function Bases() {
 
   // Adicionar insumo
   const handleAddInsumo = (insumo: any) => {
+    console.log('🔍 Debug - handleAddInsumo chamado com:', insumo)
     const custoCalculado = insumo.quantidade * insumo.custo
     
-    setInsumosSelecionados(prev => [...prev, {
+    const novoInsumoSelecionado = {
       insumo_id: insumo.insumo_id,
       nome: insumo.nome,
       quantidade: insumo.quantidade,
       unidade: insumo.unidade,
       custo: custoCalculado,
-      tipo: 'insumo'
-    }])
+      tipo: 'insumo' as const
+    }
+    
+    console.log('🔍 Debug - novoInsumoSelecionado:', novoInsumoSelecionado)
+    
+    setInsumosSelecionados(prev => {
+      const novoArray = [...prev, novoInsumoSelecionado]
+      console.log('🔍 Debug - novo array de insumos:', novoArray)
+      return novoArray
+    })
   }
 
   // Buscar insumos para autocomplete
@@ -285,6 +294,10 @@ export default function Bases() {
 
   // Adicionar insumo da tabela
   const handleAdicionarInsumoTabela = () => {
+    console.log('🔍 Debug - handleAdicionarInsumoTabela chamado')
+    console.log('🔍 Debug - novoInsumo:', novoInsumo)
+    console.log('🔍 Debug - insumos disponíveis:', insumos.length)
+    
     // Verificar se há insumos disponíveis
     if (insumos.length === 0) {
       toast({
@@ -310,6 +323,8 @@ export default function Bases() {
     const insumoEncontrado = insumos.find(i => 
       i.nome.toLowerCase().includes(novoInsumo.nome.toLowerCase())
     )
+
+    console.log('🔍 Debug - insumoEncontrado:', insumoEncontrado)
 
     if (!insumoEncontrado) {
       toast({
