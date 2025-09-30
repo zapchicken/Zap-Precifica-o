@@ -90,17 +90,26 @@ export const useBases = () => {
 
           if (insumosError) throw insumosError
 
-          const insumos = (insumosData || []).map((item: any) => ({
-            id: item.id,
-            insumo_id: item.insumo_id,
-            nome: item.insumo?.nome || 'Insumo não encontrado',
-            quantidade: item.quantidade,
-            unidade: item.unidade,
-            custo: item.custo,
-            base_id: item.base_id,
-            created_at: item.created_at,
-            tipo: 'insumo' as const
-          }))
+          const insumos = (insumosData || [])
+            .filter((item: any) => {
+              // Filtrar insumos que não existem mais (foram deletados)
+              if (!item.insumo || !item.insumo.nome) {
+                console.warn(`⚠️ Insumo não encontrado para base ${base.codigo}: insumo_id ${item.insumo_id}`)
+                return false
+              }
+              return true
+            })
+            .map((item: any) => ({
+              id: item.id,
+              insumo_id: item.insumo_id,
+              nome: item.insumo.nome,
+              quantidade: item.quantidade,
+              unidade: item.unidade,
+              custo: item.custo,
+              base_id: item.base_id,
+              created_at: item.created_at,
+              tipo: 'insumo' as const
+            }))
 
           return {
             ...base,
@@ -284,6 +293,46 @@ export const useBases = () => {
     }
   }
 
+  // Limpar referências órfãs de insumos (insumos que foram deletados)
+  const limparReferenciasOrfas = async (baseId: string) => {
+    if (!user?.id) return
+
+    try {
+      // Buscar todos os insumos da base
+      const { data: insumosBase, error: fetchError } = await supabase
+        .from('bases_insumos')
+        .select('id, insumo_id, insumos(id)')
+        .eq('base_id', baseId)
+
+      if (fetchError) {
+        console.error('Erro ao buscar insumos da base:', fetchError)
+        return
+      }
+
+      // Identificar insumos órfãos (que não existem mais na tabela insumos)
+      const insumosOrfaos = (insumosBase || [])
+        .filter((item: any) => !item.insumos)
+        .map((item: any) => item.id)
+
+      if (insumosOrfaos.length > 0) {
+        console.log(`🧹 Limpando ${insumosOrfaos.length} referência(s) órfã(s) da base`)
+        
+        const { error: deleteError } = await supabase
+          .from('bases_insumos')
+          .delete()
+          .in('id', insumosOrfaos)
+
+        if (deleteError) {
+          console.error('Erro ao limpar referências órfãs:', deleteError)
+        } else {
+          console.log('✅ Referências órfãs removidas com sucesso')
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao limpar referências órfãs:', err)
+    }
+  }
+
   // Deletar base
   const deleteBase = async (id: string) => {
     if (!user?.id) {
@@ -296,6 +345,36 @@ export const useBases = () => {
     }
 
     try {
+      // Verificar se a base está sendo usada em fichas técnicas
+      const { data: fichasComBase, error: checkError } = await supabase
+        .from('fichas_bases')
+        .select(`
+          ficha_id,
+          fichas_tecnicas (
+            nome,
+            codigo_pdv
+          )
+        `)
+        .eq('base_id', id)
+
+      if (checkError) {
+        console.error('Erro ao verificar dependências:', checkError)
+      }
+
+      if (fichasComBase && fichasComBase.length > 0) {
+        const fichasNomes = fichasComBase
+          .map((fb: any) => fb.fichas_tecnicas?.nome || 'Ficha sem nome')
+          .join(', ')
+        
+        toast({
+          title: 'Não é possível excluir',
+          description: `Esta base está sendo usada em ${fichasComBase.length} ficha(s) técnica(s): ${fichasNomes}. Remova a base dessas fichas primeiro.`,
+          variant: 'destructive',
+          duration: 8000
+        })
+        return
+      }
+
       // Deletar insumos primeiro
       const { error: insumosError } = await supabase
         .from('bases_insumos')
@@ -319,13 +398,24 @@ export const useBases = () => {
         title: 'Sucesso',
         description: 'Base deletada com sucesso!'
       })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao deletar base:', err)
-      toast({
-        title: 'Erro',
-        description: 'Erro ao deletar base',
-        variant: 'destructive'
-      })
+      
+      // Verificar se é erro de foreign key
+      if (err.code === '23503') {
+        toast({
+          title: 'Não é possível excluir',
+          description: 'Esta base está sendo usada em outras fichas técnicas. Remova essas referências primeiro.',
+          variant: 'destructive',
+          duration: 8000
+        })
+      } else {
+        toast({
+          title: 'Erro',
+          description: err.message || 'Erro ao deletar base',
+          variant: 'destructive'
+        })
+      }
       throw err
     }
   }
@@ -344,6 +434,7 @@ export const useBases = () => {
     loadBases,
     createBase,
     updateBase,
-    deleteBase
+    deleteBase,
+    limparReferenciasOrfas
   }
 }
