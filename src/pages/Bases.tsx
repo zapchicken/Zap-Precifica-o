@@ -127,9 +127,14 @@ export default function Bases() {
   const [editingBase, setEditingBase] = useState<BaseComInsumos | null>(null)
   const [deleteBaseId, setDeleteBaseId] = useState<string | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isInsumoDialogOpen, setIsInsumoDialogOpen] = useState(false)
-  const [insumoSelecionado, setInsumoSelecionado] = useState<any>(null)
-  const [quantidadeInsumo, setQuantidadeInsumo] = useState(1)
+  const [novoInsumo, setNovoInsumo] = useState({
+    tipo: 'insumo',
+    codigo: '',
+    nome: '',
+    quantidade: 0,
+    unidade: '',
+    custo: 0
+  })
 
   // Filtrar bases
   const filteredBases = bases.filter(base =>
@@ -244,23 +249,51 @@ export default function Bases() {
     }])
   }
 
-  // Adicionar insumo selecionado do modal
-  const handleAdicionarInsumoSelecionado = () => {
-    if (!insumoSelecionado) return
+  // Adicionar insumo da tabela
+  const handleAdicionarInsumoTabela = () => {
+    if (!novoInsumo.nome || novoInsumo.quantidade <= 0) {
+      toast({
+        title: 'Erro',
+        description: 'Preencha o nome e quantidade do insumo',
+        variant: 'destructive'
+      })
+      return
+    }
 
-    const novoInsumo = {
-      insumo_id: insumoSelecionado.id,
-      nome: insumoSelecionado.nome,
-      quantidade: quantidadeInsumo,
-      unidade: insumoSelecionado.unidade_medida,
-      custo: insumoSelecionado.preco_por_unidade * (insumoSelecionado.fator_correcao || 1),
+    // Buscar insumo pelo nome
+    const insumoEncontrado = insumos.find(i => 
+      i.nome.toLowerCase().includes(novoInsumo.nome.toLowerCase())
+    )
+
+    if (!insumoEncontrado) {
+      toast({
+        title: 'Erro',
+        description: 'Insumo não encontrado',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    const insumoParaAdicionar = {
+      insumo_id: insumoEncontrado.id,
+      nome: insumoEncontrado.nome,
+      quantidade: novoInsumo.quantidade,
+      unidade: novoInsumo.unidade || insumoEncontrado.unidade_medida,
+      custo: insumoEncontrado.preco_por_unidade * (insumoEncontrado.fator_correcao || 1),
       tipo: 'insumo' as const
     }
 
-    handleAddInsumo(novoInsumo)
-    setIsInsumoDialogOpen(false)
-    setInsumoSelecionado(null)
-    setQuantidadeInsumo(1)
+    handleAddInsumo(insumoParaAdicionar)
+    
+    // Limpar campos
+    setNovoInsumo({
+      tipo: 'insumo',
+      codigo: '',
+      nome: '',
+      quantidade: 0,
+      unidade: '',
+      custo: 0
+    })
   }
 
   // Remover insumo
@@ -612,50 +645,126 @@ export default function Bases() {
                 />
               </div>
 
-              {/* Insumos Selecionados */}
+              {/* Insumos */}
               <div>
-                <div className="flex justify-between items-center mb-2">
-                  <Label>Insumos Selecionados</Label>
+                <div className="flex justify-between items-center mb-4">
+                  <Label className="text-lg font-semibold">Insumos</Label>
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      // Verificar se há insumos disponíveis
-                      if (insumos.length === 0) {
-                        toast({
-                          title: 'Aviso',
-                          description: 'Nenhum insumo cadastrado. Cadastre insumos primeiro.',
-                          variant: 'destructive'
-                        })
-                        return
-                      }
-                      
-                      // Abrir modal de seleção de insumos
-                      setIsInsumoDialogOpen(true)
-                    }}
+                    onClick={handleAdicionarInsumoTabela}
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
                     Adicionar Insumo
                   </Button>
                 </div>
-                <div className="space-y-2 mt-2">
-                  {insumosSelecionados.map((insumo, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium">{insumo.nome}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {insumo.quantidade} {insumo.unidade} × R$ {insumo.custo.toFixed(2)} = R$ {(insumo.quantidade * insumo.custo).toFixed(2)}
-                        </div>
-                      </div>
+
+                {/* Tabela de Insumos */}
+                <div className="border rounded-lg overflow-hidden">
+                  {/* Cabeçalho da Tabela */}
+                  <div className="grid grid-cols-7 gap-4 p-3 bg-muted border-b">
+                    <div className="text-sm font-medium">Tipo</div>
+                    <div className="text-sm font-medium">Código</div>
+                    <div className="text-sm font-medium">Nome</div>
+                    <div className="text-sm font-medium">Qtd.</div>
+                    <div className="text-sm font-medium">Unidade</div>
+                    <div className="text-sm font-medium">Custo (R$)</div>
+                    <div className="text-sm font-medium">Ações</div>
+                  </div>
+
+                  {/* Linha para Adicionar Novo Insumo */}
+                  <div className="grid grid-cols-7 gap-4 p-3 bg-muted/30">
+                    <div>
+                      <Input
+                        value={novoInsumo.tipo}
+                        onChange={(e) => setNovoInsumo(prev => ({ ...prev, tipo: e.target.value }))}
+                        placeholder="Insumo"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        value={novoInsumo.codigo}
+                        onChange={(e) => setNovoInsumo(prev => ({ ...prev, codigo: e.target.value }))}
+                        placeholder="Código auto"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        value={novoInsumo.nome}
+                        onChange={(e) => setNovoInsumo(prev => ({ ...prev, nome: e.target.value }))}
+                        placeholder="Buscar insumo"
+                        className="text-sm border-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="number"
+                        step="0.001"
+                        value={novoInsumo.quantidade}
+                        onChange={(e) => setNovoInsumo(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 0 }))}
+                        placeholder="0.000"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        value={novoInsumo.unidade}
+                        onChange={(e) => setNovoInsumo(prev => ({ ...prev, unidade: e.target.value }))}
+                        placeholder="Unidade"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={novoInsumo.custo}
+                        onChange={(e) => setNovoInsumo(prev => ({ ...prev, custo: parseFloat(e.target.value) || 0 }))}
+                        placeholder="0.00"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRemoveInsumo(index)}
+                        onClick={() => setNovoInsumo({
+                          tipo: 'insumo',
+                          codigo: '',
+                          nome: '',
+                          quantidade: 0,
+                          unidade: '',
+                          custo: 0
+                        })}
+                        className="border-orange-500"
                       >
                         <X className="h-4 w-4" />
                       </Button>
+                    </div>
+                  </div>
+
+                  {/* Insumos Selecionados */}
+                  {insumosSelecionados.map((insumo, index) => (
+                    <div key={index} className="grid grid-cols-7 gap-4 p-3 border-b">
+                      <div className="text-sm">{insumo.tipo}</div>
+                      <div className="text-sm">-</div>
+                      <div className="text-sm font-medium">{insumo.nome}</div>
+                      <div className="text-sm">{insumo.quantidade}</div>
+                      <div className="text-sm">{insumo.unidade}</div>
+                      <div className="text-sm">R$ {insumo.custo.toFixed(2)}</div>
+                      <div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRemoveInsumo(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -736,100 +845,6 @@ export default function Bases() {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog para Seleção de Insumos */}
-        <Dialog open={isInsumoDialogOpen} onOpenChange={setIsInsumoDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Selecionar Insumo</DialogTitle>
-              <DialogDescription>
-                Escolha um insumo para adicionar à base
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              {/* Lista de Insumos */}
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {insumos.map((insumo) => (
-                  <div
-                    key={insumo.id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      insumoSelecionado?.id === insumo.id
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:bg-muted'
-                    }`}
-                    onClick={() => setInsumoSelecionado(insumo)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-medium">{insumo.nome}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {insumo.codigo_insumo && `Código: ${insumo.codigo_insumo}`}
-                          {insumo.codigo_insumo && insumo.categoria && ' • '}
-                          {insumo.categoria}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          R$ {insumo.preco_por_unidade.toFixed(2)} / {insumo.unidade_medida}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">
-                          R$ {(insumo.preco_por_unidade * (insumo.fator_correcao || 1)).toFixed(2)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Custo unitário
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Quantidade */}
-              {insumoSelecionado && (
-                <div className="space-y-2">
-                  <Label htmlFor="quantidade">Quantidade</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="quantidade"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={quantidadeInsumo}
-                      onChange={(e) => setQuantidadeInsumo(parseFloat(e.target.value) || 1)}
-                      className="w-32"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {insumoSelecionado.unidade_medida}
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Custo total: R$ {(quantidadeInsumo * insumoSelecionado.preco_por_unidade * (insumoSelecionado.fator_correcao || 1)).toFixed(2)}
-                  </div>
-                </div>
-              )}
-
-              {/* Botões */}
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsInsumoDialogOpen(false)
-                    setInsumoSelecionado(null)
-                    setQuantidadeInsumo(1)
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleAdicionarInsumoSelecionado}
-                  disabled={!insumoSelecionado}
-                >
-                  Adicionar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Dialog de Confirmação de Exclusão */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
