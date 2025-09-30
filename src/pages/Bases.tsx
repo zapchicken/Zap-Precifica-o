@@ -227,10 +227,10 @@ export default function Bases() {
   const handleSave = async () => {
     try {
       const insumosData = insumosSelecionados.map(insumo => ({
-        insumo_id: insumo.insumo_id,
-        quantidade: insumo.quantidade,
+        insumo_id: insumo.insumo_id.toString(),
+        quantidade: Number(insumo.quantidade),
         unidade: insumo.unidade,
-        custo: insumo.custo
+        custo: Number(insumo.custo)
       }))
 
       const baseData = {
@@ -398,12 +398,12 @@ export default function Bases() {
 
         {/* Dialog para Criar/Editar Base */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="dialog-description">
             <DialogHeader>
               <DialogTitle>
                 {editingBase ? 'Editar Base' : 'Nova Base'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="dialog-description">
                 {editingBase ? 'Edite as informações da base' : 'Crie uma nova base'}
               </DialogDescription>
             </DialogHeader>
@@ -571,14 +571,24 @@ export default function Bases() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      // Aqui você pode abrir um modal para selecionar insumos
-                      // Por enquanto, vou adicionar um insumo de exemplo
+                      // Verificar se há insumos disponíveis
+                      if (insumos.length === 0) {
+                        toast({
+                          title: 'Aviso',
+                          description: 'Nenhum insumo cadastrado. Cadastre insumos primeiro.',
+                          variant: 'destructive'
+                        })
+                        return
+                      }
+                      
+                      // Usar o primeiro insumo disponível como exemplo
+                      const primeiroInsumo = insumos[0]
                       const novoInsumo = {
-                        insumo_id: Date.now(),
-                        nome: 'Insumo Exemplo',
+                        insumo_id: primeiroInsumo.id,
+                        nome: primeiroInsumo.nome,
                         quantidade: 1,
-                        unidade: 'kg',
-                        custo: 10.00,
+                        unidade: primeiroInsumo.unidade_medida,
+                        custo: primeiroInsumo.preco_por_unidade,
                         tipo: 'insumo' as const
                       }
                       handleAddInsumo(novoInsumo)
