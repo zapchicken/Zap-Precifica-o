@@ -424,7 +424,7 @@ export function useDashboardStats() {
       
       const totalProdutos = produtos.length;
       
-      // --- CÁLCULO DA MARGEM DE CONTRIBUIÇÃO PONDERADA COM BASE NOS PRODUTOS CADASTRADOS ---
+      // --- CÁLCULO DA MARGEM DE CONTRIBUIÇÃO PONDERADA COM BASE NAS VENDAS REAIS ---
       // 1. Buscar todos os produtos ativos com seus preços de venda e user_id
       const produtosAtivos = produtos.filter(p => p.status === 'ativo');
        
@@ -473,39 +473,56 @@ export function useDashboardStats() {
         }
       });
       
-       
-      // 6. Calcular margem de contribuição ponderada com base no faturamento estimado
-      // O faturamento estimado vem do campo "Faturamento Estimado Mensal (R$)" da página Taxa de Marcação
-      // Como não há um hook para ele, assumimos que ele está armazenado em localStorage ou state global
-      // Se não existir, use 0 para evitar divisão por zero
-      const faturamentoEstimado = parseFloat(localStorage.getItem('faturamentoEstimado') || '0');
-       
-      // Se não houver faturamento estimado, calcule a MC média simples (fallback)
+      // 6. NOVO: Calcular margem de contribuição ponderada com base nas vendas reais
+      const vendas = vendasSumResult.data || [];
+      
+      // Agrupar vendas por produto (usando código PDV como chave)
+      const vendasPorProduto = new Map();
+      vendas.forEach(venda => {
+        const codigoPdv = venda.produto_codigo;
+        if (!codigoPdv) return;
+        
+        if (!vendasPorProduto.has(codigoPdv)) {
+          vendasPorProduto.set(codigoPdv, {
+            quantidadeTotal: 0,
+            valorTotal: 0,
+            precoMedioVenda: 0
+          });
+        }
+        
+        const produtoVendas = vendasPorProduto.get(codigoPdv);
+        produtoVendas.quantidadeTotal += parseFloat(venda.quantidade) || 0;
+        produtoVendas.valorTotal += parseFloat(venda.valor_total) || 0;
+        produtoVendas.precoMedioVenda = produtoVendas.valorTotal / produtoVendas.quantidadeTotal;
+      });
+      
+      // Calcular margem ponderada baseada nas vendas reais
       let totalMargemPonderada = 0;
       let totalFaturamento = 0;
-       
-      if (faturamentoEstimado > 0) {
-        // Calcula o peso de cada produto com base na proporção do faturamento estimado
-        produtosAtivos.forEach(produto => {
-          const precoVenda = produto.preco_venda || 0;
-          const custoUnitario = custoPorProduto.get(produto.id) || 0;
-          
-          // Evita divisão por zero
-          if (precoVenda <= 0 || custoUnitario < 0) return;
-          
-          // Margem unitária
-          const margemUnitaria = (precoVenda - custoUnitario) / precoVenda;
-          
-          // Peso: quanto esse produto representa do faturamento estimado
-          // Assume-se que cada produto tem o mesmo peso proporcional ao seu preço
-          // Isso é uma aproximação válida quando não temos dados de vendas reais por produto
-          const peso = precoVenda / faturamentoEstimado;
-          
-          totalMargemPonderada += margemUnitaria * peso;
-          totalFaturamento += peso;
-        });
-      } else {
-        // Fallback: se não tiver faturamento estimado, usa média simples dos produtos
+      
+      vendasPorProduto.forEach((vendasProduto, codigoPdv) => {
+        // Encontrar o produto correspondente
+        const produto = produtosAtivos.find(p => p.codigo_pdv === codigoPdv);
+        if (!produto) return;
+        
+        const precoVenda = vendasProduto.precoMedioVenda; // Preço real de venda
+        const custoUnitario = custoPorProduto.get(produto.id) || 0;
+        
+        // Evita divisão por zero
+        if (precoVenda <= 0 || custoUnitario < 0) return;
+        
+        // Margem unitária baseada no preço real de venda
+        const margemUnitaria = (precoVenda - custoUnitario) / precoVenda;
+        
+        // Peso: quanto esse produto representa do faturamento total real
+        const peso = vendasProduto.valorTotal;
+        
+        totalMargemPonderada += margemUnitaria * peso;
+        totalFaturamento += peso;
+      });
+      
+      // Se não há vendas reais, usar fallback com produtos cadastrados
+      if (totalFaturamento === 0) {
         produtosAtivos.forEach(produto => {
           const precoVenda = produto.preco_venda || 0;
           const custoUnitario = custoPorProduto.get(produto.id) || 0;
