@@ -179,7 +179,7 @@ export default function FichasTecnicas() {
         tempo_preparo: parseInt(formData.tempoPreparo) || 0,
         rendimento: parseFloat(formData.rendimento) || 1,
         custo_total_producao: parseFloat(formData.custoTotalProducao) || 0,
-        custo_por_unidade: (parseFloat(formData.custoTotalProducao) || 0) / (parseFloat(formData.rendimento) || 1),
+        custo_por_unidade: parseFloat(formData.custoUnitario) || 0,
         data_ficha: formData.dataFicha,
         modo_preparo: formData.modoPreparo,
         foto: formData.fotos[0] || null,
