@@ -143,6 +143,8 @@ const buscarTodosProdutos = async (): Promise<Map<string, string>> => {
   }
 };
 
+// Função para processar vendas no formato da imagem (sem data e pedido)
+// Função para processar vendas no formato completo (com data e pedido)
 export const processarVendas = async (file: File) => {
   const dados = await lerArquivo(file);
   
@@ -171,12 +173,10 @@ export const processarVendas = async (file: File) => {
   
   for (const [index, linha] of dados.entries()) {
     try {
-      
       // Mapear campos para os nomes esperados
       const camposMapeados = mapearCampos(linha);
       
-      
-      
+      // Verificar campos obrigatórios
       if (!camposMapeados.data || !camposMapeados.quantidade || !camposMapeados.valor_unitario || !camposMapeados.pedido_numero) {
         const camposFaltando = [];
         if (!camposMapeados.data) camposFaltando.push('data');
@@ -192,67 +192,105 @@ export const processarVendas = async (file: File) => {
       // Converter data para formato ISO (YYYY-MM-DD)
       let dataFormatada = camposMapeados.data.toString().trim();
       
-      // Verificar se é uma data serial do Excel (número decimal)
-      if (!isNaN(parseFloat(dataFormatada)) && parseFloat(dataFormatada) > 25000) {
-        // É uma data serial do Excel - converter para data
-        const dataSerial = parseFloat(dataFormatada);
-        // Excel conta dias desde 1 de janeiro de 1900 (com correção para bug do Excel)
-        // Usar UTC para evitar problemas de timezone
-        const dataExcel = new Date(Date.UTC(1900, 0, dataSerial - 1));
-        dataFormatada = dataExcel.toISOString().split('T')[0];
-      } else if (dataFormatada.includes('/')) {
-        // Se a data está no formato DD/MM/YYYY, MM/DD/YYYY ou DD/MM/YY, MM/DD/YY
-        const partes = dataFormatada.split('/');
-        if (partes.length === 3) {
-          let [parte1, parte2, ano] = partes;
-          
-          // Se o ano tem 2 dígitos, assumir 20XX
-          if (ano.length === 2) {
-            ano = '20' + ano;
-          }
-          
-          // Detectar se é formato brasileiro (DD/MM/YYYY) ou americano (MM/DD/YYYY)
-          const num1 = parseInt(parte1);
-          const num2 = parseInt(parte2);
-          
-          let dia, mes;
-          
-          // Se a primeira parte é > 12, então é formato brasileiro (DD/MM/YYYY)
-          if (num1 > 12) {
-            dia = parte1;
-            mes = parte2;
-          }
-          // Se a segunda parte é > 12, então é formato americano (MM/DD/YYYY)
-          else if (num2 > 12) {
-            mes = parte1;
-            dia = parte2;
-          }
-          // Se ambas partes são <= 12, usar heurística mais inteligente
-          else {
-            // Se a primeira parte é <= 12 e a segunda também, verificar contexto
-            // Se a primeira parte é 1-12 e a segunda é 1-31, assumir MM/DD (americano)
-            // Mas se parece com datas brasileiras (ex: 6/1, 7/1, 8/1), assumir DD/MM
-            if (num1 <= 12 && num2 <= 31) {
-              // Verificar se parece com formato brasileiro (dia 1-31, mês 1-12)
-              if (num2 <= 12) {
-                // Ambas <= 12, assumir brasileiro por padrão
-                dia = parte1;
-                mes = parte2;
-              } else {
-                // Primeira <= 12, segunda > 12, assumir americano
-                mes = parte1;
-                dia = parte2;
-              }
-            } else {
-              // Fallback: assumir brasileiro
-              dia = parte1;
-              mes = parte2;
-            }
-          }
-          
-          dataFormatada = `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+      // Gerar número do pedido automaticamente se não fornecido
+      const pedidoNumero = camposMapeados.pedido_numero?.toString().trim() || `PED-${Date.now()}-${index}`;
+
+      // Converter valores para números
+      const quantidade = parseFloat(camposMapeados.quantidade.toString().replace(',', '.'));
+      const valorUnitario = parseFloat(camposMapeados.valor_unitario.toString().replace(',', '.'));
+
+      // Verificar se os valores são válidos
+      if (isNaN(quantidade) || isNaN(valorUnitario) || quantidade <= 0 || valorUnitario <= 0) {
+        const erroMsg = `Linha ${index + 2}: Valores inválidos - Quantidade: ${quantidade}, Valor Unitário: ${valorUnitario}`;
+        erros.push(erroMsg);
+        continue;
+      }
+
+      // Buscar produto pelo código PDV
+      let nomeProduto = camposMapeados.produto;
+      if (camposMapeados.codigo_pdv) {
+        const produtoEncontrado = mapaProdutos.get(camposMapeados.codigo_pdv.toString());
+        if (produtoEncontrado) {
+          nomeProduto = produtoEncontrado;
         }
       }
+
+      // Calcular valor total
+      const valorTotal = quantidade * valorUnitario;
+      
+      const venda = {
+        data_venda: dataFormatada,
+        pedido_numero: pedidoNumero,
+        produto_nome: nomeProduto,
+        produto_codigo: camposMapeados.codigo_pdv?.toString().trim() || null,
+        quantidade: quantidade,
+        valor_unitario: valorUnitario,
+        valor_total: valorTotal,
+        canal: camposMapeados.canal?.toString().trim() || 'outros',
+        observacoes: camposMapeados.observacoes?.toString().trim() || null
+      };
+      
+      vendasProcessadas.push(venda);
+    } catch (error) {
+      erros.push(`Linha ${index + 2}: Erro ao processar - ${error}`);
+    }
+  }
+
+  return {
+    dados: vendasProcessadas,
+    erros: erros,
+    totalLinhas: totalLinhas,
+    sucessos: vendasProcessadas.length,
+    falhas: erros.length
+  };
+};
+
+// Função para processar vendas no formato da imagem (sem data e pedido)
+export const processarVendasFormatoImagem = async (file: File, dataVenda: string, canal: string) => {
+  const dados = await lerArquivo(file);
+  
+  // Buscar todos os produtos uma única vez (otimização para arquivos grandes)
+  const mapaProdutos = await buscarTodosProdutos();
+  
+  const vendasProcessadas = [];
+  const erros = [];
+
+  // Função para mapear campos do CSV no formato da imagem
+  const mapearCamposFormatoImagem = (linha: any) => {
+    return {
+      produto: linha['Produto'] || linha['produto'] || linha.produto || linha.nome_produto || linha.product_name,
+      codigo_pdv: linha['PDV'] || linha['pdv'] || linha.codigo_pdv || linha.codigo || linha.codigo_produto || linha.product_code,
+      valor_unitario: linha['valor unitário'] || linha['valor_unitario'] || linha.valor_unitario || linha.valor || linha.preco || linha.price,
+      quantidade: linha['Quantidade Vendida'] || linha['quantidade_vendida'] || linha.quantidade || linha.qtd || linha.qtde,
+      valor_total: linha['Vendas Total'] || linha['vendas_total'] || linha.valor_total || linha.total || linha.total_vendas
+    };
+  };
+
+  // Processar vendas no formato da imagem
+  const totalLinhas = dados.length;
+  
+  for (const [index, linha] of dados.entries()) {
+    try {
+      // Mapear campos para os nomes esperados
+      const camposMapeados = mapearCamposFormatoImagem(linha);
+      
+      // Verificar campos obrigatórios
+      if (!camposMapeados.produto || !camposMapeados.quantidade || !camposMapeados.valor_unitario) {
+        const camposFaltando = [];
+        if (!camposMapeados.produto) camposFaltando.push('produto');
+        if (!camposMapeados.quantidade) camposFaltando.push('quantidade');
+        if (!camposMapeados.valor_unitario) camposFaltando.push('valor_unitario');
+        
+        const erroMsg = `Linha ${index + 2}: Campos obrigatórios faltando: ${camposFaltando.join(', ')}`;
+        erros.push(erroMsg);
+        continue;
+      }
+
+      // Usar a data fornecida pelo usuário
+      let dataFormatada = dataVenda;
+      
+      // Gerar número do pedido automaticamente (formato: PED-YYYYMMDD-XXXX)
+      const pedidoNumero = `PED-${dataFormatada.replace(/-/g, '')}-${String(index + 1).padStart(4, '0')}`;
 
       // Validar e corrigir data inválida
       const validarECorrigirData = (dataStr: string): string => {
@@ -381,14 +419,14 @@ export const processarVendas = async (file: File) => {
       
       const venda = {
         data_venda: dataFormatada,
-        pedido_numero: camposMapeados.pedido_numero.toString().trim(),
+        pedido_numero: pedidoNumero,
         produto_nome: nomeProduto,
         produto_codigo: camposMapeados.codigo_pdv?.toString().trim() || null,
         quantidade: quantidade,
         valor_unitario: valorNumerico,
         valor_total: valorTotal,
-        canal: camposMapeados.canal?.toString().trim() || null,
-        observacoes: camposMapeados.observacoes?.toString().trim() || null
+        canal: canal,
+        observacoes: null
       };
       
 
@@ -446,8 +484,8 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
       }
       
       return {
-      ...item,
-      user_id: user.id
+        ...item,
+        user_id: user.id
       };
     });
 

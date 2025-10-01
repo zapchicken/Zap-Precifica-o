@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
 import { processarVendas, salvarNoSupabase } from "@/utils/csvProcessor"
+import { processarVendasFormatoImagem, salvarVendasFormatoImagem } from "@/utils/csvProcessorFormatoImagem"
 import { useProdutos } from "@/hooks/useProdutos"
 import { useMarkup } from "@/hooks/useMarkup"
 import { supabase } from "@/lib/supabase"
@@ -38,12 +39,13 @@ import {
 interface VendaImportada {
   id: string
   data: string
+  pedido: string
   produto: string
+  codigoPdv?: string
   quantidade: number
   valorUnitario: number
   valorTotal: number
   canal: string
-  codigoPdv?: string
   status: 'sucesso' | 'erro' | 'aviso'
   observacao?: string
 }
@@ -107,6 +109,11 @@ export default function ImportarVendas() {
   const [dataFim, setDataFim] = useState<string>("")
   const [filtrarPorPeriodo, setFiltrarPorPeriodo] = useState<boolean>(false)
   const [limpezaConfirmada, setLimpezaConfirmada] = useState<boolean>(false)
+  
+  // Estados para formato da imagem
+  const [dataVenda, setDataVenda] = useState<string>("")
+  const [canalVenda, setCanalVenda] = useState<string>("balcao")
+  const [formatoImportacao, setFormatoImportacao] = useState<"completo" | "imagem">("completo")
   
   const { toast } = useToast()
   
@@ -276,58 +283,94 @@ export default function ImportarVendas() {
     setProgresso(0)
 
     try {
+      let resultado;
       
-      // Processar arquivo de vendas
-      const resultado = await processarVendas(arquivo);
-      
-      // Filtrar vendas por período se necessário
-      let vendasParaSalvar = resultado.dados;
-      if (filtrarPorPeriodo) {
-        vendasParaSalvar = filtrarVendasPorPeriodo(resultado.dados);
-      }
-      
-      if (vendasParaSalvar.length > 0) {
-        const salvamento = await salvarNoSupabase('vendas', vendasParaSalvar);
-        
-        if (!salvamento.data) {
-          throw new Error(`Erro ao salvar: ${salvamento.error}`);
+      // Escolher processador baseado no formato
+      if (formatoImportacao === "imagem") {
+        // Validar campos obrigatórios para formato da imagem
+        if (!dataVenda) {
+          throw new Error("Data da venda é obrigatória para este formato");
         }
         
+        // Processar arquivo no formato da imagem
+        resultado = await processarVendasFormatoImagem(arquivo, dataVenda, canalVenda);
+        
+        // Salvar vendas no formato da imagem
+        if (resultado.vendas.length > 0) {
+          await salvarVendasFormatoImagem(resultado.vendas);
+        }
       } else {
+        // Processar arquivo no formato completo
+        resultado = await processarVendas(arquivo);
+        
+        // Filtrar vendas por período se necessário
+        let vendasParaSalvar = resultado.dados;
+        if (filtrarPorPeriodo) {
+          vendasParaSalvar = filtrarVendasPorPeriodo(resultado.dados);
+        }
+        
+        if (vendasParaSalvar.length > 0) {
+          const salvamento = await salvarNoSupabase('vendas', vendasParaSalvar);
+          
+          if (!salvamento.data) {
+            throw new Error(`Erro ao salvar: ${salvamento.error}`);
+          }
+        }
       }
       
       setProgresso(100);
-      setVendasImportadas(vendasParaSalvar.map((venda: any, index: number) => ({
-        id: index.toString(),
-        data: venda.data_venda,
-        produto: venda.produto_nome,
-        quantidade: venda.quantidade,
-        valorUnitario: venda.valor_unitario,
-        valorTotal: venda.valor_total,
-        canal: venda.canal || 'outros',
-        codigoPdv: venda.produto_codigo,
-        status: 'sucesso' as const,
-        observacao: undefined
-      })));
+      
+      // Mapear vendas baseado no formato
+      let vendasMapeadas;
+      if (formatoImportacao === "imagem") {
+        vendasMapeadas = resultado.vendas.map((venda: any, index: number) => ({
+          id: index.toString(),
+          data: venda.data,
+          pedido: venda.pedido,
+          produto: venda.produto,
+          codigoPdv: venda.codigoPdv,
+          quantidade: venda.quantidade,
+          valorUnitario: venda.valorUnitario,
+          valorTotal: venda.valorTotal,
+          canal: venda.canal,
+          status: venda.status,
+          observacao: venda.observacao
+        }));
+      } else {
+        vendasMapeadas = resultado.dados.map((venda: any, index: number) => ({
+          id: index.toString(),
+          data: venda.data_venda,
+          pedido: venda.pedido_numero,
+          produto: venda.produto_nome,
+          codigoPdv: venda.produto_codigo,
+          quantidade: venda.quantidade,
+          valorUnitario: venda.valor_unitario,
+          valorTotal: venda.valor_total,
+          canal: venda.canal || 'outros',
+          status: 'sucesso' as const,
+          observacao: undefined
+        }));
+      }
       
       // Calcular período das vendas importadas
-      const datas = vendasParaSalvar.map((venda: any) => venda.data_venda).sort();
+      const datas = vendasMapeadas.map((venda: any) => venda.data).sort();
       const dataInicioPeriodo = datas.length > 0 ? datas[0] : undefined;
       const dataFimPeriodo = datas.length > 0 ? datas[datas.length - 1] : undefined;
       
 
       const novoResumo = {
-        totalVendas: vendasParaSalvar.length,
-        valorTotal: vendasParaSalvar.reduce((total: number, venda: any) => total + venda.valor_total, 0),
-        sucessos: vendasParaSalvar.length,
-        erros: resultado.erros.length,
-        avisos: resultado.dados.length - vendasParaSalvar.length, // Vendas filtradas fora do período
+        totalVendas: vendasMapeadas.length,
+        valorTotal: vendasMapeadas.reduce((total: number, venda: any) => total + venda.valorTotal, 0),
+        sucessos: vendasMapeadas.length,
+        erros: resultado.erros?.length || 0,
+        avisos: 0,
         dataInicio: dataInicioPeriodo,
         dataFim: dataFimPeriodo
       };
       
       setResumo(novoResumo);
-      setErrosDetalhados(resultado.erros);
+      setErrosDetalhados(resultado.erros || []);
+      setVendasImportadas(vendasMapeadas);
 
       const mensagemSucesso = filtrarPorPeriodo 
         ? `${novoResumo.sucessos} vendas importadas do período selecionado!`
@@ -363,6 +406,38 @@ export default function ImportarVendas() {
     a.download = 'template_vendas.csv'
     a.click()
     window.URL.revokeObjectURL(url)
+  }
+
+  const downloadTemplateFormatoImagem = () => {
+    const csvContent = [
+      "Produto,PDV,valor unitário,Quantidade Vendida,Vendas Total",
+      "SuperBalde Premium (13 Un.),122,93.02,201,18696.19",
+      "Balde Premium (8 Un.),121,75.10,208,15621.50",
+      "Combo Família Premium- p/ 4 pessoas,146,124.38,99,12313.80",
+      "Balde Clássico (8 Pedaços),119,61.08,155,9466.66",
+      "SuperBalde Clássico(13 un.),120,81.95,87,7129.30",
+      "Combo Amigos Premium p/ 2 pessoas,243,91.04,56,5098.40",
+      "COXINHAS CRUSH,370,72.70,61,4434.90",
+      "Combo Família Clássico p/ 4 pessoas,147,114.66,37,4242.30",
+      "Bacon Cheese Burger,31,45.02,66,2971.10",
+      "Combo Amigos Clássico p/2 pessoas,242,81.87,35,2865.40",
+      "Batatas fritas Grande,54,9.80,268,2625.40",
+      "ZAPBOX TIRAS,43,34.55,74,2556.60",
+      "ZAPBOX PEDAÇOS,42,31.90,72,2296.80"
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'template_vendas_formato_imagem.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+    
+    toast({
+      title: "Template baixado",
+      description: "Arquivo template_vendas_formato_imagem.csv foi baixado com sucesso!"
+    })
   }
 
   const vendasFiltradas = vendasImportadas.filter(venda => {
@@ -558,7 +633,11 @@ export default function ImportarVendas() {
           
           <Button variant="outline" onClick={baixarTemplateCSV}>
             <Download className="h-4 w-4" />
-            Baixar Template
+            Baixar Template Completo
+          </Button>
+          <Button variant="outline" onClick={downloadTemplateFormatoImagem}>
+            <Download className="h-4 w-4" />
+            Baixar Template Formato Imagem
           </Button>
         </div>
 
@@ -581,6 +660,49 @@ export default function ImportarVendas() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Seleção de Formato */}
+                <div className="space-y-4">
+                  <Label htmlFor="formato">Formato de Importação</Label>
+                  <Select value={formatoImportacao} onValueChange={(value: "completo" | "imagem") => setFormatoImportacao(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o formato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="completo">Formato Completo (com data e pedido)</SelectItem>
+                      <SelectItem value="imagem">Formato da Imagem (sem data e pedido)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Campos para formato da imagem */}
+                {formatoImportacao === "imagem" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="dataVenda">Data da Venda *</Label>
+                      <Input
+                        id="dataVenda"
+                        type="date"
+                        value={dataVenda}
+                        onChange={(e) => setDataVenda(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="canalVenda">Canal de Venda</Label>
+                      <Select value={canalVenda} onValueChange={setCanalVenda}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o canal" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="balcao">Balcão</SelectItem>
+                          <SelectItem value="ifood">iFood</SelectItem>
+                          <SelectItem value="outros">Outros</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
                   <div className="flex flex-col items-center gap-4">
                     <FileSpreadsheet className="h-12 w-12 text-muted-foreground" />
@@ -804,13 +926,41 @@ export default function ImportarVendas() {
                     
                     <h4 className="font-semibold mb-2 mt-4">Canais Aceitos</h4>
                     <div className="space-y-2">
-                      {canaisDisponiveis.map(canal => (
-                        <div key={canal.id} className="flex items-center gap-2 text-sm">
-                          <div className={`w-3 h-3 rounded-full ${canal.cor}`}></div>
-                          <span><strong>{canal.id}</strong> - {canal.nome}</span>
-                        </div>
-                      ))}
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <span><strong>ifood</strong> - iFood</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span><strong>whatsapp</strong> - WhatsApp</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <span><strong>balcao</strong> - Balcão</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                        <span><strong>outros</strong> - Outros</span>
+                      </div>
                     </div>
+                  </div>
+                </div>
+                
+                {/* Formato da Imagem */}
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold mb-2 text-blue-800">📊 Formato da Imagem (Sem Data e Pedido)</h4>
+                  <div className="text-sm text-blue-700">
+                    <p className="mb-2">Para arquivos no formato da imagem, use as seguintes colunas:</p>
+                    <ul className="space-y-1 ml-4">
+                      <li>• <strong>Produto</strong> - Nome do produto</li>
+                      <li>• <strong>PDV</strong> - Código PDV do produto</li>
+                      <li>• <strong>valor unitário</strong> - Preço unitário</li>
+                      <li>• <strong>Quantidade Vendida</strong> - Quantidade vendida</li>
+                      <li>• <strong>Vendas Total</strong> - Valor total da venda</li>
+                    </ul>
+                    <p className="mt-2 text-xs text-blue-600">
+                      💡 <strong>Dica:</strong> Selecione "Formato da Imagem" na interface e informe a data e canal da venda.
+                    </p>
                   </div>
                 </div>
               </CardContent>

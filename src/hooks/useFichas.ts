@@ -933,6 +933,9 @@ export const useFichas = () => {
         title: "Sucesso",
         description: "Ficha técnica excluída com sucesso"
       })
+      
+      // ✅ CORREÇÃO: NÃO chamar sincronizarComProdutos após deletar
+      // A sincronização automática só deve acontecer em create/update, não em delete
     } catch (err: any) {
       setError(err.message)
       toast({
@@ -976,10 +979,7 @@ export const useFichas = () => {
         const hasChanges = 
           produtoExistente.nome !== produtoData.nome ||
           produtoExistente.codigo_pdv !== produtoData.codigo_pdv ||
-          produtoExistente.descricao !== produtoData.descricao ||
-          produtoExistente.categoria !== produtoData.categoria ||
-          produtoExistente.preco_custo !== produtoData.preco_custo ||
-          produtoExistente.observacoes !== produtoData.observacoes
+          produtoExistente.preco_custo !== produtoData.preco_custo
 
         if (hasChanges) {
           await supabase
@@ -990,6 +990,26 @@ export const useFichas = () => {
           console.log('✅ Produto sincronizado: Campos seguros atualizados, preços de venda preservados')
         }
       } else {
+        // ✅ VALIDAÇÃO: Verificar se código PDV já existe antes de criar
+        if (ficha.codigo) {
+          const { data: codigoExistente, error: checkError } = await supabase
+            .from('produtos')
+            .select('id, codigo_pdv, nome')
+            .eq('codigo_pdv', ficha.codigo)
+            .eq('user_id', user.id)
+            .single()
+
+          if (checkError && checkError.code !== 'PGRST116') {
+            console.error('❌ Erro ao verificar código PDV:', checkError)
+            throw checkError
+          }
+
+          if (codigoExistente) {
+            console.warn(`⚠️ Código PDV "${ficha.codigo}" já existe no produto "${codigoExistente.nome}". Pulando criação de produto.`)
+            return // Não criar produto duplicado
+          }
+        }
+
         // ✅ Criar novo produto apenas se não existir
         const produtoData = {
           nome: ficha.nome,
