@@ -89,10 +89,10 @@ export default function Dashboard() {
           <StatCard
             title="Margem de Contribuição"
             value={`${(stats.margemContribuicaoPonderada || 0).toFixed(1)}%`}
-            subtitle="Média ponderada pelas vendas reais"
+            subtitle="Ponderada por participação no faturamento"
             icon={TrendingUp}
             trend="up"
-            trendValue="Baseado nas vendas importadas"
+            trendValue="Preços de venda direta × vendas reais"
             color="success"
           />
           <StatCard

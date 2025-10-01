@@ -485,15 +485,13 @@ export function useDashboardStats() {
         if (!vendasPorProduto.has(codigoPdv)) {
           vendasPorProduto.set(codigoPdv, {
             quantidadeTotal: 0,
-            valorTotal: 0,
-            precoMedioVenda: 0
+            valorTotal: 0
           });
         }
         
         const produtoVendas = vendasPorProduto.get(codigoPdv);
         produtoVendas.quantidadeTotal += parseFloat(venda.quantidade) || 0;
         produtoVendas.valorTotal += parseFloat(venda.valor_total) || 0;
-        produtoVendas.precoMedioVenda = produtoVendas.valorTotal / produtoVendas.quantidadeTotal;
       });
       
       // Calcular margem ponderada baseada nas vendas reais
@@ -505,14 +503,15 @@ export function useDashboardStats() {
         const produto = produtosAtivos.find(p => p.codigo_pdv === codigoPdv);
         if (!produto) return;
         
-        const precoVenda = vendasProduto.precoMedioVenda; // Preço real de venda
+        // Usar o preço de venda direta cadastrado na página de produtos
+        const precoVendaDireta = produto.preco_venda || 0;
         const custoUnitario = custoPorProduto.get(produto.id) || 0;
         
         // Evita divisão por zero
-        if (precoVenda <= 0 || custoUnitario < 0) return;
+        if (precoVendaDireta <= 0 || custoUnitario < 0) return;
         
-        // Margem unitária baseada no preço real de venda
-        const margemUnitaria = (precoVenda - custoUnitario) / precoVenda;
+        // Margem unitária baseada no preço de venda direta cadastrado
+        const margemUnitaria = (precoVendaDireta - custoUnitario) / precoVendaDireta;
         
         // Peso: quanto esse produto representa do faturamento total real
         const peso = vendasProduto.valorTotal;
