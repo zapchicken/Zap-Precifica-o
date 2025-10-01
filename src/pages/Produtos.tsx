@@ -599,6 +599,53 @@ export default function Produtos() {
     }
   }
 
+  // 🔄 Forçar sincronização de todos os produtos existentes
+  const forcarSincronizacaoProdutos = async () => {
+    if (!fichas || !produtos || fichas.length === 0) return
+
+    try {
+      const produtosComFicha = produtos.filter(produto => produto.ficha_tecnica_id)
+      
+      if (produtosComFicha.length === 0) {
+        toast({
+          title: "Nenhum produto para sincronizar",
+          description: "Não há produtos vinculados a fichas técnicas",
+          variant: "default"
+        })
+        return
+      }
+
+      let sincronizados = 0
+      for (const produto of produtosComFicha) {
+        const ficha = fichas.find(f => f.id === produto.ficha_tecnica_id)
+        if (ficha) {
+          try {
+            await sincronizarComProdutos(ficha)
+            sincronizados++
+          } catch (error) {
+            console.error(`Erro ao sincronizar produto ${produto.nome}:`, error)
+          }
+        }
+      }
+
+      if (sincronizados > 0) {
+        await refresh()
+        toast({
+          title: "Sincronização concluída",
+          description: `${sincronizados} produto(s) atualizado(s) com sucesso`,
+          variant: "default"
+        })
+      }
+    } catch (error) {
+      console.error('Erro na sincronização forçada:', error)
+      toast({
+        title: "Erro",
+        description: "Erro ao sincronizar produtos",
+        variant: "destructive"
+      })
+    }
+  }
+
   const salvarNovaCategoria = async () => {
     if (!novaCategoria.trim()) {
       toast({
@@ -843,6 +890,11 @@ export default function Produtos() {
           <Button variant="outline" onClick={exportarParaExcel}>
             <Download className="h-4 w-4" />
             Exportar Excel
+          </Button>
+          
+          <Button variant="outline" onClick={forcarSincronizacaoProdutos}>
+            <Package className="h-4 w-4" />
+            Sincronizar Produtos
           </Button>
         </div>
 
