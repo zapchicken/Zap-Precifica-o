@@ -954,7 +954,7 @@ export const useFichas = () => {
         codigo_pdv: ficha.codigo,
         descricao: ficha.descricao,
         categoria: ficha.categoria,
-        preco_custo: ficha.custo_total_producao || 0,
+        preco_custo: ficha.custo_por_unidade || 0,
         preco_venda: ficha.preco_sugerido || 0,
         preco_venda_ifood: ficha.preco_sugerido || 0, // Por padrão, usar o mesmo preço
         margem_lucro: ficha.margem_contribuicao || 0,
