@@ -18,14 +18,29 @@ const lerArquivo = (file: File): Promise<any[]> => {
         
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        // CRÍTICO: Forçar leitura como texto para preservar vírgulas decimais
+        // CRÍTICO: Forçar leitura como texto para preservar vírgulas decimais e acentuação
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
           raw: false,
           defval: "",
           blankrows: false
         });
         
-        resolve(jsonData);
+        // Normalizar caracteres para corrigir acentuação
+        const dadosNormalizados = jsonData.map((item: any) => {
+          const itemNormalizado: any = {};
+          Object.keys(item).forEach(key => {
+            const valor = item[key];
+            if (typeof valor === 'string') {
+              // Normalizar acentuação
+              itemNormalizado[key] = valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            } else {
+              itemNormalizado[key] = valor;
+            }
+          });
+          return itemNormalizado;
+        });
+        
+        resolve(dadosNormalizados);
       } catch (error) {
         reject(error);
       }
@@ -484,8 +499,8 @@ export const salvarNoSupabase = async (tabela: 'produtos' | 'insumos' | 'vendas'
       }
       
       return {
-        ...item,
-        user_id: user.id
+      ...item,
+      user_id: user.id
       };
     });
 

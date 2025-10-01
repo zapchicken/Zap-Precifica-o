@@ -1,8 +1,12 @@
 import { supabase } from '../lib/supabase';
 
-// Função para ler arquivo CSV/Excel
+// Função para ler arquivo CSV/Excel com suporte a UTF-8
 const lerArquivo = async (file: File): Promise<any[]> => {
-  const texto = await file.text();
+  // Ler arquivo com codificação UTF-8
+  const arrayBuffer = await file.arrayBuffer();
+  const decoder = new TextDecoder('utf-8');
+  const texto = decoder.decode(arrayBuffer);
+  
   const linhas = texto.split('\n').filter(linha => linha.trim());
   
   if (linhas.length === 0) return [];
@@ -12,12 +16,16 @@ const lerArquivo = async (file: File): Promise<any[]> => {
   const separadores = [',', ';', '\t'];
   const separador = separadores.find(sep => primeiraLinha.includes(sep)) || ',';
   
-  // Processar cabeçalho
-  const cabecalho = linhas[0].split(separador).map(col => col.trim().replace(/"/g, ''));
+  // Processar cabeçalho com normalização de caracteres
+  const cabecalho = linhas[0].split(separador).map(col => 
+    col.trim().replace(/"/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  );
   
-  // Processar dados
+  // Processar dados com normalização de caracteres
   const dados = linhas.slice(1).map((linha, index) => {
-    const valores = linha.split(separador).map(val => val.trim().replace(/"/g, ''));
+    const valores = linha.split(separador).map(val => 
+      val.trim().replace(/"/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    );
     const objeto: any = {};
     
     cabecalho.forEach((col, i) => {
