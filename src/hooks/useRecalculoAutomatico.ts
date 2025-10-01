@@ -326,7 +326,7 @@ export const useRecalculoAutomatico = () => {
 
       console.log('✅ Custo total recalculado para ficha:', fichaId, 'Valor:', custoTotalGeral)
 
-      // 🔄 SINCRONIZAÇÃO AUTOMÁTICA: Atualizar produto no catálogo
+      // 🔄 SINCRONIZAÇÃO AUTOMÁTICA: Atualizar produto no catálogo (APENAS CUSTO)
       try {
         const { data: fichaAtualizada } = await supabase
           .from('fichas_tecnicas')
@@ -338,24 +338,34 @@ export const useRecalculoAutomatico = () => {
           // Verificar se já existe produto para esta ficha
           const { data: produtoExistente } = await supabase
             .from('produtos')
-            .select('id')
+            .select('id, preco_venda, preco_venda_ifood, margem_lucro, preco_custo')
             .eq('ficha_tecnica_id', fichaId)
             .single()
 
           if (produtoExistente) {
-            // Atualizar produto existente com novo custo
-            const produtoData = {
-              preco_custo: custoTotalGeral,
-              preco_venda: fichaAtualizada.preco_sugerido || 0,
-              margem_lucro: fichaAtualizada.margem_contribuicao || 0
+            // ✅ CORREÇÃO SEGURA: Apenas atualizar custo se for diferente do atual
+            const custoAtual = produtoExistente.preco_custo || 0
+            const diferencaCusto = Math.abs(custoTotalGeral - custoAtual)
+            
+            // Só atualizar se houver diferença significativa (mais de 1 centavo)
+            if (diferencaCusto > 0.01) {
+              const produtoData = {
+                preco_custo: custoTotalGeral
+                // ✅ PRESERVAÇÃO TOTAL: Não tocar em preços de venda, margem ou outros campos
+                // preco_venda: mantém valor existente
+                // preco_venda_ifood: mantém valor existente  
+                // margem_lucro: mantém valor existente
+              }
+
+              await supabase
+                .from('produtos')
+                .update(produtoData)
+                .eq('id', produtoExistente.id)
+
+              console.log('✅ Produto atualizado: Custo alterado de', custoAtual, 'para', custoTotalGeral, '- Preços de venda preservados')
+            } else {
+              console.log('✅ Produto não atualizado: Custo não mudou significativamente (diferença:', diferencaCusto, ')')
             }
-
-            await supabase
-              .from('produtos')
-              .update(produtoData)
-              .eq('id', produtoExistente.id)
-
-            console.log('✅ Produto atualizado automaticamente no catálogo com novo custo:', custoTotalGeral)
           }
         }
       } catch (syncError) {

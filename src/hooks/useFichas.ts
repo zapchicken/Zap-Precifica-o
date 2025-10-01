@@ -949,21 +949,6 @@ export const useFichas = () => {
     if (!user?.id) return
 
     try {
-      const produtoData = {
-        nome: ficha.nome,
-        codigo_pdv: ficha.codigo,
-        descricao: ficha.descricao,
-        categoria: ficha.categoria,
-        preco_custo: ficha.custo_por_unidade || 0,
-        preco_venda: ficha.preco_sugerido || 0,
-        preco_venda_ifood: ficha.preco_sugerido || 0, // Por padrão, usar o mesmo preço
-        margem_lucro: ficha.margem_contribuicao || 0,
-        origem: 'ficha_tecnica' as const,
-        ficha_tecnica_id: ficha.id,
-        observacoes: ficha.observacoes,
-        status: 'ativo'
-      }
-
       // Verificar se já existe produto para esta ficha
       const { data: produtoExistente } = await supabase
         .from('produtos')
@@ -972,26 +957,60 @@ export const useFichas = () => {
         .single()
 
       if (produtoExistente) {
-        // Verificar se há mudanças antes de atualizar
+        // ✅ CORREÇÃO: Preservar preços de venda existentes e apenas atualizar campos seguros
+        const produtoData = {
+          nome: ficha.nome,
+          codigo_pdv: ficha.codigo,
+          descricao: ficha.descricao,
+          categoria: ficha.categoria,
+          preco_custo: ficha.custo_por_unidade || 0,
+          // ✅ PRESERVAÇÃO: Não tocar em preços de venda existentes
+          // preco_venda: mantém valor existente
+          // preco_venda_ifood: mantém valor existente
+          // margem_lucro: mantém valor existente
+          observacoes: ficha.observacoes,
+          status: 'ativo'
+        }
+
+        // Verificar se há mudanças apenas nos campos seguros
         const hasChanges = 
           produtoExistente.nome !== produtoData.nome ||
           produtoExistente.codigo_pdv !== produtoData.codigo_pdv ||
+          produtoExistente.descricao !== produtoData.descricao ||
+          produtoExistente.categoria !== produtoData.categoria ||
           produtoExistente.preco_custo !== produtoData.preco_custo ||
-          produtoExistente.preco_venda !== produtoData.preco_venda ||
-          produtoExistente.preco_venda_ifood !== produtoData.preco_venda_ifood ||
-          produtoExistente.margem_lucro !== produtoData.margem_lucro
+          produtoExistente.observacoes !== produtoData.observacoes
 
         if (hasChanges) {
           await supabase
             .from('produtos')
             .update(produtoData)
             .eq('id', produtoExistente.id)
+          
+          console.log('✅ Produto sincronizado: Campos seguros atualizados, preços de venda preservados')
         }
       } else {
-        // Criar novo produto
+        // ✅ Criar novo produto apenas se não existir
+        const produtoData = {
+          nome: ficha.nome,
+          codigo_pdv: ficha.codigo,
+          descricao: ficha.descricao,
+          categoria: ficha.categoria,
+          preco_custo: ficha.custo_por_unidade || 0,
+          preco_venda: ficha.preco_sugerido || 0,
+          preco_venda_ifood: ficha.preco_sugerido || 0,
+          margem_lucro: ficha.margem_contribuicao || 0,
+          origem: 'ficha_tecnica' as const,
+          ficha_tecnica_id: ficha.id,
+          observacoes: ficha.observacoes,
+          status: 'ativo'
+        }
+
         await supabase
           .from('produtos')
           .insert([{ ...produtoData, user_id: user.id }])
+          
+        console.log('✅ Novo produto criado a partir da ficha técnica')
       }
     } catch (err: any) {
       console.error('Erro ao sincronizar com produtos:', err)
